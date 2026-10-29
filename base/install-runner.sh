@@ -3,7 +3,6 @@
 # Never fails the caller: a failed install is a row with status "failed" (the cycle goes on).
 # Usage: install-runner.sh <agent>     (env: BENCH_STATE=/var/lib/bench, BENCH_AGENTS=/opt/bench/agents)
 set -uo pipefail
-umask 077   # the log and install.json may hold vendor output; root-only on the box
 agent=$1
 state=${BENCH_STATE:-/var/lib/bench}
 dir=${BENCH_AGENTS:-/opt/bench/agents}/$agent
@@ -11,10 +10,14 @@ log=$state/install.log
 meta=$dir/meta.json
 
 command -v apt-get > /dev/null && apt-get clean > /dev/null 2>&1   # cold package cache, as on a fresh box
+# The runner's own files are root-only (vendor output may echo keys); the vendor install itself runs
+# under the default umask, as it would for any admin (a 077 umask breaks apt keyrings, for one).
+install -m 0600 /dev/null "$log"
 started=$(date +%s.%N)
 bash "$dir/install.sh" > "$log" 2>&1
 rc=$?
 finished=$(date +%s.%N)
+sleep 5   # daemons that bind late (Glances) show their port
 seconds=$(awk -v a="$started" -v b="$finished" 'BEGIN{printf "%.1f", b-a}')
 
 version=$(grep -m1 '^VERSION=' "$log" | cut -d= -f2-)
@@ -35,6 +38,7 @@ if [[ -n "$pkg" ]] && command -v dpkg-query > /dev/null; then
   disk=$((disk + kb * 1024))
 fi
 [[ $rc -eq 0 ]] && status=ok || status=failed
+umask 077
 
 # Redact every secret value the agent's env file carries (vendor installers echo keys) before the
 # tail is recorded: install.json ends up in the published raw data. The file is %q-quoted, so the

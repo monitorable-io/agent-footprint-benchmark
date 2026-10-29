@@ -20,7 +20,8 @@
   "env": [],
   "package": "netdata",
   "footnotes": [
-    "ML anomaly detection stays at its default (on)."
+    "ML anomaly detection stays at its default (on).",
+    "kickstart's default channel is nightly; installed with --stable-channel so the version is a release readers can reproduce."
   ],
   "sourceUrl": "https://learn.netdata.cloud/docs/netdata-agent/installation/linux"
 }

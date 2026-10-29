@@ -24,5 +24,5 @@ WantedBy=multi-user.target
 UNIT
 systemctl daemon-reload
 systemctl enable --now glances
-echo "VERSION=$(/root/.local/bin/glances -V 2>/dev/null | head -1)"
+echo "VERSION=$(/root/.local/bin/glances -V 2>/dev/null | head -1 | awk '{print $NF}')"
 echo "UNITS=glances.service"

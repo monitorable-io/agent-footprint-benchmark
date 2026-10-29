@@ -23,7 +23,8 @@
   ],
   "package": "netdata",
   "footnotes": [
-    "Same binary as the self-hosted row, claimed to Netdata Cloud. ML anomaly detection stays at its default (on)."
+    "Same binary as the self-hosted row, claimed to Netdata Cloud. ML anomaly detection stays at its default (on).",
+    "kickstart's default channel is nightly; installed with --stable-channel so the version is a release readers can reproduce."
   ],
   "sourceUrl": "https://learn.netdata.cloud/docs/netdata-agent/installation/linux"
 }
