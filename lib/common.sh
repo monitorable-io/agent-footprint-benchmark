@@ -59,7 +59,7 @@ scp_box() {
   local ip
   ip=$(box_ip "$name")
   if [[ "$ip" == lxd:* ]]; then
-    lxc file push -r -q "$src" "${ip#lxd:}$dst"
+    if [[ -d "$src" ]]; then lxc file push -r -q "$src" "${ip#lxd:}$dst"; else lxc file push -q "$src" "${ip#lxd:}$dst"; fi
   else
     # shellcheck disable=SC2046
     scp -q -r $(ssh_opts) "$src" "root@$ip:$dst"

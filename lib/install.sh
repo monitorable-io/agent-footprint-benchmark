@@ -35,12 +35,10 @@ cmd_install() {
   agent_env "$agent" > "$envfile"
 
   log "$box: staging $agent"
-  ssh_box "$box" "mkdir -p /opt/bench/agents /opt/bench/base /opt/bench/collector"
+  ssh_box "$box" "mkdir -p /opt/bench/agents"
   scp_box "$box" "$dir" /opt/bench/agents/
-  scp_box "$box" "$BENCH_ROOT/base/install-runner.sh" /opt/bench/base/install-runner.sh
-  scp_box "$box" "$BENCH_ROOT/collector/bench_collector.py" /opt/bench/collector/bench_collector.py
-  scp_box "$box" "$BENCH_ROOT/collector/netcounters.py" /opt/bench/collector/netcounters.py
-  scp_box "$box" "$BENCH_ROOT/collector/bench-collector.service" /opt/bench/collector/bench-collector.service
+  scp_box "$box" "$BENCH_ROOT/base" /opt/bench/
+  scp_box "$box" "$BENCH_ROOT/collector" /opt/bench/
   scp_box "$box" "$envfile" "/opt/bench/agents/$agent/env"
   rm -f "$envfile"
   ssh_box "$box" "chmod 0600 /opt/bench/agents/$agent/env"
