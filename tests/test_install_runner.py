@@ -41,14 +41,14 @@ class RunnerTest(unittest.TestCase):
     def test_secret_values_are_redacted_from_the_recorded_tail(self):
         with tempfile.TemporaryDirectory() as d:
             a = make_agent(d, "fake", "#!/bin/bash\ncd \"$(dirname \"$0\")\"\n. ./env\necho \"installing with key $DD_API_KEY and site $DD_SITE\"\necho VERSION=1\necho UNITS=x\n")
-            (a / "env").write_text("DD_API_KEY=abcdef0123456789secret\nDD_SITE=datadoghq.eu\n")
+            (a / "env").write_text("DD_API_KEY=abcdef0123456789secret\nDD_SITE=eu1\n")
             r = self.run_runner(d, "fake")
             self.assertEqual(r.returncode, 0, r.stderr)
             rec = json.loads((Path(d) / "state" / "install.json").read_text())
             joined = "\n".join(rec["tail"])
             self.assertNotIn("abcdef0123456789secret", joined)
             self.assertIn("***", joined)
-            self.assertIn("datadoghq.eu", joined)  # short, non-secret-looking values stay readable
+            self.assertIn("site eu1", joined)  # values under 8 chars are not worth masking and stay readable
             mode = stat.S_IMODE(os.stat(Path(d) / "state" / "install.json").st_mode)
             self.assertEqual(mode, 0o600)
 
