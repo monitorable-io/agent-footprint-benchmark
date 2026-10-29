@@ -10,9 +10,13 @@ import argparse
 import csv
 import glob
 import os
+import re
 import sys
 import time
 from pathlib import Path
+
+# A cgroup path we are willing to put into a CSV and an nft rule: unit-name characters only.
+SAFE_PATH = re.compile(r"^[A-Za-z0-9_.@:\\/-]+$")
 
 HEADER = (
     "ts,cgroup,cgroup_ino,cpu_usage_usec,memory_current,memory_peak,anon,file,pss,rss,"
@@ -29,7 +33,8 @@ def discover(root, globs):
         for p in sorted(glob.glob(str(root / pattern))):
             if os.path.isdir(p):
                 rel = os.path.relpath(p, root)
-                found[rel] = os.stat(p).st_ino
+                if SAFE_PATH.match(rel):
+                    found[rel] = os.stat(p).st_ino
     return found
 
 
@@ -145,21 +150,29 @@ def box_stats(proc):
     return {"box_load1": load1, "box_memavail_kb": memavail, "box_steal_ticks": steal}
 
 
-def sample(cg_root, proc, cgroups, ts, net):
-    """CSV rows (strings) for one tick: one per cgroup, then one 'box' row."""
+def sample_structured(cg_root, proc, cgroups, ts, net):
+    """One tick: ({path: counters}, [csv rows]) with one row per cgroup, then one 'box' row."""
     box = box_stats(proc)
     box_cols = [str(box["box_load1"]), str(box["box_memavail_kb"]), str(box["box_steal_ticks"])]
+    structured = {}
     rows = []
     for path, ino in cgroups.items():
         s = read_cgroup(cg_root, path)
         pss_kb, rss_kb, threads = read_pss_rss(proc, s["procs"])
         out_b, in_b = net(path)
+        s.update(pss=pss_kb * 1024, rss=rss_kb * 1024, threads=threads, net_out=out_b, net_in=in_b)
+        structured[path] = s
         rows.append(",".join(
             [str(ts), path, str(ino), str(s["cpu_usage_usec"]), str(s["memory_current"]), str(s["memory_peak"]),
-             str(s["anon"]), str(s["file"]), str(pss_kb * 1024), str(rss_kb * 1024), str(s["io_rbytes"]),
+             str(s["anon"]), str(s["file"]), str(s["pss"]), str(s["rss"]), str(s["io_rbytes"]),
              str(s["io_wbytes"]), str(s["pids"]), str(threads), str(out_b), str(in_b)] + box_cols))
     rows.append(",".join([str(ts), "box", ""] + [""] * len(UNIT_COLUMNS) + box_cols))
-    return rows
+    return structured, rows
+
+
+def sample(cg_root, proc, cgroups, ts, net):
+    """CSV rows (strings) for one tick."""
+    return sample_structured(cg_root, proc, cgroups, ts, net)[1]
 
 
 def main(argv=None):
@@ -206,8 +219,8 @@ def main(argv=None):
             for event, path in diff_discovery(known, cur):
                 ev.writerow([ts, event, path, cur.get(path, "")])
             known = cur
-            rows = sample(args.root, args.proc, known, ts, net)
-            cpu_now = {r.split(",")[1]: int(r.split(",")[3]) for r in rows[:-1]}
+            structured, rows = sample_structured(args.root, args.proc, known, ts, net)
+            cpu_now = {path: s["cpu_usage_usec"] for path, s in structured.items()}
             for path in counter_resets(last_cpu, cpu_now):
                 ev.writerow([ts, "restart", path, "cpu counter reset"])
                 fresh.append(path)

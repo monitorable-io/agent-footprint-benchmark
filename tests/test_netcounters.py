@@ -51,6 +51,14 @@ class RuleTest(unittest.TestCase):
         self.assertIn('add rule inet bench out socket cgroupv2 level 2 "system.slice/netdata.service" counter name "out_system_slice_netdata_service"', flat)
         self.assertIn('add rule inet bench in socket cgroupv2 level 2 "system.slice/netdata.service" counter name "in_system_slice_netdata_service"', flat)
 
+    def test_rejects_unsafe_paths(self):
+        fake = FakeNft({})
+        with self.assertRaises(ValueError):
+            nc.ensure_rules('system.slice/x".service', "k", run=fake)
+        with self.assertRaises(ValueError):
+            nc.ensure_rules("system.slice/x service", "k", run=fake)
+        self.assertEqual(fake.calls, [])
+
     def test_level_is_path_depth(self):
         self.assertEqual(nc.level_for("system.slice/netdata.service"), 2)
         self.assertEqual(nc.level_for("system.slice/hetrix.slice/x.service"), 3)

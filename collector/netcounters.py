@@ -7,9 +7,12 @@ nft resolves the cgroup path to its id when the rule is added, so a recreated cg
 restart) needs ensure_rules() again; the collector calls it on every appeared/restart event.
 """
 import json
+import re
 import subprocess
 
 TABLE = "inet bench"
+# Only unit-name characters reach an nft rule; anything else is refused (never shell-quoted around).
+SAFE_PATH = re.compile(r"^[A-Za-z0-9_.@:\\/-]+$")
 
 
 def _nft(args):
@@ -51,6 +54,8 @@ def _rule_handles(chain, counter_name, run):
 
 def ensure_rules(path, key, run=_nft):
     """Create (or replace) the out/in rules + counters for one cgroup path."""
+    if not SAFE_PATH.match(path):
+        raise ValueError(f"refusing cgroup path with unsafe characters: {path!r}")
     level = str(level_for(path))
     for chain, prefix in (("out", "out_"), ("in", "in_")):
         name = prefix + key

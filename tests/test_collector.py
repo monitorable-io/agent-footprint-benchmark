@@ -1,5 +1,6 @@
 """Unit tests for collector/bench_collector.py against a fake /sys/fs/cgroup + /proc tree."""
 import os
+import tempfile
 import sys
 import unittest
 from pathlib import Path
@@ -36,6 +37,21 @@ class DiscoverTest(unittest.TestCase):
         self.assertEqual(bc.counter_resets(prev, {"system.slice/x.service": 600000}), [])
         self.assertEqual(bc.counter_resets(prev, {"system.slice/x.service": 1200}), ["system.slice/x.service"])
         self.assertEqual(bc.counter_resets({}, {"system.slice/x.service": 1200}), [])
+
+
+class SafetyTest(unittest.TestCase):
+    def test_discover_skips_paths_outside_the_safe_charset(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            (root / "system.slice" / "ok-1.service").mkdir(parents=True)
+            (root / "system.slice" / 'bad",x.service').mkdir()
+            found = bc.discover(root, ["system.slice/*.service"])
+            self.assertEqual(list(found), ["system.slice/ok-1.service"])
+
+    def test_sample_structured_carries_cpu_without_reparsing(self):
+        structured, rows = bc.sample_structured(CG, PROC, {"system.slice/netdata.service": 1}, ts=1, net=lambda cg: (0, 0))
+        self.assertEqual(structured["system.slice/netdata.service"]["cpu_usage_usec"], 123456)
+        self.assertEqual(len(rows), 2)
 
 
 class ReadTest(unittest.TestCase):
