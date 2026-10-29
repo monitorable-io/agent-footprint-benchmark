@@ -12,6 +12,8 @@ systemctl enable bench-sink-firewall > /dev/null 2>&1
 bash /opt/bench/sink/firewall.sh --restore
 docker compose pull -q
 docker compose up -d --remove-orphans
+# A rewritten prometheus.yml is a bind mount: compose does not restart for it, so reload explicitly.
+docker kill -s HUP prometheus > /dev/null 2>&1 || true
 if [[ -n "$glances_ip" ]]; then
   sed "s/@GLANCES_IP@/$glances_ip/" glances-poller.service.tmpl > /etc/systemd/system/glances-poller.service
   systemctl daemon-reload

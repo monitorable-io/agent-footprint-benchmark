@@ -38,7 +38,9 @@ sink_allow_boxes() {
     a=$(box_addr "box-$n" 2>/dev/null) || continue
     [[ -n "$a" ]] && addrs+=("$a")
   done
-  ssh_box sink "bash /opt/bench/sink/firewall.sh ${addrs[*]}"
+  local uniq
+  uniq=$(printf '%s\n' "${addrs[@]+"${addrs[@]}"}" | sort -u | paste -sd' ' -)
+  ssh_box sink "bash /opt/bench/sink/firewall.sh $uniq"
 }
 
 # sink_allow_box BOX: after a box is (re)created, refresh the whole allow-list.
