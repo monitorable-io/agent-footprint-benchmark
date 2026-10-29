@@ -37,14 +37,20 @@ fi
 [[ $rc -eq 0 ]] && status=ok || status=failed
 
 # Redact every secret value the agent's env file carries (vendor installers echo keys) before the
-# tail is recorded: install.json ends up in the published raw data. Short values (< 8 chars) stay.
+# tail is recorded: install.json ends up in the published raw data. The file is %q-quoted, so the
+# decoded values come from sourcing it in a subshell, never from re-parsing it. Keys named like a
+# secret are masked whatever their length; other values when 8+ chars.
 redacted=$(tail -n 50 "$log")
 if [[ -f "$dir/env" ]]; then
-  while IFS='=' read -r _k v; do
-    v=${v#\'}; v=${v%\'}; v=${v//\\/}
-    [[ ${#v} -ge 8 ]] || continue
-    redacted=${redacted//"$v"/***}
-  done < "$dir/env"
+  while read -r k; do
+    [[ "$k" =~ ^[A-Z][A-Z0-9_]*$ ]] || continue
+    # shellcheck disable=SC1091
+    v=$(. "$dir/env" 2>/dev/null; printf '%s' "${!k:-}")
+    [[ -n "$v" ]] || continue
+    if [[ "$k" =~ (KEY|TOKEN|SECRET|PASS) || ${#v} -ge 8 ]]; then
+      redacted=${redacted//"$v"/***}
+    fi
+  done < <(cut -d= -f1 "$dir/env")
 fi
 
 jq -n --arg agent "$agent" --arg started "$started" --arg finished "$finished" --arg seconds "$seconds" \

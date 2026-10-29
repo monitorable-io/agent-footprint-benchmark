@@ -52,6 +52,21 @@ class RunnerTest(unittest.TestCase):
             mode = stat.S_IMODE(os.stat(Path(d) / "state" / "install.json").st_mode)
             self.assertEqual(mode, 0o600)
 
+    def test_redaction_handles_quoted_values_and_short_secret_keys(self):
+        # cmd_install writes the env with printf %q: values with blanks or quotes come out $'...'-quoted.
+        with tempfile.TemporaryDirectory() as d:
+            a = make_agent(d, "fake", "#!/bin/bash\ncd \"$(dirname \"$0\")\"\n. ./env\necho \"key=$HETRIX_KEY token=$PULSE_TOKEN\"\necho VERSION=1\necho UNITS=x\n")
+            weird = "ab cd'ef$gh\\ij12"
+            quoted = subprocess.run(["bash", "-c", 'printf "HETRIX_KEY=%q\\nPULSE_TOKEN=%q\\n" "$1" "$2"', "_", weird, "short1"],
+                                    capture_output=True, text=True).stdout
+            (a / "env").write_text(quoted)
+            r = self.run_runner(d, "fake")
+            self.assertEqual(r.returncode, 0, r.stderr)
+            joined = "\n".join(json.loads((Path(d) / "state" / "install.json").read_text())["tail"])
+            self.assertNotIn(weird, joined)
+            self.assertNotIn("short1", joined)  # *_KEY/*_TOKEN values are masked whatever their length
+            self.assertIn("key=*** token=***", joined)
+
     def test_ok_install_records_version_units_and_disk(self):
         with tempfile.TemporaryDirectory() as d:
             a = make_agent(d, "fake", "#!/bin/bash\necho VERSION=v1.2.3\necho UNITS=x.service,y.socket\n")
