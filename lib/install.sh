@@ -9,8 +9,11 @@ agent_env() {
   export BESZEL_HUB_URL="${BESZEL_HUB_URL:-http://$sink:8090}"
   export PULSE_URL="${PULSE_URL:-http://$sink:7655}"
   export SINK_IP="$sink"
+  # Only upper-case names listed by the agent; never the operator's own credentials.
   while read -r key; do
     [[ -n "$key" ]] || continue
+    [[ "$key" =~ ^[A-Z][A-Z0-9_]*$ ]] || die "agent $agent asks for an odd env key: $key"
+    case "$key" in ONIDEL_*|SSH_*|BOX_*) die "agent $agent must not receive $key";; esac
     printf '%s=%q\n' "$key" "${!key:-}"
   done < <(jq -r '.env[]?' "$meta")
 }

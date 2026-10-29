@@ -3,6 +3,7 @@
 # Never fails the caller: a failed install is a row with status "failed" (the cycle goes on).
 # Usage: install-runner.sh <agent>     (env: BENCH_STATE=/var/lib/bench, BENCH_AGENTS=/opt/bench/agents)
 set -uo pipefail
+umask 077   # the log and install.json may hold vendor output; root-only on the box
 agent=$1
 state=${BENCH_STATE:-/var/lib/bench}
 dir=${BENCH_AGENTS:-/opt/bench/agents}/$agent
@@ -35,9 +36,20 @@ if [[ -n "$pkg" ]] && command -v dpkg-query > /dev/null; then
 fi
 [[ $rc -eq 0 ]] && status=ok || status=failed
 
+# Redact every secret value the agent's env file carries (vendor installers echo keys) before the
+# tail is recorded: install.json ends up in the published raw data. Short values (< 8 chars) stay.
+redacted=$(tail -n 50 "$log")
+if [[ -f "$dir/env" ]]; then
+  while IFS='=' read -r _k v; do
+    v=${v#\'}; v=${v%\'}; v=${v//\\/}
+    [[ ${#v} -ge 8 ]] || continue
+    redacted=${redacted//"$v"/***}
+  done < "$dir/env"
+fi
+
 jq -n --arg agent "$agent" --arg started "$started" --arg finished "$finished" --arg seconds "$seconds" \
   --arg status "$status" --argjson rc "$rc" --arg version "$version" --argjson units "$units" \
-  --argjson ports "$ports" --argjson disk "$disk" --rawfile logtail <(tail -n 50 "$log") \
+  --argjson ports "$ports" --argjson disk "$disk" --arg logtail "$redacted" \
   '{agent: $agent, started: ($started|tonumber), finished: ($finished|tonumber), seconds: ($seconds|tonumber),
     status: $status, exit_code: $rc, version: $version, units: $units, listening_ports: $ports,
     disk_bytes: $disk, tail: ($logtail | split("\n") | map(select(length > 0)))}' > "$state/install.json"

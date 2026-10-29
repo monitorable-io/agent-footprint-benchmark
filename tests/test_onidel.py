@@ -50,5 +50,32 @@ class QuoteTest(unittest.TestCase):
         self.assertIn("192.0.2.10", r.stdout)
 
 
+class AgentEnvTest(unittest.TestCase):
+    def test_agent_env_forwards_only_listed_upper_case_keys(self):
+        script = (
+            'BENCH_ROOT="%s"; . "$BENCH_ROOT/lib/common.sh"; . "$BENCH_ROOT/lib/install.sh"; '
+            'DD_API_KEY=k1 DD_SITE=s1 ONIDEL_TOKEN=t SSH_KEY_PATH=p BOX_SINK_IP=192.0.2.9 agent_env datadog' % ROOT
+        )
+        r = subprocess.run(["bash", "-c", script], capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("DD_API_KEY=k1", r.stdout)
+        self.assertIn("DD_SITE=s1", r.stdout)
+        self.assertNotIn("ONIDEL", r.stdout)
+        self.assertNotIn("SSH_KEY", r.stdout)
+
+    def test_agent_env_refuses_forbidden_or_odd_keys(self):
+        with tempfile.TemporaryDirectory() as d:
+            a = Path(d) / "agents" / "evil"
+            a.mkdir(parents=True)
+            (a / "meta.json").write_text('{"env": ["ONIDEL_TOKEN", "DD_API_KEY"]}')
+            script = (
+                'BENCH_ROOT="%s"; . "$BENCH_ROOT/lib/common.sh"; . "$BENCH_ROOT/lib/install.sh"; '
+                'BENCH_ROOT="%s"; ONIDEL_TOKEN=t DD_API_KEY=k agent_env evil' % (ROOT, d)
+            )
+            r = subprocess.run(["bash", "-c", script], capture_output=True, text=True)
+            self.assertNotEqual(r.returncode, 0)
+            self.assertIn("ONIDEL_TOKEN", r.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -38,6 +38,20 @@ class RunnerTest(unittest.TestCase):
             self.assertTrue(any("Unable to locate package" in line for line in rec["tail"]), rec["tail"])
             self.assertGreaterEqual(rec["seconds"], 0)
 
+    def test_secret_values_are_redacted_from_the_recorded_tail(self):
+        with tempfile.TemporaryDirectory() as d:
+            a = make_agent(d, "fake", "#!/bin/bash\ncd \"$(dirname \"$0\")\"\n. ./env\necho \"installing with key $DD_API_KEY and site $DD_SITE\"\necho VERSION=1\necho UNITS=x\n")
+            (a / "env").write_text("DD_API_KEY=abcdef0123456789secret\nDD_SITE=datadoghq.eu\n")
+            r = self.run_runner(d, "fake")
+            self.assertEqual(r.returncode, 0, r.stderr)
+            rec = json.loads((Path(d) / "state" / "install.json").read_text())
+            joined = "\n".join(rec["tail"])
+            self.assertNotIn("abcdef0123456789secret", joined)
+            self.assertIn("***", joined)
+            self.assertIn("datadoghq.eu", joined)  # short, non-secret-looking values stay readable
+            mode = stat.S_IMODE(os.stat(Path(d) / "state" / "install.json").st_mode)
+            self.assertEqual(mode, 0o600)
+
     def test_ok_install_records_version_units_and_disk(self):
         with tempfile.TemporaryDirectory() as d:
             a = make_agent(d, "fake", "#!/bin/bash\necho VERSION=v1.2.3\necho UNITS=x.service,y.socket\n")
