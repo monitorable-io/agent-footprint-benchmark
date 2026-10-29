@@ -5,7 +5,7 @@
 agent_env() {
   local agent=$1 meta="$BENCH_ROOT/agents/$1/meta.json" key sink
   sink=${BOX_SINK_IP:-}
-  [[ "$sink" == lxd:* ]] && sink=$(lxc list "${sink#lxd:}" -c 4 --format csv | awk '{print $1}')
+  [[ "$sink" == lxd:* ]] && sink=$(box_addr sink)
   export BESZEL_HUB_URL="${BESZEL_HUB_URL:-http://$sink:8090}"
   export PULSE_URL="${PULSE_URL:-http://$sink:7655}"
   export SINK_IP="$sink"

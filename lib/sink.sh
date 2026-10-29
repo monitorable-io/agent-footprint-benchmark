@@ -5,7 +5,7 @@
 box_addr() {
   local ip
   ip=$(box_ip "$1")
-  if [[ "$ip" == lxd:* ]]; then lxc list "${ip#lxd:}" -c 4 --format csv | awk '{print $1}'; else printf '%s' "$ip"; fi
+  if [[ "$ip" == lxd:* ]]; then lxc list "${ip#lxd:}" -c 4 --format csv | tr -d '"' | awk 'NF {print $1; exit}'; else printf '%s' "$ip"; fi
 }
 
 cmd_sink() {
@@ -18,7 +18,7 @@ cmd_sink() {
       log "sink: provisioning (hub ports open to the agent boxes only; UIs over an SSH tunnel)"
       cmd_provision sink
       ssh_box sink "mkdir -p /opt/bench/sink"
-      scp_box sink "$BENCH_ROOT/sink/." /opt/bench/sink/
+      scp_box sink "$BENCH_ROOT/sink" /opt/bench/
       ssh_box sink "bash /opt/bench/sink/up.sh '$node_ip' '$glances_ip'"
       sink_allow_boxes
       log "UIs: ssh -L 8090:127.0.0.1:8090 -L 7655:127.0.0.1:7655 root@$(box_addr sink)  then http://localhost:8090 and :7655";;
