@@ -1,4 +1,5 @@
 # The sink box: the hubs the self-hosted agents report to or get polled by. Versions pinned 2026-10-29.
+# Published ports are gated in DOCKER-USER by sink/firewall.sh (ufw does not see Docker-published ports).
 services:
   beszel-hub:
     image: henrygd/beszel:0.21.1

@@ -28,23 +28,21 @@ cmd_sink() {
   esac
 }
 
-# sink_allow_box BOX: let one agent box reach the sink's hub ports (Beszel 8090, InfluxDB 8086, Pulse 7655).
-sink_allow_box() {
-  local addr
-  addr=$(box_addr "$1" 2>/dev/null) || return 0
-  [[ -n "$addr" ]] || return 0
-  ssh_box sink "ufw allow from $addr to any port 8090,8086,7655 proto tcp > /dev/null"
+# sink_allow_boxes: rewrite the sink's DOCKER-USER allow-list with every box that has an address
+# (plain `ufw allow` does nothing for Docker-published ports).
+sink_allow_boxes() {
+  local n addrs=() key a
+  for n in $(seq 0 $((AGENT_COUNT - 1))); do
+    key="BOX_BOX_${n}_IP"
+    [[ -n "${!key:-}" ]] || continue
+    a=$(box_addr "box-$n" 2>/dev/null) || continue
+    [[ -n "$a" ]] && addrs+=("$a")
+  done
+  ssh_box sink "bash /opt/bench/sink/firewall.sh ${addrs[*]}"
 }
 
-# sink_allow_boxes: every box that currently has an address.
-sink_allow_boxes() {
-  local n
-  for n in $(seq 0 $((AGENT_COUNT - 1))); do
-    local key="BOX_BOX_${n}_IP"
-    [[ -n "${!key:-}" ]] && sink_allow_box "box-$n"
-  done
-  return 0
-}
+# sink_allow_box BOX: after a box is (re)created, refresh the whole allow-list.
+sink_allow_box() { sink_allow_boxes; }
 
 # sink_box_of AGENT: the box that currently runs AGENT (from the rotation, cycle in bench.env CYCLE, default 0).
 sink_box_of() {
