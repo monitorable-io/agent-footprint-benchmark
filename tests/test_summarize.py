@@ -32,7 +32,7 @@ def rows_for(agent, t0, pss_mb, cpu_pct, reset_at=None, wbytes_per_s=1000, out_p
         pss = int((pss_mb + (50 if i < 3600 else 0)) * MB)  # the first hour carries a warm-up bump
         lines.append(",".join(map(str, [ts, f"system.slice/{agent}.service", ino, cpu, pss, pss + 5 * MB, pss, 0, pss, pss + MB,
                                         0, i * wbytes_per_s, 3, 9, i * out_per_s, i * in_per_s, 0.1, 1_500_000, 0])))
-        lines.append(",".join(map(str, [ts, "box", "", "", "", "", "", "", "", "", "", "", "", "", "", "", 0.1, 1_500_000, 0])))
+        lines.append(",".join(map(str, [ts, "box", "", "", "", "", "", "", "", "", "", "", "", "", "", "", (2.0 if in_load else 0.1), 1_500_000, 0])))
     return "\n".join(lines) + "\n"
 
 
@@ -140,6 +140,47 @@ class SummarizeTest(unittest.TestCase):
         m = sm.cycle_metrics(rows, meta)
         self.assertEqual(m["pss_idle_median_mb"], 0.0)
         self.assertTrue(any("idle window" in f for f in meta["footnotes"]), meta["footnotes"])
+
+    def test_failed_cycles_keep_footnotes_and_rows_never_vanish(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d) / "2026"
+            agents = {"alpha": AGENTS["alpha"], "monitorable": AGENTS["monitorable"], "control": AGENTS["control"]}
+            for k in range(3):
+                write_cycle(root, k, agents)
+            # cycle 1: alpha's install failed; cycles 2 and 3: alpha failed too (vendor does not support the OS)
+            for k in range(3):
+                mp = root / f"cycle-{k + 1}" / "alpha.meta.json"
+                m = json.loads(mp.read_text())
+                m["install"]["status"] = "failed"
+                mp.write_text(json.dumps(m))
+            res = sm.summarize(root, harness_commit="x")
+            alpha = next(r for r in res["rows"] if r["key"] == "alpha")
+            self.assertIsNone(alpha["values"]["pss_idle_median_mb"]["median"])
+            self.assertEqual(alpha["values"]["pss_idle_median_mb"]["cycles"], [])
+            self.assertEqual(sum("install failed" in f for f in alpha["footnotes"]), 3)
+            self.assertEqual([r["key"] for r in res["rows"]], ["monitorable", "alpha"])  # nulls last
+
+    def test_footprint_at_collect_time_wins_over_install_time(self):
+        meta = {"name": "x", "kind": "push", "footnotes": [], "install": {"seconds": 1, "disk_bytes": 10 * MB},
+                "footprint": {"disk_bytes": 95 * MB, "journal_bytes": 8_640_000},
+                "schedule": {"installFinished": T0, "loadStart": T0 + IDLE, "stop": T0 + IDLE + LOAD}}
+        rows = [{"ts": T0 + i, "cgroup": "system.slice/x.service", **{k: 0 for k in sm.COUNTERS + sm.GAUGES}} for i in range(0, IDLE + LOAD, 10)]
+        m = sm.cycle_metrics(rows, meta)
+        self.assertAlmostEqual(m["disk_footprint_mb"], 95.0)
+        # 8.64 MB of journal over a 1 h idle window (IDLE - warm-up) scales to 207.36 MB per 24 h
+        self.assertAlmostEqual(m["journal_mb_24h"], 8.64 * 24, places=1)
+
+    def test_load_window_that_did_not_run_is_footnoted(self):
+        meta = {"name": "x", "kind": "push", "footnotes": [], "install": {"seconds": 1, "disk_bytes": 0},
+                "schedule": {"installFinished": T0, "loadStart": T0 + IDLE, "stop": T0 + IDLE + LOAD}}
+        rows = [{"ts": T0 + i, "cgroup": "system.slice/x.service", **{k: 0 for k in sm.COUNTERS + sm.GAUGES}} for i in range(0, IDLE + LOAD, 10)]
+        box = [{"ts": T0 + i, "box_load1": 0.1} for i in range(0, IDLE + LOAD, 10)]
+        sm.cycle_metrics(rows, meta, box_rows=box)
+        self.assertTrue(any("load window" in f for f in meta["footnotes"]), meta["footnotes"])
+        meta2 = dict(meta, footnotes=[])
+        box2 = [{"ts": T0 + i, "box_load1": (2.5 if i >= IDLE else 0.1)} for i in range(0, IDLE + LOAD, 10)]
+        sm.cycle_metrics(rows, meta2, box_rows=box2)
+        self.assertFalse(any("load window" in f for f in meta2["footnotes"]))
 
     def test_disk_written_scaled_to_24h(self):
         # 1000 B/s written -> 86.4 MB per 24 h

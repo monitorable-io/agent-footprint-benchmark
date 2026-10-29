@@ -54,6 +54,41 @@ class SafetyTest(unittest.TestCase):
         self.assertEqual(len(rows), 2)
 
 
+class NetPortsTest(unittest.TestCase):
+    def test_net_ports_mode_arms_port_rules_once_and_reads_counters_once_per_tick(self):
+        import types
+
+        fake = types.ModuleType("netcounters")
+        calls = []
+        fake.ensure_table = lambda: calls.append("table")
+        fake.ensure_port_rules = lambda ports, key: calls.append(("ports", tuple(ports), key))
+        fake.ensure_rules = lambda path, key: calls.append(("cgroup", path, key))
+        fake.key_for = lambda p: "k"
+        fake.read_all = lambda: (calls.append("read"), {"out_ports": 11, "in_ports": 22})[1]
+        fake.read = lambda k, snapshot=None: ((snapshot or {}).get("out_" + k, 0), (snapshot or {}).get("in_" + k, 0))
+        with tempfile.TemporaryDirectory() as d:
+            out, ev = Path(d) / "s.csv", Path(d) / "e.csv"
+            saved = sys.modules.get("netcounters")
+            sys.modules["netcounters"] = fake
+            try:
+                bc.main(["--root", str(CG), "--proc", str(PROC), "--globs", "system.slice/*.service",
+                         "--out", str(out), "--events", str(ev), "--netcounters", "--net-ports", "9100", "--once"])
+            finally:
+                if saved is not None:
+                    sys.modules["netcounters"] = saved
+                else:
+                    sys.modules.pop("netcounters", None)
+            rows = out.read_text().splitlines()
+        self.assertIn(("ports", (9100,), "ports"), calls)
+        self.assertFalse(any(c[0] == "cgroup" for c in calls if isinstance(c, tuple)))
+        self.assertEqual(calls.count("read"), 1)  # two cgroups matched, one nft read
+        unit_rows = [r for r in rows[1:] if ",box," not in r]
+        self.assertEqual(len(unit_rows), 2)
+        # port counters are attributed to the first cgroup only, so a multi-cgroup row is not double counted
+        self.assertEqual(unit_rows[0].split(",")[14:16], ["11", "22"])
+        self.assertEqual(unit_rows[1].split(",")[14:16], ["0", "0"])
+
+
 class NetFailureTest(unittest.TestCase):
     def test_collector_survives_nft_failure(self):
         import subprocess
@@ -62,7 +97,8 @@ class NetFailureTest(unittest.TestCase):
         fake = types.ModuleType("netcounters")
         fake.ensure_table = lambda: None
         fake.key_for = lambda p: "k"
-        fake.read = lambda k: (0, 0)
+        fake.read = lambda k, snapshot=None: (0, 0)
+        fake.read_all = lambda: {}
 
         def boom(path, key):
             raise subprocess.CalledProcessError(1, ["nft"], stderr="Error: syntax error")
@@ -94,7 +130,7 @@ class ReadTest(unittest.TestCase):
         self.assertEqual(s["file"], 20971520)
         self.assertEqual(s["io_rbytes"], 1024)
         self.assertEqual(s["io_wbytes"], 2048)
-        self.assertEqual(s["pids"], 7)
+        self.assertEqual(s["pids"], 2)  # processes = cgroup.procs; pids.current counts threads too
         self.assertEqual(s["procs"], [4242, 4243])
 
     def test_read_pss_rss_sums_over_pids_and_counts_threads(self):

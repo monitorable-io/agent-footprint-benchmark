@@ -29,6 +29,7 @@ METRICS = [
     ("cpu_idle_pct", "CPU, idle (one vCPU)", "%", True),
     ("cpu_loaded_pct", "CPU, under load (one vCPU)", "%", True),
     ("disk_written_mb_24h", "Disk written per 24 h", "MB", True),
+    ("journal_mb_24h", "Log volume handed to journald per 24 h", "MB", True),
     ("net_out_mb_24h", "Network out per 24 h", "MB", True),
     ("net_in_mb_24h", "Network in per 24 h", "MB", True),
     ("net_headline_mb_24h", "Network per 24 h (out for push agents, in+out for polled)", "MB", True),
@@ -55,18 +56,22 @@ def windows(schedule):
 
 
 def load_rows(path):
-    """Unit rows of a samples CSV (plain or .gz) as dicts with ints; box rows are dropped."""
+    """(unit rows, box rows) of a samples CSV (plain or .gz); unit rows carry ints, box rows the load."""
     opener = gzip.open if str(path).endswith(".gz") else open
-    rows = []
+    rows, box = [], []
     with opener(path, "rt", newline="") as f:
         for r in csv.DictReader(f):
             if r["cgroup"] == "box":
+                try:
+                    box.append({"ts": int(r["ts"]), "box_load1": float(r["box_load1"] or 0)})
+                except ValueError:
+                    pass
                 continue
             row = {"ts": int(r["ts"]), "cgroup": r["cgroup"]}
             for k in COUNTERS + GAUGES:
                 row[k] = int(r[k] or 0)
             rows.append(row)
-    return rows
+    return rows, box
 
 
 def counter_total(rows, column):
@@ -97,10 +102,17 @@ def _p95(values):
     return s[min(len(s) - 1, int(round(0.95 * (len(s) - 1))))]
 
 
-def cycle_metrics(rows, meta):
+LOAD_MIN_LOAD1 = 0.8
+
+
+def cycle_metrics(rows, meta, box_rows=()):
     """One cycle's metric values for one agent."""
     sched = meta["schedule"]
     idle_start, idle_end, load_start, load_end = windows(sched)
+    load_peak = max((b["box_load1"] for b in box_rows if load_start <= b["ts"] < load_end), default=None)
+    if load_peak is not None and load_peak < LOAD_MIN_LOAD1:
+        meta.setdefault("footnotes", []).append(
+            f"The load window of the cycle starting {sched['installFinished']} shows no load (peak load1 {load_peak}); its loaded figure is suspect.")
     idle = [r for r in rows if idle_start <= r["ts"] < idle_end]
     loaded = [r for r in rows if load_start <= r["ts"] < load_end]
     warm = [r for r in rows if sched["installFinished"] <= r["ts"] < idle_start]
@@ -117,6 +129,9 @@ def cycle_metrics(rows, meta):
     kind = meta.get("kind", "push")
     headline = out_b + in_b if kind == "polled" else out_b
     install = meta.get("install", {})
+    footprint = meta.get("footprint") or {}
+    disk_bytes = footprint.get("disk_bytes", install.get("disk_bytes", 0))
+    journal = footprint.get("journal_bytes")
     return {
         "pss_idle_median_mb": statistics.median(pss) / MB if pss else 0.0,
         "pss_idle_p95_mb": _p95(pss) / MB,
@@ -126,11 +141,12 @@ def cycle_metrics(rows, meta):
         "cpu_idle_pct": counter_total(idle, "cpu_usage_usec") / (idle_wall * 1e6) * 100,
         "cpu_loaded_pct": counter_total(loaded, "cpu_usage_usec") / (load_wall * 1e6) * 100,
         "disk_written_mb_24h": counter_total(idle, "io_wbytes") * per_day / MB,
+        "journal_mb_24h": (journal * DAY / max(1, idle_end - idle_start) / MB) if journal is not None else None,
         "net_out_mb_24h": out_b / MB,
         "net_in_mb_24h": in_b / MB,
         "net_headline_mb_24h": headline / MB,
         "install_seconds": float(install.get("seconds", 0)),
-        "disk_footprint_mb": install.get("disk_bytes", 0) / MB,
+        "disk_footprint_mb": disk_bytes / MB,
         "pids_median": statistics.median(v["pids"] for v in idle_ts.values()) if idle_ts else 0,
         "threads_median": statistics.median(v["threads"] for v in idle_ts.values()) if idle_ts else 0,
     }
@@ -140,7 +156,7 @@ def reduce_cycles(per_cycle):
     """{metric: {median, cycles: [...]}} from a list of per-cycle metric dicts."""
     out = {}
     for key, *_ in METRICS:
-        vals = [c[key] for c in per_cycle if key in c]
+        vals = [c[key] for c in per_cycle if c.get(key) is not None]
         out[key] = {"median": statistics.median(vals) if vals else None, "cycles": vals}
     return out
 
@@ -159,6 +175,7 @@ def summarize(root, harness_commit=None):
     cycles = sorted(p for p in root.glob("cycle-*") if p.is_dir())
     per_agent = defaultdict(list)
     metas = {}
+    footnotes = defaultdict(list)
     spans = []
     kernel = run_facts.get("kernel", "")
     for cdir in cycles:
@@ -171,12 +188,17 @@ def summarize(root, harness_commit=None):
                 csv_path = cdir / f"{name}.csv"
             if not csv_path.exists():
                 continue
-            rows = load_rows(csv_path)
+            rows, box_rows = load_rows(csv_path)
+            base_notes = list(meta.get("footnotes", []))
+            meta["footnotes"] = []
             if meta.get("install", {}).get("status", "ok") != "ok" or not rows:
-                meta.setdefault("footnotes", []).append(f"Cycle {cdir.name[-1]}: install failed or no samples; not counted.")
-                metas[name] = meta
-                continue
-            per_agent[name].append(cycle_metrics(rows, meta))
+                meta["footnotes"].append(f"Cycle {cdir.name[-1]}: install failed or no samples; not counted.")
+            else:
+                per_agent[name].append(cycle_metrics(rows, meta, box_rows))
+            for note in base_notes:
+                if note not in footnotes[name]:
+                    footnotes[name].append(note)
+            footnotes[name].extend(meta["footnotes"])
             metas[name] = meta
             kernel = kernel or meta.get("install", {}).get("kernel", "")
             starts.append(meta["schedule"]["installFinished"])
@@ -198,13 +220,13 @@ def summarize(root, harness_commit=None):
             "reportsTo": meta.get("reportsTo", ""),
             "intervalSeconds": meta.get("intervalSeconds", 0),
             "us": name == US,
-            "footnotes": meta.get("footnotes", []),
-            "values": reduce_cycles(per_agent[name]),
+            "footnotes": footnotes[name],
+            "values": reduce_cycles(per_agent.get(name, [])),
         }
 
-    rows = [row_for(n) for n in per_agent if n not in ("control", "none")]
+    rows = [row_for(n) for n in metas if n not in ("control", "none")]
     rows.sort(key=lambda r: (r["values"]["pss_idle_median_mb"]["median"] is None, r["values"]["pss_idle_median_mb"]["median"] or 0))
-    control = row_for("control") if "control" in per_agent else None
+    control = row_for("control") if "control" in metas else None
     return {
         "slug": f"agent-footprint-{year}",
         "title": f"Linux monitoring agent footprint benchmark ({year}): {len(rows)} agents, one VPS type, 24 hours",

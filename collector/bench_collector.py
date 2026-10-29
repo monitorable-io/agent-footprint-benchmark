@@ -107,7 +107,7 @@ def read_cgroup(root, path):
         "file": mem.get("file", 0),
         "io_rbytes": rbytes,
         "io_wbytes": wbytes,
-        "pids": _read_int(d / "pids.current"),
+        "pids": len(procs),  # processes; pids.current would count every thread
         "procs": procs,
     }
 
@@ -184,17 +184,26 @@ def main(argv=None):
     ap.add_argument("--out", default="/var/lib/bench/samples.csv")
     ap.add_argument("--events", default="/var/lib/bench/events.csv")
     ap.add_argument("--netcounters", action="store_true", help="read nft byte counters per cgroup (collector/netcounters.py)")
+    ap.add_argument("--net-ports", default="", help="comma-separated TCP ports: count bytes by port instead of by cgroup "
+                    "(socket-activated or polled rows); attributed to the row's first cgroup")
     ap.add_argument("--once", action="store_true", help="one tick, then exit (for tests)")
     args = ap.parse_args(argv)
 
+    net_ports = [int(p) for p in args.net_ports.split(",") if p.strip()]
+    snapshot = {}
+    first_path = {"value": None}
     if args.netcounters:
         sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
         import netcounters  # noqa: WPS433
 
         netcounters.ensure_table()
+        if net_ports:
+            netcounters.ensure_port_rules(net_ports, "ports")
 
         def net(path):
-            return netcounters.read(netcounters.key_for(path))
+            if net_ports:
+                return netcounters.read("ports", snapshot=snapshot) if path == first_path["value"] else (0, 0)
+            return netcounters.read(netcounters.key_for(path), snapshot=snapshot)
     else:
         def net(path):
             return (0, 0)
@@ -219,13 +228,16 @@ def main(argv=None):
             for event, path in diff_discovery(known, cur):
                 ev.writerow([ts, event, path, cur.get(path, "")])
             known = cur
+            first_path["value"] = next(iter(known), None)
+            if args.netcounters:
+                snapshot = netcounters.read_all()
             structured, rows = sample_structured(args.root, args.proc, known, ts, net)
             cpu_now = {path: s["cpu_usage_usec"] for path, s in structured.items()}
             for path in counter_resets(last_cpu, cpu_now):
                 ev.writerow([ts, "restart", path, "cpu counter reset"])
                 fresh.append(path)
             last_cpu = cpu_now
-            if args.netcounters:
+            if args.netcounters and not net_ports:
                 for path in dict.fromkeys(fresh):
                     try:
                         netcounters.ensure_rules(path, netcounters.key_for(path))

@@ -48,8 +48,26 @@ class RuleTest(unittest.TestCase):
         # counters are created idempotently and the rules name the cgroup path and the counter
         self.assertIn("add counter inet bench out_system_slice_netdata_service", flat)
         self.assertIn("add counter inet bench in_system_slice_netdata_service", flat)
-        self.assertIn('add rule inet bench out socket cgroupv2 level 2 "system.slice/netdata.service" counter name "out_system_slice_netdata_service"', flat)
-        self.assertIn('add rule inet bench in socket cgroupv2 level 2 "system.slice/netdata.service" counter name "in_system_slice_netdata_service"', flat)
+        self.assertIn('add rule inet bench out oifname != "lo" socket cgroupv2 level 2 "system.slice/netdata.service" counter name "out_system_slice_netdata_service"', flat)
+        self.assertIn('add rule inet bench in iifname != "lo" socket cgroupv2 level 2 "system.slice/netdata.service" counter name "in_system_slice_netdata_service"', flat)
+
+    def test_port_rules_for_socket_activated_or_polled_rows(self):
+        # node_exporter's listener belongs to its .socket unit's cgroup, so accepted connections never
+        # match the service's cgroup: rows with ports are counted by port instead.
+        fake = FakeNft({("-j", "list", "chain"): (FIX / "list_chain_out.json").read_text()})
+        nc.ensure_port_rules([9100, 9101], "ports", run=fake)
+        flat = [" ".join(c) for c in fake.calls]
+        self.assertIn('add rule inet bench out oifname != "lo" tcp sport { 9100, 9101 } counter name "out_ports"', flat)
+        self.assertIn('add rule inet bench in iifname != "lo" tcp dport { 9100, 9101 } counter name "in_ports"', flat)
+        with self.assertRaises(ValueError):
+            nc.ensure_port_rules([0, 70000], "ports", run=fake)
+
+    def test_read_all_returns_every_bench_counter_once(self):
+        fake = FakeNft({("-j", "list", "counters"): (FIX / "list_counters.json").read_text()})
+        allc = nc.read_all(run=fake)
+        self.assertEqual(allc["out_system_slice_netdata_service"], 65536)
+        self.assertEqual(allc["in_system_slice_netdata_service"], 4096)
+        self.assertEqual(len(fake.calls), 1)
 
     def test_rejects_unsafe_paths(self):
         fake = FakeNft({})
