@@ -67,6 +67,15 @@ class RunnerTest(unittest.TestCase):
             self.assertNotIn("short1", joined)  # *_KEY/*_TOKEN values are masked whatever their length
             self.assertIn("key=*** token=***", joined)
 
+    def test_redaction_is_longest_value_first(self):
+        # A secret that contains another secret as a substring must not leave fragments behind.
+        with tempfile.TemporaryDirectory() as d:
+            a = make_agent(d, "fake", "#!/bin/bash\ncd \"$(dirname \"$0\")\"\n. ./env\necho \"long=$DD_API_KEY short=$DD_SITE\"\necho VERSION=1\necho UNITS=x\n")
+            (a / "env").write_text("DD_API_KEY=prefix-abcdefgh-suffix\nDD_SITE=abcdefgh\n")
+            self.run_runner(d, "fake")
+            joined = "\n".join(json.loads((Path(d) / "state" / "install.json").read_text())["tail"])
+            self.assertIn("long=*** short=***", joined)
+
     def test_ok_install_records_version_units_and_disk(self):
         with tempfile.TemporaryDirectory() as d:
             a = make_agent(d, "fake", "#!/bin/bash\necho VERSION=v1.2.3\necho UNITS=x.service,y.socket\n")

@@ -42,15 +42,18 @@ fi
 # secret are masked whatever their length; other values when 8+ chars.
 redacted=$(tail -n 50 "$log")
 if [[ -f "$dir/env" ]]; then
+  values=()
   while read -r k; do
     [[ "$k" =~ ^[A-Z][A-Z0-9_]*$ ]] || continue
     # shellcheck disable=SC1091
     v=$(. "$dir/env" 2>/dev/null; printf '%s' "${!k:-}")
     [[ -n "$v" ]] || continue
-    if [[ "$k" =~ (KEY|TOKEN|SECRET|PASS) || ${#v} -ge 8 ]]; then
-      redacted=${redacted//"$v"/***}
-    fi
+    if [[ "$k" =~ (KEY|TOKEN|SECRET|PASS) || ${#v} -ge 8 ]]; then values+=("$v"); fi
   done < <(cut -d= -f1 "$dir/env")
+  # Longest value first, so a secret containing another secret leaves no fragment behind.
+  while IFS= read -r v; do
+    [[ -n "$v" ]] && redacted=${redacted//"$v"/***}
+  done < <(printf '%s\n' "${values[@]}" | awk '{ print length, $0 }' | sort -rn | cut -d' ' -f2-)
 fi
 
 jq -n --arg agent "$agent" --arg started "$started" --arg finished "$finished" --arg seconds "$seconds" \

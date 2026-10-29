@@ -1,0 +1,7 @@
+# Prometheus on the sink scrapes node_exporter on its box at Prometheus' default interval (1 m).
+global:
+  scrape_interval: 1m
+scrape_configs:
+  - job_name: node
+    static_configs:
+      - targets: ["@NODE_EXPORTER_IP@:9100"]

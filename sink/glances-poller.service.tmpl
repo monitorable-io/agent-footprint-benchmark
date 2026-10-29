@@ -1,0 +1,11 @@
+[Unit]
+Description=Glances REST poller (benchmark sink)
+After=network-online.target
+
+[Service]
+ExecStart=/usr/bin/env bash /opt/bench/sink/glances-poller.sh @GLANCES_IP@ 3
+Restart=always
+StandardOutput=append:/var/log/glances-poller.log
+
+[Install]
+WantedBy=multi-user.target

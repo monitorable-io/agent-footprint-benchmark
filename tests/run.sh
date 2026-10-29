@@ -9,6 +9,7 @@ if ((${#files[@]})); then
   shellcheck -x "${files[@]}"
   echo "shellcheck: ${#files[@]} files clean"
 fi
+docker compose -f sink/compose.yaml config -q && echo "sink/compose.yaml: valid"
 if compgen -G "tests/test_*.py" > /dev/null; then
   python3 -I -m unittest discover -s tests -v
 else
