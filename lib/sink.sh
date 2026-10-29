@@ -46,9 +46,25 @@ sink_allow_boxes() {
 # sink_allow_box BOX: after a box is (re)created, refresh the whole allow-list.
 sink_allow_box() { sink_allow_boxes; }
 
-# sink_box_of AGENT: the box that currently runs AGENT (from the rotation, cycle in bench.env CYCLE, default 0).
+# sink_box_of AGENT [K]: the box that runs AGENT in cycle K (default: CYCLE or 0).
 sink_box_of() {
   local idx
   idx=$(agent_index "$1")
-  box_for "$idx" "${CYCLE:-0}"
+  box_for "$idx" "${2:-${CYCLE:-0}}"
+}
+
+# sink_retarget K: re-template Prometheus' target and the Glances poller for cycle K's boxes.
+sink_retarget() {
+  local k=$1 node_ip="" glances_ip=""
+  node_ip=$(box_addr "$(sink_box_of node-exporter "$k")" 2>/dev/null || true)
+  glances_ip=$(box_addr "$(sink_box_of glances "$k")" 2>/dev/null || true)
+  ssh_box sink "bash /opt/bench/sink/up.sh '$node_ip' '$glances_ip'" | grep -E "prometheus:|SINK_UP" || true
+  sink_allow_boxes
+}
+
+# sink_status: the Prometheus target health and the poller's last line, so an unpolled row is visible.
+sink_status() {
+  ssh_box sink "printf 'sink: prometheus targets %s; poller %s\n' \
+    \"\$(curl -s http://127.0.0.1:9090/api/v1/targets | python3 -c 'import json,sys; print([(t[\"scrapeUrl\"], t[\"health\"]) for t in json.load(sys.stdin)[\"data\"][\"activeTargets\"]])' 2>/dev/null)\" \
+    \"\$(tail -1 /var/log/glances-poller.log 2>/dev/null)\"" 2>/dev/null || echo "sink: unreachable"
 }

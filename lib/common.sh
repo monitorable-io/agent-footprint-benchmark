@@ -36,7 +36,7 @@ box_ip() {
 }
 
 ssh_opts() {
-  printf '%s' "-o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 -i ${SSH_KEY_PATH:-$HOME/.ssh/id_ed25519}"
+  printf '%s' "-n -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 -i ${SSH_KEY_PATH:-$HOME/.ssh/id_ed25519}"
 }
 
 # ssh_box NAME CMD...: run a command on the box as root. A BOX_<NAME>_IP of the form
@@ -62,7 +62,7 @@ scp_box() {
     if [[ -d "$src" ]]; then lxc file push -r -q "$src" "${ip#lxd:}$dst"; else lxc file push -q "$src" "${ip#lxd:}$dst"; fi
   else
     # shellcheck disable=SC2046
-    scp -q -r $(ssh_opts) "$src" "root@$ip:$dst"
+    scp -q -r $(ssh_opts | sed 's/^-n //') "$src" "root@$ip:$dst"
   fi
 }
 
@@ -75,6 +75,6 @@ fetch_box() {
     lxc file pull -q "${ip#lxd:}$src" "$dst"
   else
     # shellcheck disable=SC2046
-    scp -q $(ssh_opts) "root@$ip:$src" "$dst"
+    scp -q $(ssh_opts | sed 's/^-n //') "root@$ip:$src" "$dst"
   fi
 }

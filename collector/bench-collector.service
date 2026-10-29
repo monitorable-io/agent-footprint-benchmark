@@ -5,7 +5,7 @@ After=network.target nftables.service
 [Service]
 Type=simple
 EnvironmentFile=-/etc/bench-collector.env
-ExecStart=/usr/bin/python3 /opt/bench/collector/bench_collector.py --interval 10 --out /var/lib/bench/samples.csv --events /var/lib/bench/events.csv --netcounters $GLOBS
+ExecStart=/usr/bin/python3 /opt/bench/collector/bench_collector.py --interval 10 --out /var/lib/bench/samples.csv --events /var/lib/bench/events.csv --netcounters $GLOBS $NET_PORTS
 Restart=always
 RestartSec=5
 Nice=10

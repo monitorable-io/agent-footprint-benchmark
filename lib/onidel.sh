@@ -159,6 +159,8 @@ vm_destroy() {
   id=$(vm_id_of "$name")
   [[ -n "$id" ]] || { log "$name: no such VM, nothing to destroy"; return 0; }
   onidel_delete "/vm/$id" > /dev/null
+  local old_ip; old_ip=$(box_ip "$name" 2>/dev/null || true)
+  [[ -n "$old_ip" ]] && ssh-keygen -R "$old_ip" > /dev/null 2>&1   # a recycled IP comes back with a new host key
   write_env_var "$(env_key_for "$name")_IP" ""
   write_env_var "$(env_key_for "$name")_ID" ""
   log "destroyed $name ($id)"

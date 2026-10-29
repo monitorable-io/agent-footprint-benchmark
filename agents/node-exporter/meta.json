@@ -15,6 +15,8 @@
   ],
   "user": "node_exporter",
   "env": [],
-  "footnotes": [],
+  "footnotes": [
+    "Network bytes are counted by TCP port (the listening socket is not in the service's cgroup under socket activation, and polled traffic is what this row sends)."
+  ],
   "sourceUrl": "https://prometheus.io/docs/guides/node-exporter/"
 }

@@ -18,7 +18,8 @@
   "env": [],
   "footnotes": [
     "Glances ships no systemd unit; the harness adds a two-line one that runs `glances -w`.",
-    "Runs as root (pipx install as root, the documented route); port 61208 is reachable from the sink only."
+    "Runs as root (pipx install as root, the documented route); port 61208 is reachable from the sink only.",
+    "Network bytes are counted by TCP port (the listening socket is not in the service's cgroup under socket activation, and polled traffic is what this row sends)."
   ],
   "sourceUrl": "https://github.com/nicolargo/glances#installation"
 }

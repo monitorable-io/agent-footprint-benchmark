@@ -2,7 +2,8 @@
   "name": "netdata-cloud",
   "kind": "push",
   "cgroupGlobs": [
-    "system.slice/netdata.service"
+    "system.slice/netdata.service",
+    "system.slice/netdata-updater.service"
   ],
   "ports": [],
   "reportsTo": "Netdata Cloud (ACLK, outbound)",
@@ -24,7 +25,8 @@
   "package": "netdata",
   "footnotes": [
     "Same binary as the self-hosted row, claimed to Netdata Cloud. ML anomaly detection stays at its default (on).",
-    "kickstart's default channel is nightly; installed with --stable-channel so the version is a release readers can reproduce."
+    "kickstart's default channel is nightly; installed with --stable-channel so the version is a release readers can reproduce.",
+    "Anonymous telemetry and the daily updater timer stay at their defaults; the updater's unit is counted with the agent."
   ],
   "sourceUrl": "https://learn.netdata.cloud/docs/netdata-agent/installation/linux"
 }

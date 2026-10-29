@@ -10,6 +10,9 @@ if ((${#files[@]})); then
   echo "shellcheck: ${#files[@]} files clean"
 fi
 docker compose -f sink/compose.yaml config -q && echo "sink/compose.yaml: valid"
+for t in tests/test_rotation.sh tests/test_merge_meta.sh; do
+  if "$t" > /dev/null; then echo "$t: PASS"; else echo "$t: FAIL"; "$t"; exit 1; fi
+done
 if compgen -G "tests/test_*.py" > /dev/null; then
   python3 -I -m unittest discover -s tests -v
 else

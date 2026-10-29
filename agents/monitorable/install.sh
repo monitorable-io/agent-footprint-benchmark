@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Source: https://monitorable.io/docs/install/ (read 2026-10-29)
+# Source: https://monitorable.io/docs/agent/install/ (read 2026-10-29)
 # Installed exactly as that page says for a fresh Ubuntu server; the harness passes keys through ./env (0600).
 set -euo pipefail
 export DEBIAN_FRONTEND=noninteractive
