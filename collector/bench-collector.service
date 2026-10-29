@@ -1,0 +1,15 @@
+[Unit]
+Description=Benchmark collector: samples the agent's cgroups every 10 s
+After=network.target nftables.service
+
+[Service]
+Type=simple
+EnvironmentFile=-/etc/bench-collector.env
+ExecStart=/usr/bin/python3 /opt/bench/collector/bench_collector.py --interval 10 --out /var/lib/bench/samples.csv --events /var/lib/bench/events.csv --netcounters $GLOBS
+Restart=always
+RestartSec=5
+Nice=10
+KillSignal=SIGINT
+
+[Install]
+WantedBy=multi-user.target
