@@ -54,6 +54,36 @@ class SafetyTest(unittest.TestCase):
         self.assertEqual(len(rows), 2)
 
 
+class NetFailureTest(unittest.TestCase):
+    def test_collector_survives_nft_failure(self):
+        import subprocess
+        import types
+
+        fake = types.ModuleType("netcounters")
+        fake.ensure_table = lambda: None
+        fake.key_for = lambda p: "k"
+        fake.read = lambda k: (0, 0)
+
+        def boom(path, key):
+            raise subprocess.CalledProcessError(1, ["nft"], stderr="Error: syntax error")
+
+        fake.ensure_rules = boom
+        with tempfile.TemporaryDirectory() as d:
+            out, ev = Path(d) / "s.csv", Path(d) / "e.csv"
+            saved = sys.modules.get("netcounters")
+            sys.modules["netcounters"] = fake
+            try:
+                bc.main(["--root", str(CG), "--proc", str(PROC), "--globs", "system.slice/netdata.service",
+                         "--out", str(out), "--events", str(ev), "--netcounters", "--once"])
+            finally:
+                if saved is not None:
+                    sys.modules["netcounters"] = saved
+                else:
+                    sys.modules.pop("netcounters", None)
+            self.assertIn("netcounter_error", ev.read_text())
+            self.assertEqual(len(out.read_text().splitlines()), 3)  # header + unit row + box row
+
+
 class ReadTest(unittest.TestCase):
     def test_read_cgroup_parses_cpu_memory_io_pids(self):
         s = bc.read_cgroup(CG, "system.slice/netdata.service")

@@ -57,6 +57,10 @@ class RuleTest(unittest.TestCase):
             nc.ensure_rules('system.slice/x".service', "k", run=fake)
         with self.assertRaises(ValueError):
             nc.ensure_rules("system.slice/x service", "k", run=fake)
+        with self.assertRaises(ValueError):
+            nc.ensure_rules("system.slice/x\\", "k", run=fake)  # a trailing backslash would escape nft's closing quote
+        with self.assertRaises(ValueError):
+            nc.ensure_rules("/system.slice//x.service", "k", run=fake)
         self.assertEqual(fake.calls, [])
 
     def test_level_is_path_depth(self):

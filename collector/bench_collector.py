@@ -16,7 +16,7 @@ import time
 from pathlib import Path
 
 # A cgroup path we are willing to put into a CSV and an nft rule: unit-name characters only.
-SAFE_PATH = re.compile(r"^[A-Za-z0-9_.@:\\/-]+$")
+SAFE_PATH = re.compile(r"[A-Za-z0-9_.@:-]+(/[A-Za-z0-9_.@:-]+)*")  # used with fullmatch; no quotes, blanks, backslashes
 
 HEADER = (
     "ts,cgroup,cgroup_ino,cpu_usage_usec,memory_current,memory_peak,anon,file,pss,rss,"
@@ -33,7 +33,7 @@ def discover(root, globs):
         for p in sorted(glob.glob(str(root / pattern))):
             if os.path.isdir(p):
                 rel = os.path.relpath(p, root)
-                if SAFE_PATH.match(rel):
+                if SAFE_PATH.fullmatch(rel):
                     found[rel] = os.stat(p).st_ino
     return found
 
@@ -227,7 +227,10 @@ def main(argv=None):
             last_cpu = cpu_now
             if args.netcounters:
                 for path in dict.fromkeys(fresh):
-                    netcounters.ensure_rules(path, netcounters.key_for(path))
+                    try:
+                        netcounters.ensure_rules(path, netcounters.key_for(path))
+                    except Exception as e:  # nft refused: keep sampling, record it
+                        ev.writerow([ts, "netcounter_error", path, str(e)[:200]])
             for row in rows:
                 out.write(row + "\n")
             if args.once:

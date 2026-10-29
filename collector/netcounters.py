@@ -12,7 +12,7 @@ import subprocess
 
 TABLE = "inet bench"
 # Only unit-name characters reach an nft rule; anything else is refused (never shell-quoted around).
-SAFE_PATH = re.compile(r"^[A-Za-z0-9_.@:\\/-]+$")
+SAFE_PATH = re.compile(r"[A-Za-z0-9_.@:-]+(/[A-Za-z0-9_.@:-]+)*")  # used with fullmatch; no quotes, blanks, backslashes
 
 
 def _nft(args):
@@ -54,7 +54,7 @@ def _rule_handles(chain, counter_name, run):
 
 def ensure_rules(path, key, run=_nft):
     """Create (or replace) the out/in rules + counters for one cgroup path."""
-    if not SAFE_PATH.match(path):
+    if not SAFE_PATH.fullmatch(path):
         raise ValueError(f"refusing cgroup path with unsafe characters: {path!r}")
     level = str(level_for(path))
     for chain, prefix in (("out", "out_"), ("in", "in_")):
