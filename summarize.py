@@ -104,6 +104,9 @@ def cycle_metrics(rows, meta):
     idle = [r for r in rows if idle_start <= r["ts"] < idle_end]
     loaded = [r for r in rows if load_start <= r["ts"] < load_end]
     warm = [r for r in rows if sched["installFinished"] <= r["ts"] < idle_start]
+    if not idle:
+        meta.setdefault("footnotes", []).append(
+            f"No samples in the idle window (hours 1-24 after install) for the cycle starting {sched['installFinished']}; idle figures are 0.")
     idle_ts = _by_ts(idle)
     pss = [v["pss"] for v in idle_ts.values()]
     rss = [v["rss"] for v in idle_ts.values()]

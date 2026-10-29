@@ -133,6 +133,14 @@ class SummarizeTest(unittest.TestCase):
     def test_footnotes_carried_from_meta(self):
         self.assertEqual(self.row("alpha")["footnotes"], ["alpha note"])
 
+    def test_empty_idle_window_is_footnoted_not_silent(self):
+        meta = {"name": "x", "kind": "push", "footnotes": [], "install": {"seconds": 1, "disk_bytes": 0},
+                "schedule": {"installFinished": T0, "loadStart": T0 + 300, "stop": T0 + 600}}
+        rows = [{"ts": T0 + i, "cgroup": "system.slice/x.service", **{k: 0 for k in sm.COUNTERS + sm.GAUGES}} for i in range(0, 600, 10)]
+        m = sm.cycle_metrics(rows, meta)
+        self.assertEqual(m["pss_idle_median_mb"], 0.0)
+        self.assertTrue(any("idle window" in f for f in meta["footnotes"]), meta["footnotes"])
+
     def test_disk_written_scaled_to_24h(self):
         # 1000 B/s written -> 86.4 MB per 24 h
         self.assertAlmostEqual(self.row("alpha")["values"]["disk_written_mb_24h"]["median"], 86.4, places=1)
