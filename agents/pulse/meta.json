@@ -15,10 +15,12 @@
   "user": "root",
   "env": [
     "PULSE_TOKEN",
-    "PULSE_URL"
+    "PULSE_URL",
+    "PULSE_INSTALLER_SHA256"
   ],
   "footnotes": [
-    "Auto-update stays at its default (on)."
+    "Auto-update stays at its default (on).",
+    "The agent installer and its reports travel over plain HTTP between the agent box and the sink box (no hostname for TLS); the installer is checksum-pinned."
   ],
   "sourceUrl": "https://github.com/rcourtman/Pulse/blob/main/docs/UNIFIED_AGENT.md"
 }

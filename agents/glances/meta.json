@@ -17,7 +17,8 @@
   "user": "root",
   "env": [],
   "footnotes": [
-    "Glances ships no systemd unit; the harness adds a two-line one that runs `glances -w`."
+    "Glances ships no systemd unit; the harness adds a two-line one that runs `glances -w`.",
+    "Runs as root (pipx install as root, the documented route); port 61208 is reachable from the sink only."
   ],
   "sourceUrl": "https://github.com/nicolargo/glances#installation"
 }

@@ -42,9 +42,14 @@ cmd_install() {
   rm -f "$envfile"
   ssh_box "$box" "chmod 0600 /opt/bench/agents/$agent/env"
 
-  local port
+  # Polled ports open to the sink only: these are unauthenticated endpoints on a public box.
+  local port sink=${SINK_IP:-}
   for port in $(jq -r '.ports[]?' "$dir/meta.json"); do
-    ssh_box "$box" "ufw allow $port/tcp > /dev/null"
+    if [[ -n "$sink" ]]; then
+      ssh_box "$box" "ufw allow from $sink to any port $port proto tcp > /dev/null"
+    else
+      ssh_box "$box" "ufw allow $port/tcp > /dev/null"
+    fi
   done
 
   log "$box: installing $agent (documented command, timed)"

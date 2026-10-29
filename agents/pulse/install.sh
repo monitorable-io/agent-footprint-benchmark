@@ -11,6 +11,10 @@ install -d -m 0700 /root/.config/pulse
 printf '%s' "$PULSE_TOKEN" > /root/.config/pulse/agent-token
 chmod 0600 /root/.config/pulse/agent-token
 curl -fsSL "$PULSE_URL/install.sh" -o /root/.config/pulse/agent-install.sh
+# The installer travels over plain HTTP between two benchmark boxes: it must match the checksum
+# recorded on the dry run (PULSE_INSTALLER_SHA256 in bench.env) before it runs.
+[[ -n "${PULSE_INSTALLER_SHA256:-}" ]] || { echo "PULSE_INSTALLER_SHA256 unset: record it from the dry run first" >&2; exit 2; }
+echo "$PULSE_INSTALLER_SHA256  /root/.config/pulse/agent-install.sh" | sha256sum -c - > /dev/null
 bash /root/.config/pulse/agent-install.sh --url "$PULSE_URL" --token-file /root/.config/pulse/agent-token
 bin=$(systemctl show -p ExecStart --value pulse-agent | sed -n 's/.*path=\([^ ;]*\).*/\1/p')
 echo "VERSION=$("$bin" --version 2>/dev/null | head -1 || echo unknown)"
