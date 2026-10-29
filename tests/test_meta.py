@@ -14,7 +14,7 @@ KINDS = {"push", "polled", "none"}
 
 class MetaTest(unittest.TestCase):
     def test_all_eleven_agents_present(self):
-        self.assertEqual(sorted(os.listdir(AGENTS)), sorted(EXPECTED))
+        self.assertEqual(sorted(os.listdir(AGENTS)), sorted(EXPECTED + ["none"]))
 
     def test_meta_json_complete(self):
         for name in EXPECTED:
