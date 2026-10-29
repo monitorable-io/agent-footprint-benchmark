@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# bench: the benchmark harness CLI. See README.md.
+set -euo pipefail
+BENCH_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export BENCH_ROOT
+# shellcheck source=lib/common.sh
+. "$BENCH_ROOT/lib/common.sh"
+for f in "$BENCH_ROOT"/lib/*.sh; do
+  [[ "$f" == */common.sh ]] && continue
+  # shellcheck disable=SC1090
+  . "$f"
+done
+
+usage() {
+  cat <<'USAGE'
+usage: bench <subcommand> [args]
+
+  quote                      show the Onidel plan, template and price (billing gate)
+  vm list|create|destroy|reimage <name>
+  sink up|down|status        the hub box for the polled agents
+  provision <box> [--no-cron] [--ports a,b]
+  install <agent> <box>      documented install, timed, collector started
+  cycle start <k>|status     one 25 h cycle (k = 0, 1, 2)
+  collect <k>                fetch the cycle's CSVs into data/<year>/cycle-<k+1>/
+  summarize [<year>]         data/<year> -> results.json + results.md
+USAGE
+}
+
+main() {
+  local sub=${1:-}
+  [[ -n "$sub" ]] || { usage; exit 2; }
+  shift
+  if declare -F "cmd_$sub" > /dev/null; then
+    "cmd_$sub" "$@"
+  else
+    usage
+    exit 2
+  fi
+}
+main "$@"

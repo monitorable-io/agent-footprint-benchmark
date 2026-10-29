@@ -1,0 +1,5 @@
+bench.env
+*.tmp
+.lxd/
+.superpowers/
+__pycache__/
