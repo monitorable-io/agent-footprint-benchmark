@@ -63,6 +63,14 @@ class RuleTest(unittest.TestCase):
             nc.ensure_rules("/system.slice//x.service", "k", run=fake)
         self.assertEqual(fake.calls, [])
 
+    def test_stale_rule_found_in_real_nft_json(self):
+        # Recorded from nft 1.1.x on Ubuntu 26.04: the counter ref is a plain string and the cgroup
+        # path has been resolved to its id. The rule must still be found and replaced after a restart.
+        fake = FakeNft({("-j", "list", "chain"): (FIX / "list_chain_in_real.json").read_text()})
+        nc.ensure_rules("system.slice/docker.service", "system_slice_docker_service", run=fake)
+        flat = [" ".join(c) for c in fake.calls]
+        self.assertTrue(any(c.startswith("delete rule inet bench in handle 8") for c in flat), flat)
+
     def test_level_is_path_depth(self):
         self.assertEqual(nc.level_for("system.slice/netdata.service"), 2)
         self.assertEqual(nc.level_for("system.slice/hetrix.slice/x.service"), 3)

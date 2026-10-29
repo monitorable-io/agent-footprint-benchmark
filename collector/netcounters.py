@@ -45,7 +45,11 @@ def _rule_handles(chain, counter_name, run):
             if not rule:
                 continue
             for expr in rule.get("expr", []):
-                if expr.get("counter", {}).get("name") == counter_name:
+                # nft -j writes a named-counter reference as {"counter": "<name>"}; older/other
+                # builds as {"counter": {"name": ...}}. Accept both.
+                ref = expr.get("counter") if isinstance(expr, dict) else None
+                name = ref.get("name") if isinstance(ref, dict) else ref
+                if name == counter_name:
                     handles.append(rule["handle"])
     except (ValueError, KeyError, TypeError):
         pass
