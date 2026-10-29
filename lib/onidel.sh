@@ -17,6 +17,9 @@
 # rate is the monthly price / 672. A create with payment_cycle=hourly fails loudly if refused.
 
 ONIDEL_API="${ONIDEL_API:-https://api.cloud.onidel.com}"
+
+# auth_config: a curl config carrying the bearer header, so the token is never in argv (ps-visible).
+auth_config() { printf 'header = "Authorization: Bearer %s"\n' "$ONIDEL_TOKEN"; }
 ONIDEL_FIXTURES=""
 HOURS_PER_MONTH=672
 
@@ -39,15 +42,14 @@ onidel_get() {
     return
   fi
   require_env ONIDEL_TOKEN
-  curl -fsS -H "Authorization: Bearer $ONIDEL_TOKEN" -H 'Accept: application/json' \
-    "$ONIDEL_API$path${query:+?$query}"
+  curl -fsS -K <(auth_config) -H 'Accept: application/json' "$ONIDEL_API$path${query:+?$query}"
 }
 
 onidel_post() {
   local path=$1 body=$2
   [[ -z "$ONIDEL_FIXTURES" ]] || die "no fixture for POST $path"
   require_env ONIDEL_TOKEN
-  curl -fsS -X POST -H "Authorization: Bearer $ONIDEL_TOKEN" -H 'Content-Type: application/json' \
+  curl -fsS -X POST -K <(auth_config) -H 'Content-Type: application/json' \
     -H 'Accept: application/json' --data "$body" "$ONIDEL_API$path"
 }
 
@@ -55,7 +57,7 @@ onidel_delete() {
   local path=$1
   [[ -z "$ONIDEL_FIXTURES" ]] || die "no fixture for DELETE $path"
   require_env ONIDEL_TOKEN
-  curl -fsS -X DELETE -H "Authorization: Bearer $ONIDEL_TOKEN" -H 'Accept: application/json' "$ONIDEL_API$path"
+  curl -fsS -X DELETE -K <(auth_config) -H 'Accept: application/json' "$ONIDEL_API$path"
 }
 
 # resolve_instance_type: prints the uuid of ONIDEL_INSTANCE_TYPE (a type slug like "vhp", or a uuid) offered in ONIDEL_LOCATION.
