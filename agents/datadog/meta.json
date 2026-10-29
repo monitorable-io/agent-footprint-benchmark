@@ -1,0 +1,26 @@
+{
+  "name": "datadog",
+  "kind": "push",
+  "cgroupGlobs": [
+    "system.slice/datadog-agent*.service"
+  ],
+  "ports": [],
+  "reportsTo": "Datadog intake (HTTPS)",
+  "intervalSeconds": 15,
+  "licence": "Apache-2.0",
+  "diskPaths": [
+    "/opt/datadog-agent",
+    "/etc/datadog-agent",
+    "/var/log/datadog"
+  ],
+  "user": "dd-agent",
+  "env": [
+    "DD_API_KEY",
+    "DD_SITE"
+  ],
+  "package": "datadog-agent",
+  "footnotes": [
+    "Every datadog-agent* unit is summed (7.84+ runs a process manager)."
+  ],
+  "sourceUrl": "https://docs.datadoghq.com/agent/basic_agent_usage/ubuntu/"
+}

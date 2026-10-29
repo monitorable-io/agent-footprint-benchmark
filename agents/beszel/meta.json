@@ -1,0 +1,23 @@
+{
+  "name": "beszel",
+  "kind": "polled",
+  "cgroupGlobs": [
+    "system.slice/beszel-agent.service"
+  ],
+  "ports": [],
+  "reportsTo": "Beszel hub on the sink (WebSocket, hub-driven every 60 s)",
+  "intervalSeconds": 60,
+  "licence": "MIT",
+  "diskPaths": [
+    "/opt/beszel-agent",
+    "/var/lib/beszel-agent"
+  ],
+  "user": "beszel",
+  "env": [
+    "BESZEL_KEY",
+    "BESZEL_TOKEN",
+    "BESZEL_HUB_URL"
+  ],
+  "footnotes": [],
+  "sourceUrl": "https://beszel.dev/guide/agent-installation"
+}

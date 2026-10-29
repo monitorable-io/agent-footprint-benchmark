@@ -5,7 +5,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 VM=${1:-bench-dry}
 if ! lxc info "$VM" > /dev/null 2>&1; then
-  lxc launch images:ubuntu/26.04 "$VM" --vm -c limits.cpu=1 -c limits.memory=2GiB
+  lxc launch ubuntu:26.04 "$VM" --vm -c limits.cpu=1 -c limits.memory=2GiB
 fi
 echo "waiting for $VM ..."
 for _ in $(seq 1 60); do

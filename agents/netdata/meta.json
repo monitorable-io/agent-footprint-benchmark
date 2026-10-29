@@ -1,0 +1,26 @@
+{
+  "name": "netdata",
+  "kind": "none",
+  "cgroupGlobs": [
+    "system.slice/netdata.service"
+  ],
+  "ports": [],
+  "reportsTo": "nothing (standalone; local dashboard on :19999, not opened)",
+  "intervalSeconds": 1,
+  "licence": "GPL-3.0",
+  "diskPaths": [
+    "/etc/netdata",
+    "/usr/libexec/netdata",
+    "/usr/share/netdata",
+    "/var/cache/netdata",
+    "/var/lib/netdata",
+    "/var/log/netdata"
+  ],
+  "user": "netdata",
+  "env": [],
+  "package": "netdata",
+  "footnotes": [
+    "ML anomaly detection stays at its default (on)."
+  ],
+  "sourceUrl": "https://learn.netdata.cloud/docs/netdata-agent/installation/linux"
+}

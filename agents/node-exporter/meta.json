@@ -1,0 +1,20 @@
+{
+  "name": "node-exporter",
+  "kind": "polled",
+  "cgroupGlobs": [
+    "system.slice/node_exporter.service"
+  ],
+  "ports": [
+    9100
+  ],
+  "reportsTo": "passive: Prometheus on the sink scrapes /metrics at its default 1 m",
+  "intervalSeconds": 60,
+  "licence": "Apache-2.0",
+  "diskPaths": [
+    "/usr/sbin/node_exporter"
+  ],
+  "user": "node_exporter",
+  "env": [],
+  "footnotes": [],
+  "sourceUrl": "https://prometheus.io/docs/guides/node-exporter/"
+}

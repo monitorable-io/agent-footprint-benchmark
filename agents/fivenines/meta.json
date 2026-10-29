@@ -1,0 +1,21 @@
+{
+  "name": "fivenines",
+  "kind": "push",
+  "cgroupGlobs": [
+    "system.slice/fivenines-agent.service"
+  ],
+  "ports": [],
+  "reportsTo": "Fivenines API (HTTPS push every 60 s)",
+  "intervalSeconds": 60,
+  "licence": "WTFPL",
+  "diskPaths": [
+    "/etc/fivenines",
+    "/opt/fivenines"
+  ],
+  "user": "fivenines",
+  "env": [
+    "FIVENINES_TOKEN"
+  ],
+  "footnotes": [],
+  "sourceUrl": "https://github.com/Five-Nines-io/fivenines_agent#installation"
+}
