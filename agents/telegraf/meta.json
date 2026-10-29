@@ -5,7 +5,7 @@
     "system.slice/telegraf.service"
   ],
   "ports": [],
-  "reportsTo": "InfluxDB 1.x on the sink (the stock [[outputs.influxdb]] with the sink's URL)",
+  "reportsTo": "InfluxDB 1.x on the sink (the stock [[outputs.influxdb]] block, enabled with the sink's URL)",
   "intervalSeconds": 10,
   "licence": "MIT",
   "diskPaths": [
@@ -18,7 +18,7 @@
   ],
   "package": "telegraf",
   "footnotes": [
-    "The stock config's InfluxDB URL points at the sink; nothing else is changed."
+    "Telegraf's stock config enables no output; its [[outputs.influxdb]] block is enabled with the sink's URL (two lines). Nothing else is changed."
   ],
   "sourceUrl": "https://docs.influxdata.com/telegraf/v1/install/"
 }
