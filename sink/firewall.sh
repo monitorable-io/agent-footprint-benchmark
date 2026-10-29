@@ -1,18 +1,37 @@
 #!/usr/bin/env bash
 # Docker publishes ports past ufw (DNAT happens before INPUT), so the sink's hub ports are gated in
 # DOCKER-USER instead: new connections to them are dropped unless the source is an allowed box.
-# Usage: firewall.sh <allowed-ip> [<allowed-ip> ...]   (idempotent; rewrites the allow-list)
+# Usage: firewall.sh <allowed-ip> [<allowed-ip> ...]   (idempotent; rewrites the allow-list atomically)
+#        firewall.sh --restore                          (replay the saved list; used by the systemd unit)
 set -euo pipefail
 PORTS=8090,8086,7655
-ext=$(ip -4 route show default | awk '{print $5; exit}')
-[[ -n "$ext" ]] || { echo "no default interface" >&2; exit 1; }
+SAVED=/etc/bench-sink-allow
 
-iptables -N BENCH-SINK 2>/dev/null || true
-iptables -F BENCH-SINK
-for ip in "$@"; do
-  [[ "$ip" =~ ^[0-9.]+$ ]] || { echo "bad address $ip" >&2; exit 2; }
-  iptables -A BENCH-SINK -s "$ip" -j RETURN
+if [[ "${1:-}" == "--restore" ]]; then
+  mapfile -t addrs < <(cat "$SAVED" 2>/dev/null || true)
+else
+  addrs=("$@")
+fi
+# Validate everything before any firewall state changes.
+for ip in "${addrs[@]}"; do
+  [[ "$ip" =~ ^[0-9]{1,3}(\.[0-9]{1,3}){3}$ ]] || { echo "bad address $ip" >&2; exit 2; }
 done
-iptables -A BENCH-SINK -p tcp -m multiport --dports "$PORTS" -m conntrack --ctstate NEW -j DROP
-iptables -C DOCKER-USER -i "$ext" -j BENCH-SINK 2>/dev/null || iptables -I DOCKER-USER 1 -i "$ext" -j BENCH-SINK
-echo "BENCH-SINK: ports $PORTS open to: ${*:-nobody}"
+
+# The chain, rebuilt atomically: iptables-restore -n redefines only the chains it names.
+{
+  echo '*filter'
+  echo ':BENCH-SINK - [0:0]'
+  echo '-A BENCH-SINK -i lo -j RETURN'
+  echo '-A BENCH-SINK -i docker0 -j RETURN'
+  echo '-A BENCH-SINK -i br-+ -j RETURN'
+  for ip in "${addrs[@]}"; do echo "-A BENCH-SINK -s $ip -j RETURN"; done
+  echo "-A BENCH-SINK -p tcp -m multiport --dports $PORTS -m conntrack --ctstate NEW -j DROP"
+  echo 'COMMIT'
+} | iptables-restore -n
+iptables -C DOCKER-USER -j BENCH-SINK 2>/dev/null || iptables -I DOCKER-USER 1 -j BENCH-SINK
+
+if [[ "${1:-}" != "--restore" ]]; then
+  umask 077
+  printf '%s\n' "${addrs[@]}" > "$SAVED"
+fi
+echo "BENCH-SINK: ports $PORTS open to: ${addrs[*]:-nobody}"

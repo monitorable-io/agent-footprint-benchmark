@@ -5,6 +5,11 @@ set -euo pipefail
 node_ip=${1:-} glances_ip=${2:-}
 cd /opt/bench/sink
 sed "s/@NODE_EXPORTER_IP@/${node_ip:-127.0.0.1}/" prometheus.yml.tmpl > prometheus.yml
+# The port gate goes up before any container publishes a port, and comes back after every boot.
+cp bench-sink-firewall.service /etc/systemd/system/bench-sink-firewall.service
+systemctl daemon-reload
+systemctl enable bench-sink-firewall > /dev/null 2>&1
+bash /opt/bench/sink/firewall.sh --restore
 docker compose pull -q
 docker compose up -d --remove-orphans
 if [[ -n "$glances_ip" ]]; then

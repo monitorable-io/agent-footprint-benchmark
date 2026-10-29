@@ -1,0 +1,12 @@
+[Unit]
+Description=Benchmark sink: gate Docker-published hub ports to the agent boxes
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/env bash /opt/bench/sink/firewall.sh --restore
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
