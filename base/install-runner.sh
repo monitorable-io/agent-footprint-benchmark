@@ -56,10 +56,11 @@ if [[ -f "$dir/env" ]]; then
   done < <(printf '%s\n' "${values[@]}" | awk '{ print length, $0 }' | sort -rn | cut -d' ' -f2-)
 fi
 
-jq -n --arg agent "$agent" --arg started "$started" --arg finished "$finished" --arg seconds "$seconds" \
+kernel=$(uname -r)
+jq -n --arg agent "$agent" --arg kernel "$kernel" --arg started "$started" --arg finished "$finished" --arg seconds "$seconds" \
   --arg status "$status" --argjson rc "$rc" --arg version "$version" --argjson units "$units" \
   --argjson ports "$ports" --argjson disk "$disk" --arg logtail "$redacted" \
-  '{agent: $agent, started: ($started|tonumber), finished: ($finished|tonumber), seconds: ($seconds|tonumber),
+  '{agent: $agent, kernel: $kernel, started: ($started|tonumber), finished: ($finished|tonumber), seconds: ($seconds|tonumber),
     status: $status, exit_code: $rc, version: $version, units: $units, listening_ports: $ports,
     disk_bytes: $disk, tail: ($logtail | split("\n") | map(select(length > 0)))}' > "$state/install.json"
 echo "INSTALL_$status $agent ${seconds}s rc=$rc version=$version"

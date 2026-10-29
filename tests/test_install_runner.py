@@ -88,6 +88,7 @@ class RunnerTest(unittest.TestCase):
             self.assertEqual(rec["units"], ["x.service", "y.socket"])
             self.assertGreaterEqual(rec["disk_bytes"], 4096)
             self.assertIsInstance(rec["listening_ports"], list)
+            self.assertTrue(rec["kernel"])
 
 
 if __name__ == "__main__":
