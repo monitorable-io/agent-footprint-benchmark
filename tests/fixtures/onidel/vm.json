@@ -1,0 +1,1 @@
+[{"id":"c1d45377-b2a9-4407-ab8d-6909c34dfaac","name":"box-0","vcpu":1,"ram":2048,"disk":20,"main_ipv4":"192.0.2.10","main_ipv6":"2001:db8::10","template":"Ubuntu 26.04 x64 LTS","status":"active","billing_cycle":0}]
