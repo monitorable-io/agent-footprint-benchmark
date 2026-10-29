@@ -14,7 +14,7 @@ if [[ -n "$glances_ip" ]]; then
   systemctl restart glances-poller
 fi
 echo "SINK_UP"
-echo "beszel hub:   http://$(hostname -I | awk '{print $1}'):8090  (first visit creates the admin; Add system -> binary -> copy KEY/TOKEN into bench.env)"
-echo "pulse:        http://$(hostname -I | awk '{print $1}'):7655  (bootstrap token: docker exec pulse /app/pulse bootstrap-token; Settings -> Infrastructure -> Install on a host -> token into bench.env)"
+echo "beszel hub:   port 8090, reachable from the agent boxes and over an SSH tunnel only (first visit creates the admin: do it through the tunnel; Add system -> binary -> KEY/TOKEN into bench.env)"
+echo "pulse:        port 7655, same reach (bootstrap token: docker exec pulse /app/pulse bootstrap-token; Settings -> Infrastructure -> Install on a host -> token into bench.env)"
 echo "influxdb 1.x: :8086 (Telegraf's stock output creates its database)"
 echo "prometheus:   scraping ${node_ip:-<unset>}:9100 every 1m"

@@ -15,15 +15,35 @@ cmd_sink() {
       local node_ip="" glances_ip=""
       [[ -n "${BOX_BOX_0_IP:-}" ]] && node_ip=$(box_addr "$(sink_box_of node-exporter)" 2>/dev/null || true)
       [[ -n "${BOX_BOX_0_IP:-}" ]] && glances_ip=$(box_addr "$(sink_box_of glances)" 2>/dev/null || true)
-      log "sink: provisioning"
-      cmd_provision sink --ports 8090,8086,7655
+      log "sink: provisioning (hub ports open to the agent boxes only; UIs over an SSH tunnel)"
+      cmd_provision sink
       ssh_box sink "mkdir -p /opt/bench/sink"
       scp_box sink "$BENCH_ROOT/sink/." /opt/bench/sink/
-      ssh_box sink "bash /opt/bench/sink/up.sh '$node_ip' '$glances_ip'";;
+      ssh_box sink "bash /opt/bench/sink/up.sh '$node_ip' '$glances_ip'"
+      sink_allow_boxes
+      log "UIs: ssh -L 8090:127.0.0.1:8090 -L 7655:127.0.0.1:7655 root@$(box_addr sink)  then http://localhost:8090 and :7655";;
     down) ssh_box sink "cd /opt/bench/sink && docker compose down";;
     status) ssh_box sink "cd /opt/bench/sink && docker compose ps && systemctl is-active glances-poller || true";;
     *) die "usage: bench sink up|down|status";;
   esac
+}
+
+# sink_allow_box BOX: let one agent box reach the sink's hub ports (Beszel 8090, InfluxDB 8086, Pulse 7655).
+sink_allow_box() {
+  local addr
+  addr=$(box_addr "$1" 2>/dev/null) || return 0
+  [[ -n "$addr" ]] || return 0
+  ssh_box sink "ufw allow from $addr to any port 8090,8086,7655 proto tcp > /dev/null"
+}
+
+# sink_allow_boxes: every box that currently has an address.
+sink_allow_boxes() {
+  local n
+  for n in $(seq 0 $((AGENT_COUNT - 1))); do
+    local key="BOX_BOX_${n}_IP"
+    [[ -n "${!key:-}" ]] && sink_allow_box "box-$n"
+  done
+  return 0
 }
 
 # sink_box_of AGENT: the box that currently runs AGENT (from the rotation, cycle in bench.env CYCLE, default 0).

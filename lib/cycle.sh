@@ -30,6 +30,7 @@ cycle_one_box() {
   [[ "$(box_ip "$box")" == lxd:* ]] || vm_reimage "$box"
   # shellcheck disable=SC2086
   cmd_provision "$box" $flags ${ports:+--ports $ports}
+  [[ -n "${BOX_SINK_IP:-}" ]] && sink_allow_box "$box"
   scp_box "$box" "$BENCH_ROOT/load" /opt/bench/
   cmd_install "$agent" "$box"
   local t0
