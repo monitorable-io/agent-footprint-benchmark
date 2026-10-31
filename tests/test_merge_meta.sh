@@ -19,4 +19,5 @@ check "install merged" "$(jq -r .install.status <<<"$out")" ok
 out2=$(merge_meta "$d/meta.json" "$d/install.json" "$d/schedule-control.json" "$d/missing.json")
 check "footprint optional" "$(jq -r '.footprint // "none"' <<<"$out2")" none
 check "no world-open ports from cycle" "$(grep -c -- '--ports' lib/cycle.sh)" 0
+check "no caller of the old rotation left" "$(grep -c 'box_for\|agent_at' lib/*.sh | awk -F: '{s+=$2} END{print s}')" 0
 echo PASS

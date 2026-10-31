@@ -61,10 +61,15 @@ if [[ -f "$dir/env" ]]; then
 fi
 
 kernel=$(uname -r)
-jq -n --arg agent "$agent" --arg kernel "$kernel" --arg started "$started" --arg finished "$finished" --arg seconds "$seconds" \
+# The bed's CPU can differ per box and per slot (shared vCPU, Intel or AMD): record it with the install.
+cpu_model=$(grep -m1 '^model name' /proc/cpuinfo 2>/dev/null | cut -d: -f2- | xargs)
+[[ -n "$cpu_model" ]] || cpu_model=$(lscpu 2>/dev/null | awk -F: '/Model name/ {gsub(/^ +/, "", $2); print $2; exit}')
+[[ -n "$cpu_model" ]] || cpu_model=unknown
+vcpus=$(nproc 2>/dev/null || echo 0)
+jq -n --arg agent "$agent" --arg kernel "$kernel" --arg cpu "$cpu_model" --argjson vcpus "$vcpus" --arg started "$started" --arg finished "$finished" --arg seconds "$seconds" \
   --arg status "$status" --argjson rc "$rc" --arg version "$version" --argjson units "$units" \
   --argjson ports "$ports" --argjson disk "$disk" --arg logtail "$redacted" \
-  '{agent: $agent, kernel: $kernel, started: ($started|tonumber), finished: ($finished|tonumber), seconds: ($seconds|tonumber),
+  '{agent: $agent, kernel: $kernel, cpu_model: $cpu, vcpus: $vcpus, started: ($started|tonumber), finished: ($finished|tonumber), seconds: ($seconds|tonumber),
     status: $status, exit_code: $rc, version: $version, units: $units, listening_ports: $ports,
     disk_bytes: $disk, tail: ($logtail | split("\n") | map(select(length > 0)))}' > "$state/install.json"
 echo "INSTALL_$status $agent ${seconds}s rc=$rc version=$version"

@@ -22,8 +22,9 @@ usage: bench <subcommand> [args]
   sink up|down|status        the hub box for the polled agents
   provision <box> [--no-cron] [--ports a,b]
   install <agent> <box>      documented install, timed, collector started
-  cycle start <k>|status     one 25 h cycle (k = 0, 1, 2)
-  collect <k>                fetch the cycle's CSVs into data/<year>/cycle-<k+1>/
+  cycle plan [<s>]           the slot table: which role runs on which box, filed as which cycle
+  cycle start <s>|status     one ~26 h slot (s = 0..3): rebuild, provision, install, timers on the boxes
+  collect <s>                fetch the slot's CSVs into the cycle dirs its roles belong to
   summarize [<year>]         data/<year> -> results.json + results.md
 USAGE
 }

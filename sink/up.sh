@@ -19,9 +19,12 @@ if [[ -n "$glances_ip" ]]; then
   systemctl daemon-reload
   systemctl enable --now glances-poller
   systemctl restart glances-poller
+else
+  # No Glances box this slot: a poller aimed at a stale address would only hit a closed port.
+  systemctl disable --now glances-poller > /dev/null 2>&1 || true
 fi
 echo "SINK_UP"
 echo "beszel hub:   port 8090, reachable from the agent boxes and over an SSH tunnel only (first visit creates the admin: do it through the tunnel; Add system -> binary -> KEY/TOKEN into bench.env)"
 echo "pulse:        port 7655, same reach (bootstrap token: docker exec pulse /app/pulse bootstrap-token; Settings -> Infrastructure -> Install on a host -> token into bench.env)"
 echo "influxdb 1.x: :8086 (Telegraf's stock output creates its database)"
-echo "prometheus:   scraping ${node_ip:-<unset>}:9100 every 1m"
+echo "prometheus:   scraping ${node_ip:-<no node-exporter box this slot>}:9100 every 1m"

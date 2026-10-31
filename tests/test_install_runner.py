@@ -76,6 +76,18 @@ class RunnerTest(unittest.TestCase):
             joined = "\n".join(json.loads((Path(d) / "state" / "install.json").read_text())["tail"])
             self.assertIn("long=*** short=***", joined)
 
+    def test_records_cpu_model_and_vcpus(self):
+        # The bed's CPU may differ per box and per slot (shared vCPU, Intel or AMD): record it with every install.
+        with tempfile.TemporaryDirectory() as d:
+            make_agent(d, "fake", "#!/bin/bash\necho VERSION=1\necho UNITS=x\n")
+            r = self.run_runner(d, "fake")
+            self.assertEqual(r.returncode, 0, r.stderr)
+            rec = json.loads((Path(d) / "state" / "install.json").read_text())
+            self.assertTrue(rec["cpu_model"].strip(), rec)
+            self.assertNotEqual(rec["cpu_model"], "unknown")
+            self.assertGreaterEqual(rec["vcpus"], 1)
+            self.assertIsInstance(rec["vcpus"], int)
+
     def test_ok_install_records_version_units_and_disk(self):
         with tempfile.TemporaryDirectory() as d:
             a = make_agent(d, "fake", "#!/bin/bash\necho VERSION=v1.2.3\necho UNITS=x.service,y.socket\n")
