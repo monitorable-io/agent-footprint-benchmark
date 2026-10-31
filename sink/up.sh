@@ -13,7 +13,19 @@ bash /opt/bench/sink/firewall.sh --restore
 docker compose pull -q
 docker compose up -d --remove-orphans
 # A rewritten prometheus.yml is a bind mount: compose does not restart for it, so reload explicitly.
+# Only once Prometheus answers: a HUP in the first ~200 ms after `up -d` starts the container lands
+# before its signal handler exists, kills it (exit 129), and a `docker kill` is never auto-restarted
+# (slot 1, 2026-10-31 13:57Z). After the HUP, a container that is not running is started again.
+for _ in $(seq 1 30); do
+  curl -sf http://127.0.0.1:9090/-/ready > /dev/null 2>&1 && break
+  sleep 1
+done
 docker kill -s HUP prometheus > /dev/null 2>&1 || true
+sleep 1
+if ! docker ps --format '{{.Names}}' | grep -qx prometheus; then
+  echo "prometheus was not running after the reload: starting it again" >&2
+  docker compose up -d prometheus
+fi
 if [[ -n "$glances_ip" ]]; then
   sed "s/@GLANCES_IP@/$glances_ip/" glances-poller.service.tmpl > /etc/systemd/system/glances-poller.service
   systemctl daemon-reload
@@ -24,7 +36,7 @@ else
   systemctl disable --now glances-poller > /dev/null 2>&1 || true
 fi
 echo "SINK_UP"
-echo "beszel hub:   port 8090, reachable from the agent boxes and over an SSH tunnel only (first visit creates the admin: do it through the tunnel; Add system -> binary -> KEY/TOKEN into bench.env)"
+echo "beszel hub:   port 8090, reachable from the agent boxes and over an SSH tunnel only (first visit creates the admin: do it through the tunnel; Settings -> Tokens: universal token, KEY/TOKEN into bench.env; bench sink reset makes it permanent, the UI toggle expires after an hour)"
 echo "pulse:        port 7655, same reach (bootstrap token: docker exec pulse /app/pulse bootstrap-token; Settings -> Infrastructure -> Install on a host -> token into bench.env)"
 echo "influxdb 1.x: :8086 (Telegraf's stock output creates its database)"
 echo "prometheus:   scraping ${node_ip:-<no node-exporter box this slot>}:9100 every 1m"

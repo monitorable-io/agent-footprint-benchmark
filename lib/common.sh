@@ -35,9 +35,10 @@ box_ip() {
   printf '%s' "${!key}"
 }
 
-ssh_opts() {
-  printf '%s' "-n -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 -i ${SSH_KEY_PATH:-$HOME/.ssh/id_ed25519}"
+ssh_opts_base() {
+  printf '%s' "-o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 -i ${SSH_KEY_PATH:-$HOME/.ssh/id_ed25519}"
 }
+ssh_opts() { printf -- '-n %s' "$(ssh_opts_base)"; }   # -n: stdin closed (commands never read it)
 
 # ssh_box NAME CMD...: run a command on the box as root. A BOX_<NAME>_IP of the form
 # lxd:<instance> addresses a local LXD instance instead (dry runs), through lxc exec.
@@ -50,6 +51,20 @@ ssh_box() {
   else
     # shellcheck disable=SC2046,SC2029
     ssh $(ssh_opts) "root@$ip" "$@"
+  fi
+}
+
+# ssh_box_stdin NAME CMD...: like ssh_box, but the caller's stdin reaches the command (ssh_box passes -n,
+# which closes it). Used to hand credentials to a script on the box without putting them in argv.
+ssh_box_stdin() {
+  local name=$1; shift
+  local ip
+  ip=$(box_ip "$name")
+  if [[ "$ip" == lxd:* ]]; then
+    lxc exec "${ip#lxd:}" -- bash -c "$*"
+  else
+    # shellcheck disable=SC2046,SC2029
+    ssh $(ssh_opts_base) "root@$ip" "$@"
   fi
 }
 
