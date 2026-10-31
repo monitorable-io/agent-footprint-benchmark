@@ -1,0 +1,1 @@
+{"action": {"id": 999001, "command": "rebuild_server", "status": "running", "progress": 50, "started": "2026-10-31T12:00:00+00:00", "finished": null, "resources": [{"id": 173543213, "type": "server"}], "error": null}}

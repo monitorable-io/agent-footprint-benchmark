@@ -1,0 +1,52 @@
+{
+  "server_types": [
+    {
+      "id": 114,
+      "name": "cx23",
+      "description": "CX 23",
+      "cores": 2,
+      "memory": 4,
+      "disk": 40,
+      "cpu_type": "shared",
+      "architecture": "x86",
+      "prices": [
+        {
+          "location": "fsn1",
+          "price_hourly": {
+            "gross": "0.0088000000000000",
+            "net": "0.0088000000"
+          },
+          "price_monthly": {
+            "gross": "5.4900000000000000",
+            "net": "5.4900000000"
+          },
+          "included_traffic": 21990232555520
+        },
+        {
+          "location": "hel1",
+          "price_hourly": {
+            "gross": "0.0088000000000000",
+            "net": "0.0088000000"
+          },
+          "price_monthly": {
+            "gross": "5.4900000000000000",
+            "net": "5.4900000000"
+          },
+          "included_traffic": 21990232555520
+        },
+        {
+          "location": "nbg1",
+          "price_hourly": {
+            "gross": "0.0088000000000000",
+            "net": "0.0088000000"
+          },
+          "price_monthly": {
+            "gross": "5.4900000000000000",
+            "net": "5.4900000000"
+          },
+          "included_traffic": 21990232555520
+        }
+      ]
+    }
+  ]
+}

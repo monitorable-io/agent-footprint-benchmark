@@ -20,7 +20,7 @@ def run_bench(env_text, *args):
 
 
 ENV = (
-    "ONIDEL_TOKEN=fixture\nONIDEL_INSTANCE_TYPE=vhp\nONIDEL_LOCATION=Amsterdam\n"
+    "BENCH_PROVIDER=onidel\nONIDEL_TOKEN=fixture\nONIDEL_INSTANCE_TYPE=vhp\nONIDEL_LOCATION=Amsterdam\n"
     "ONIDEL_VCPU=1\nONIDEL_RAM=2048\nONIDEL_DISK=20\nONIDEL_TEMPLATE=\"Ubuntu 26.04\"\n"
     "ONIDEL_SSH_KEY_ID=a3f2e5d8-1234-4abc-9876-543210fedcba\n"
 )

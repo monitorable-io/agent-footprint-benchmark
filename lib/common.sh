@@ -78,3 +78,71 @@ fetch_box() {
     scp -q $(ssh_opts | sed 's/^-n //') "root@$ip:$src" "$dst"
   fi
 }
+
+# --- VM provider dispatch -------------------------------------------------------------------------
+# BENCH_PROVIDER (bench.env) names the client: lib/hcloud.sh (Hetzner Cloud) or lib/onidel.sh.
+# Every provider defines <provider>_vm_list|quote|create|destroy|reimage; the vm_* names below are
+# what the rest of bench calls (cycle start reimages through vm_reimage).
+export BENCH_FIXTURES=""   # read by lib/hcloud.sh and lib/onidel.sh
+
+# strip_fixtures ARGS...: consumes a leading or trailing `--fixtures DIR` (recorded API responses
+# instead of the network), leaves the rest in REST[].
+strip_fixtures() {
+  REST=()
+  while (($#)); do
+    if [[ "$1" == "--fixtures" ]]; then BENCH_FIXTURES=$2; shift 2; else REST+=("$1"); shift; fi
+  done
+}
+
+provider() {
+  require_env BENCH_PROVIDER
+  case "$BENCH_PROVIDER" in
+    hcloud|onidel) printf '%s' "$BENCH_PROVIDER";;
+    *) die "BENCH_PROVIDER must be hcloud or onidel (is '$BENCH_PROVIDER')";;
+  esac
+}
+# vm_dispatch VERB [ARGS]: <provider>_vm_VERB; a missing or odd BENCH_PROVIDER stops the command.
+vm_dispatch() { local p; p=$(provider) || exit 1; "${p}_vm_$1" "${@:2}"; }
+vm_list()    { vm_dispatch list; }
+vm_quote()   { vm_dispatch quote; }
+vm_create()  { vm_dispatch create "$@"; }
+vm_destroy() { vm_dispatch destroy "$@"; }
+vm_reimage() { vm_dispatch reimage "$@"; }
+
+# write_env_var KEY VALUE: set KEY in bench.env in place (keeps mode 0600).
+write_env_var() {
+  local key=$1 value=$2
+  if grep -q "^$key=" "$BENCH_ENV"; then
+    sed -i "s|^$key=.*|$key=$value|" "$BENCH_ENV"
+  else
+    printf '%s=%s\n' "$key" "$value" >> "$BENCH_ENV"
+  fi
+}
+
+env_key_for() { printf 'BOX_%s' "$(tr '[:lower:]-' '[:upper:]_' <<<"$1")"; }
+
+# box_name_of_ip IP: the box whose BOX_<NAME>_IP is IP (box-3, sink, ...), or "-".
+box_name_of_ip() {
+  local v n
+  for v in $(compgen -A variable | grep -E '^BOX_[A-Z0-9_]+_IP$'); do
+    [[ "${!v}" == "$1" ]] || continue
+    n=${v#BOX_}; n=${n%_IP}
+    tr '[:upper:]_' '[:lower:]-' <<<"$n"
+    return 0
+  done
+  printf -- '-\n'
+}
+
+cmd_quote() { strip_fixtures "$@"; load_env; vm_quote; }
+
+cmd_vm() {
+  strip_fixtures "$@"
+  load_env
+  local sub=${REST[0]:-} name=${REST[1]:-}
+  case "$sub" in
+    list) vm_list;;
+    rebuild|reimage) [[ -n "$name" ]] || die "usage: bench vm $sub <box>"; vm_reimage "$name";;
+    create|destroy) [[ -n "$name" ]] || die "usage: bench vm $sub <box>"; "vm_$sub" "$name";;
+    *) die "usage: bench vm list|rebuild|create|destroy <box>";;
+  esac
+}

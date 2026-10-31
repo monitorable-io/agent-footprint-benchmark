@@ -1,0 +1,454 @@
+{
+  "servers": [
+    {
+      "id": 173543213,
+      "name": "ubuntu-4gb-hel1-7",
+      "status": "running",
+      "created": "2026-10-30T13:40:34Z",
+      "labels": {},
+      "protection": {
+        "delete": false,
+        "rebuild": false
+      },
+      "server_type": {
+        "id": 114,
+        "name": "cx23",
+        "cores": 2,
+        "memory": 4,
+        "disk": 40,
+        "cpu_type": "shared"
+      },
+      "datacenter": {
+        "name": null
+      },
+      "location": {
+        "name": "hel1"
+      },
+      "image": {
+        "id": 387894169,
+        "name": "ubuntu-26.04",
+        "os_flavor": "ubuntu",
+        "os_version": "26.04"
+      },
+      "public_net": {
+        "ipv4": {
+          "ip": "192.0.2.10"
+        },
+        "ipv6": {
+          "ip": "2001:db8::1"
+        }
+      },
+      "private_net": [
+        {
+          "ip": "10.0.0.2"
+        }
+      ]
+    },
+    {
+      "id": 173543214,
+      "name": "ubuntu-4gb-hel1-3",
+      "status": "running",
+      "created": "2026-10-30T13:40:34Z",
+      "labels": {},
+      "protection": {
+        "delete": false,
+        "rebuild": false
+      },
+      "server_type": {
+        "id": 114,
+        "name": "cx23",
+        "cores": 2,
+        "memory": 4,
+        "disk": 40,
+        "cpu_type": "shared"
+      },
+      "datacenter": {
+        "name": null
+      },
+      "location": {
+        "name": "hel1"
+      },
+      "image": {
+        "id": 387894169,
+        "name": "ubuntu-26.04",
+        "os_flavor": "ubuntu",
+        "os_version": "26.04"
+      },
+      "public_net": {
+        "ipv4": {
+          "ip": "192.0.2.11"
+        },
+        "ipv6": {
+          "ip": "2001:db8::1"
+        }
+      },
+      "private_net": [
+        {
+          "ip": "10.0.0.3"
+        }
+      ]
+    },
+    {
+      "id": 173543215,
+      "name": "ubuntu-4gb-hel1-2",
+      "status": "running",
+      "created": "2026-10-30T13:40:34Z",
+      "labels": {},
+      "protection": {
+        "delete": false,
+        "rebuild": false
+      },
+      "server_type": {
+        "id": 114,
+        "name": "cx23",
+        "cores": 2,
+        "memory": 4,
+        "disk": 40,
+        "cpu_type": "shared"
+      },
+      "datacenter": {
+        "name": null
+      },
+      "location": {
+        "name": "hel1"
+      },
+      "image": {
+        "id": 387894169,
+        "name": "ubuntu-26.04",
+        "os_flavor": "ubuntu",
+        "os_version": "26.04"
+      },
+      "public_net": {
+        "ipv4": {
+          "ip": "192.0.2.12"
+        },
+        "ipv6": {
+          "ip": "2001:db8::1"
+        }
+      },
+      "private_net": [
+        {
+          "ip": "10.0.0.4"
+        }
+      ]
+    },
+    {
+      "id": 173543216,
+      "name": "ubuntu-4gb-hel1-9",
+      "status": "running",
+      "created": "2026-10-30T13:40:34Z",
+      "labels": {},
+      "protection": {
+        "delete": false,
+        "rebuild": false
+      },
+      "server_type": {
+        "id": 114,
+        "name": "cx23",
+        "cores": 2,
+        "memory": 4,
+        "disk": 40,
+        "cpu_type": "shared"
+      },
+      "datacenter": {
+        "name": null
+      },
+      "location": {
+        "name": "hel1"
+      },
+      "image": {
+        "id": 387894169,
+        "name": "ubuntu-26.04",
+        "os_flavor": "ubuntu",
+        "os_version": "26.04"
+      },
+      "public_net": {
+        "ipv4": {
+          "ip": "192.0.2.13"
+        },
+        "ipv6": {
+          "ip": "2001:db8::1"
+        }
+      },
+      "private_net": [
+        {
+          "ip": "10.0.0.9"
+        }
+      ]
+    },
+    {
+      "id": 173543217,
+      "name": "ubuntu-4gb-hel1-5",
+      "status": "running",
+      "created": "2026-10-30T13:40:34Z",
+      "labels": {},
+      "protection": {
+        "delete": false,
+        "rebuild": false
+      },
+      "server_type": {
+        "id": 114,
+        "name": "cx23",
+        "cores": 2,
+        "memory": 4,
+        "disk": 40,
+        "cpu_type": "shared"
+      },
+      "datacenter": {
+        "name": null
+      },
+      "location": {
+        "name": "hel1"
+      },
+      "image": {
+        "id": 387894169,
+        "name": "ubuntu-26.04",
+        "os_flavor": "ubuntu",
+        "os_version": "26.04"
+      },
+      "public_net": {
+        "ipv4": {
+          "ip": "192.0.2.14"
+        },
+        "ipv6": {
+          "ip": "2001:db8::1"
+        }
+      },
+      "private_net": [
+        {
+          "ip": "10.0.0.8"
+        }
+      ]
+    },
+    {
+      "id": 173543218,
+      "name": "ubuntu-4gb-hel1-6",
+      "status": "running",
+      "created": "2026-10-30T13:40:34Z",
+      "labels": {},
+      "protection": {
+        "delete": false,
+        "rebuild": false
+      },
+      "server_type": {
+        "id": 114,
+        "name": "cx23",
+        "cores": 2,
+        "memory": 4,
+        "disk": 40,
+        "cpu_type": "shared"
+      },
+      "datacenter": {
+        "name": null
+      },
+      "location": {
+        "name": "hel1"
+      },
+      "image": {
+        "id": 387894169,
+        "name": "ubuntu-26.04",
+        "os_flavor": "ubuntu",
+        "os_version": "26.04"
+      },
+      "public_net": {
+        "ipv4": {
+          "ip": "192.0.2.15"
+        },
+        "ipv6": {
+          "ip": "2001:db8::1"
+        }
+      },
+      "private_net": [
+        {
+          "ip": "10.0.0.10"
+        }
+      ]
+    },
+    {
+      "id": 173543219,
+      "name": "ubuntu-4gb-hel1-4",
+      "status": "running",
+      "created": "2026-10-30T13:40:34Z",
+      "labels": {},
+      "protection": {
+        "delete": false,
+        "rebuild": false
+      },
+      "server_type": {
+        "id": 114,
+        "name": "cx23",
+        "cores": 2,
+        "memory": 4,
+        "disk": 40,
+        "cpu_type": "shared"
+      },
+      "datacenter": {
+        "name": null
+      },
+      "location": {
+        "name": "hel1"
+      },
+      "image": {
+        "id": 387894169,
+        "name": "ubuntu-26.04",
+        "os_flavor": "ubuntu",
+        "os_version": "26.04"
+      },
+      "public_net": {
+        "ipv4": {
+          "ip": "192.0.2.16"
+        },
+        "ipv6": {
+          "ip": "2001:db8::1"
+        }
+      },
+      "private_net": [
+        {
+          "ip": "10.0.0.6"
+        }
+      ]
+    },
+    {
+      "id": 173543220,
+      "name": "ubuntu-4gb-hel1-8",
+      "status": "running",
+      "created": "2026-10-30T13:40:34Z",
+      "labels": {},
+      "protection": {
+        "delete": false,
+        "rebuild": false
+      },
+      "server_type": {
+        "id": 114,
+        "name": "cx23",
+        "cores": 2,
+        "memory": 4,
+        "disk": 40,
+        "cpu_type": "shared"
+      },
+      "datacenter": {
+        "name": null
+      },
+      "location": {
+        "name": "hel1"
+      },
+      "image": {
+        "id": 387894169,
+        "name": "ubuntu-26.04",
+        "os_flavor": "ubuntu",
+        "os_version": "26.04"
+      },
+      "public_net": {
+        "ipv4": {
+          "ip": "192.0.2.17"
+        },
+        "ipv6": {
+          "ip": "2001:db8::1"
+        }
+      },
+      "private_net": [
+        {
+          "ip": "10.0.0.5"
+        }
+      ]
+    },
+    {
+      "id": 173543221,
+      "name": "ubuntu-4gb-hel1-10",
+      "status": "running",
+      "created": "2026-10-30T13:40:34Z",
+      "labels": {},
+      "protection": {
+        "delete": false,
+        "rebuild": false
+      },
+      "server_type": {
+        "id": 114,
+        "name": "cx23",
+        "cores": 2,
+        "memory": 4,
+        "disk": 40,
+        "cpu_type": "shared"
+      },
+      "datacenter": {
+        "name": null
+      },
+      "location": {
+        "name": "hel1"
+      },
+      "image": {
+        "id": 387894169,
+        "name": "ubuntu-26.04",
+        "os_flavor": "ubuntu",
+        "os_version": "26.04"
+      },
+      "public_net": {
+        "ipv4": {
+          "ip": "192.0.2.18"
+        },
+        "ipv6": {
+          "ip": "2001:db8::1"
+        }
+      },
+      "private_net": [
+        {
+          "ip": "10.0.0.11"
+        }
+      ]
+    },
+    {
+      "id": 173543222,
+      "name": "ubuntu-4gb-hel1-11",
+      "status": "running",
+      "created": "2026-10-30T13:40:34Z",
+      "labels": {},
+      "protection": {
+        "delete": false,
+        "rebuild": false
+      },
+      "server_type": {
+        "id": 114,
+        "name": "cx23",
+        "cores": 2,
+        "memory": 4,
+        "disk": 40,
+        "cpu_type": "shared"
+      },
+      "datacenter": {
+        "name": null
+      },
+      "location": {
+        "name": "hel1"
+      },
+      "image": {
+        "id": 387894169,
+        "name": "ubuntu-26.04",
+        "os_flavor": "ubuntu",
+        "os_version": "26.04"
+      },
+      "public_net": {
+        "ipv4": {
+          "ip": "192.0.2.19"
+        },
+        "ipv6": {
+          "ip": "2001:db8::1"
+        }
+      },
+      "private_net": [
+        {
+          "ip": "10.0.0.7"
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "pagination": {
+      "last_page": 1,
+      "next_page": null,
+      "page": 1,
+      "per_page": 50,
+      "previous_page": null,
+      "total_entries": 10
+    }
+  }
+}
