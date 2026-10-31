@@ -1,0 +1,26 @@
+{
+  "name": "pulse",
+  "kind": "push",
+  "cgroupGlobs": [
+    "system.slice/pulse-agent.service"
+  ],
+  "ports": [],
+  "reportsTo": "Pulse server on the sink (HTTP push every 30 s)",
+  "intervalSeconds": 30,
+  "licence": "MIT",
+  "diskPaths": [
+    "/var/lib/pulse-agent",
+    "/usr/local/bin/pulse-agent"
+  ],
+  "user": "root",
+  "env": [
+    "PULSE_TOKEN",
+    "PULSE_URL",
+    "PULSE_INSTALLER_SHA256"
+  ],
+  "footnotes": [
+    "Auto-update stays at its default (on).",
+    "The agent installer and its reports travel over plain HTTP between the agent box and the sink box (no hostname for TLS); the installer is checksum-pinned."
+  ],
+  "sourceUrl": "https://github.com/rcourtman/Pulse/blob/main/docs/UNIFIED_AGENT.md"
+}

@@ -36,19 +36,45 @@ box_ip() {
 }
 
 ssh_opts() {
-  printf '%s' "-o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 -i ${SSH_KEY_PATH:-$HOME/.ssh/id_ed25519}"
+  printf '%s' "-n -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 -i ${SSH_KEY_PATH:-$HOME/.ssh/id_ed25519}"
 }
 
-# ssh_box NAME CMD...: run a command on the box as root.
+# ssh_box NAME CMD...: run a command on the box as root. A BOX_<NAME>_IP of the form
+# lxd:<instance> addresses a local LXD instance instead (dry runs), through lxc exec.
 ssh_box() {
   local name=$1; shift
-  # shellcheck disable=SC2046,SC2029
-  ssh $(ssh_opts) "root@$(box_ip "$name")" "$@"
+  local ip
+  ip=$(box_ip "$name")
+  if [[ "$ip" == lxd:* ]]; then
+    lxc exec "${ip#lxd:}" -- bash -c "$*"
+  else
+    # shellcheck disable=SC2046,SC2029
+    ssh $(ssh_opts) "root@$ip" "$@"
+  fi
 }
 
 # scp_box NAME SRC DST: copy a local path (recursively) to the box.
 scp_box() {
   local name=$1 src=$2 dst=$3
-  # shellcheck disable=SC2046
-  scp -q -r $(ssh_opts) "$src" "root@$(box_ip "$name"):$dst"
+  local ip
+  ip=$(box_ip "$name")
+  if [[ "$ip" == lxd:* ]]; then
+    if [[ -d "$src" ]]; then lxc file push -r -q "$src" "${ip#lxd:}$dst"; else lxc file push -q "$src" "${ip#lxd:}$dst"; fi
+  else
+    # shellcheck disable=SC2046
+    scp -q -r $(ssh_opts | sed 's/^-n //') "$src" "root@$ip:$dst"
+  fi
+}
+
+# fetch_box NAME SRC DST: copy a file from the box to a local path.
+fetch_box() {
+  local name=$1 src=$2 dst=$3
+  local ip
+  ip=$(box_ip "$name")
+  if [[ "$ip" == lxd:* ]]; then
+    lxc file pull -q "${ip#lxd:}$src" "$dst"
+  else
+    # shellcheck disable=SC2046
+    scp -q $(ssh_opts | sed 's/^-n //') "root@$ip:$src" "$dst"
+  fi
 }

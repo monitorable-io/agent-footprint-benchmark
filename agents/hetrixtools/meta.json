@@ -1,0 +1,25 @@
+{
+  "name": "hetrixtools",
+  "kind": "push",
+  "cgroupGlobs": [
+    "system.slice/system-hetrixtools.slice",
+    "system.slice/hetrixtools_agent.service"
+  ],
+  "ports": [],
+  "reportsTo": "sm.hetrixtools.net (wget POST once a minute)",
+  "intervalSeconds": 60,
+  "licence": "open source, no LICENSE file",
+  "diskPaths": [
+    "/etc/hetrixtools",
+    "/usr/local/sbin/hetrixtools_systemd_launcher.sh"
+  ],
+  "user": "hetrixtools",
+  "env": [
+    "HETRIX_KEY",
+    "HETRIX_INSTALL_ARGS"
+  ],
+  "footnotes": [
+    "This box has no cron, so the vendor installer's own systemd path runs: a minutely timer starting a transient unit per run. Those runs are placed in a persistent slice (one word added to the vendor launcher) so the kernel's accounting for them survives each run; the timer's launcher unit is counted too."
+  ],
+  "sourceUrl": "https://github.com/hetrixtools/agent"
+}

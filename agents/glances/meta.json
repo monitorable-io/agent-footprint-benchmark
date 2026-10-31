@@ -1,0 +1,25 @@
+{
+  "name": "glances",
+  "kind": "polled",
+  "cgroupGlobs": [
+    "system.slice/glances.service"
+  ],
+  "ports": [
+    61208
+  ],
+  "reportsTo": "passive: the sink polls /api/4/all at Glances' refresh period",
+  "intervalSeconds": 3,
+  "licence": "LGPL-3.0",
+  "diskPaths": [
+    "/root/.local/share/pipx/venvs/glances",
+    "/root/.local/bin/glances"
+  ],
+  "user": "root",
+  "env": [],
+  "footnotes": [
+    "Glances ships no systemd unit; the harness adds a two-line one that runs `glances -w`.",
+    "Runs as root (pipx install as root, the documented route); port 61208 is reachable from the sink only.",
+    "Network bytes are counted by TCP port (the listening socket is not in the service's cgroup under socket activation, and polled traffic is what this row sends)."
+  ],
+  "sourceUrl": "https://github.com/nicolargo/glances#installation"
+}

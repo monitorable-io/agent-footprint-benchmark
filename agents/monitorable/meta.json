@@ -1,0 +1,24 @@
+{
+  "name": "monitorable",
+  "kind": "push",
+  "cgroupGlobs": [
+    "system.slice/monitorable-agent.service"
+  ],
+  "ports": [],
+  "reportsTo": "Monitorable ingest (OTLP/HTTP every 60 s)",
+  "intervalSeconds": 60,
+  "licence": "Apache-2.0",
+  "diskPaths": [
+    "/opt/monitorable",
+    "/var/lib/monitorable",
+    "/etc/monitorable"
+  ],
+  "user": "monitorable",
+  "env": [
+    "MONITORABLE_API_KEY",
+    "MONITORABLE_ENDPOINT",
+    "MONITORABLE_INSTALLER_URL"
+  ],
+  "footnotes": [],
+  "sourceUrl": "https://monitorable.io/docs/agent/install/"
+}

@@ -1,0 +1,2 @@
+[{"id":"ea645d53-c0e5-406d-8863-9ecd4235be94","type":"vhp","cpu":"amd","max_vcpu":24,"max_ram":40960,"max_disk":1000,"network_rate":128,"locations":["Sydney","Amsterdam"]},
+ {"id":"11111111-2222-4333-8444-555555555555","type":"vds","cpu":"amd","max_vcpu":8,"max_ram":32768,"max_disk":500,"network_rate":128,"locations":["Sydney"]}]

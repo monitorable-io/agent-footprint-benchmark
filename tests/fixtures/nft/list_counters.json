@@ -1,0 +1,3 @@
+{"nftables": [{"metainfo": {"version": "1.1.3", "release_name": "Commodore Bullmoose", "json_schema_version": 1}},
+ {"counter": {"family": "inet", "name": "out_system_slice_netdata_service", "table": "bench", "handle": 3, "packets": 120, "bytes": 65536}},
+ {"counter": {"family": "inet", "name": "in_system_slice_netdata_service", "table": "bench", "handle": 4, "packets": 90, "bytes": 4096}}]}

@@ -1,0 +1,39 @@
+# The sink box: the hubs the self-hosted agents report to or get polled by. Versions pinned 2026-10-29.
+# Published ports are gated in DOCKER-USER by sink/firewall.sh (ufw does not see Docker-published ports).
+services:
+  beszel-hub:
+    image: henrygd/beszel:0.21.1
+    container_name: beszel-hub
+    restart: unless-stopped
+    ports: ["8090:8090"]
+    volumes: ["beszel_data:/beszel_data"]
+
+  prometheus:
+    image: prom/prometheus:v3.15.1
+    container_name: prometheus
+    restart: unless-stopped
+    ports: ["127.0.0.1:9090:9090"]
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prom_data:/prometheus
+
+  influxdb:
+    # InfluxDB 1.x: Telegraf's stock [[outputs.influxdb]] writes to it with only the URL changed.
+    image: influxdb:1.11.8
+    container_name: influxdb
+    restart: unless-stopped
+    ports: ["8086:8086"]
+    volumes: ["influx_data:/var/lib/influxdb"]
+
+  pulse:
+    image: rcourtman/pulse:v6.6.0
+    container_name: pulse
+    restart: unless-stopped
+    ports: ["7655:7655"]
+    volumes: ["pulse_data:/data"]
+
+volumes:
+  beszel_data:
+  prom_data:
+  influx_data:
+  pulse_data:
