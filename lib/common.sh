@@ -79,6 +79,22 @@ fetch_box() {
   fi
 }
 
+# run_isolated LOGFILE MESSAGE CMD...: run one box's step chain so that a failing command stops the
+# chain and MESSAGE is appended to LOGFILE, while the caller carries on with the other boxes.
+# `( cmd ) || log` cannot do this: bash ignores set -e inside every command of an || list, so the
+# chain's later steps would run on a half-provisioned box and the failure would go unrecorded.
+# Call it as a plain statement (never as part of an || or && list); it always returns 0.
+run_isolated() {
+  local logfile=$1 message=$2 rc
+  shift 2
+  set +e
+  ( set -e; "$@" )
+  rc=$?
+  set -e
+  if ((rc != 0)); then printf '%s\n' "$message" >> "$logfile"; fi
+  return 0
+}
+
 # --- VM provider dispatch -------------------------------------------------------------------------
 # BENCH_PROVIDER (bench.env) names the client: lib/hcloud.sh (Hetzner Cloud) or lib/onidel.sh.
 # Every provider defines <provider>_vm_list|quote|create|destroy|reimage; the vm_* names below are

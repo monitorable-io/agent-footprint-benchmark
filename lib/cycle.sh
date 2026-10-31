@@ -109,7 +109,7 @@ cmd_cycle() {
         read -r _ box role run cyc outname <<<"$line"
         outdir=$(cycle_dir "$cyc"); mkdir -p "$outdir"; touched+=("$outdir")
         log "slot $s: $role run $((run + 1)) ($cyc) on $box"
-        ( cycle_one_box "$s" "$box" "$role" "$run" "$outname" "$outdir" ) || echo "$role on $box: setup failed" >> "$failures"
+        run_isolated "$failures" "$role on $box: setup failed (run $((run + 1)), $cyc)" cycle_one_box "$s" "$box" "$role" "$run" "$outname" "$outdir"
       done
       for outdir in $(printf '%s\n' "${touched[@]}" | sort -u); do regen_cycle_schedule "$outdir"; done
       write_slot_manifest "$s" "$started"
@@ -157,13 +157,17 @@ cmd_collect() {
   local s=${1:-}
   [[ "$s" =~ ^[0-3]$ ]] || die "usage: bench collect <0|1|2|3>"
   local lines line box role run cyc outname outdir
+  mkdir -p "$(slots_dir)"; : > "$(slots_dir)/slot-$s.collect-failures.log"
   mapfile -t lines < <(slot_plan "$s")
   for line in "${lines[@]}"; do
     read -r _ box role run cyc outname <<<"$line"
     outdir=$(cycle_dir "$cyc")
     [[ -d "$outdir" ]] || { log "$outname: no $outdir (was slot $s started?)"; continue; }
-    ( collect_box "$box" "$role" "$outname" "$outdir" ) || log "$outname: not collected"
+    run_isolated "$(slots_dir)/slot-$s.collect-failures.log" "$outname on $box: not collected" collect_box "$box" "$role" "$outname" "$outdir"
   done
+  local f; f="$(slots_dir)/slot-$s.collect-failures.log"
+  [[ -s "$f" ]] && log "NOT COLLECTED: $(paste -sd';' "$f")"
+  return 0
 }
 
 cmd_summarize() {

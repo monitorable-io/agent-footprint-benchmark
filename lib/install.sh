@@ -71,6 +71,7 @@ cmd_install() {
     && systemctl daemon-reload && systemctl stop bench-collector > /dev/null 2>&1; rm -f /var/lib/bench/samples.csv /var/lib/bench/events.csv \
     && systemctl enable bench-collector > /dev/null 2>&1 && systemctl restart bench-collector && systemctl is-active bench-collector"
   mkdir -p "$BENCH_ROOT/.runs"
+  rm -f "${BENCH_ROOT:?}/.runs/$box-$agent-install.json"   # never let a stale record stand in for a failed fetch
   fetch_box "$box" /var/lib/bench/install.json "$BENCH_ROOT/.runs/$box-$agent-install.json"
   jq -r '"\(.agent): \(.status) in \(.seconds)s, version \(.version), units \(.units|join(","))"' "$BENCH_ROOT/.runs/$box-$agent-install.json"
 }
