@@ -15,16 +15,25 @@ LOAD_SECONDS=${LOAD_SECONDS:-3600}
 slots_dir() { printf '%s/data/%s/slots' "$BENCH_ROOT" "$YEAR"; }
 cycle_dir() { printf '%s/data/%s/%s' "$BENCH_ROOT" "$YEAR" "$1"; }   # $1 = cycle-N
 
-# schedule_on BOX INSTALL_FINISHED_EPOCH: timers on the box for the load window and the stop.
+# schedule_on BOX INSTALL_FINISHED_EPOCH: timers on the box for the load window and the stop. Leftovers
+# of an earlier run are cleared first (tolerant); the two systemd-run calls and a check that both timers
+# exist are chained, so a refused timer fails the step instead of leaving a box with no load hour.
 schedule_on() {
   local box=$1 t0=$2
   local load_at=$((t0 + IDLE_SECONDS)) stop_at=$((t0 + IDLE_SECONDS + LOAD_SECONDS))
-  ssh_box "$box" "systemctl stop bench-load.timer bench-stop.timer 2>/dev/null; \
+  ssh_box "$box" "systemctl stop bench-load.timer bench-stop.timer bench-load.service bench-stop.service 2>/dev/null; \
+    systemctl reset-failed bench-load.service bench-stop.service 2>/dev/null; \
     systemd-run --unit=bench-load --on-calendar='@$load_at' --timer-property=AccuracySec=1s \
-      /usr/bin/env bash /opt/bench/load/loaded-window.sh $LOAD_SECONDS > /dev/null 2>&1; \
+      /usr/bin/env bash /opt/bench/load/loaded-window.sh $LOAD_SECONDS > /dev/null && \
     systemd-run --unit=bench-stop --on-calendar='@$stop_at' --timer-property=AccuracySec=1s \
-      /usr/bin/systemctl stop bench-collector > /dev/null 2>&1; \
+      /usr/bin/systemctl stop bench-collector > /dev/null && \
+    [ \"\$(systemctl list-timers --all bench-load.timer bench-stop.timer --no-legend | grep -c .)\" = 2 ] && \
     echo scheduled load=$load_at stop=$stop_at"
+}
+
+# reset_log_unless_filtered FILE: a full slot starts its failure log afresh; a BENCH_ONLY_BOXES redo appends.
+reset_log_unless_filtered() {
+  if [[ -z "${BENCH_ONLY_BOXES:-}" ]]; then : > "$1"; else touch "$1"; fi
 }
 
 # cycle_one_box SLOT BOX ROLE RUN OUTNAME OUTDIR: rebuild + provision + install + schedule for one box;
@@ -103,11 +112,8 @@ cmd_cycle() {
       local failures="$sd/slot-$s.failures.log" started line box role run cyc outname outdir touched=()
       local lines; mapfile -t lines < <(slot_plan "$s")
       ((${#lines[@]})) || die "no box in slot $s matches BENCH_ONLY_BOXES='${BENCH_ONLY_BOXES:-}' (space-separated box names, e.g. \"box-4 box-7\")"
-      if [[ -n "${BENCH_ONLY_BOXES:-}" ]]; then
-        log "slot $s: redoing only ${BENCH_ONLY_BOXES} (failures log appended, manifest covers the whole slot)"
-      else
-        : > "$failures"
-      fi
+      [[ -z "${BENCH_ONLY_BOXES:-}" ]] || log "slot $s: redoing only ${BENCH_ONLY_BOXES} (failures log appended, manifest covers the whole slot)"
+      reset_log_unless_filtered "$failures"
       started=$(date +%s)
       export SLOT=$s
       [[ -n "${BOX_SINK_IP:-}" ]] && sink_retarget "$s"
@@ -163,7 +169,7 @@ cmd_collect() {
   local s=${1:-}
   [[ "$s" =~ ^[0-3]$ ]] || die "usage: bench collect <0|1|2|3>"
   local lines line box role run cyc outname outdir
-  mkdir -p "$(slots_dir)"; : > "$(slots_dir)/slot-$s.collect-failures.log"
+  mkdir -p "$(slots_dir)"; reset_log_unless_filtered "$(slots_dir)/slot-$s.collect-failures.log"
   mapfile -t lines < <(slot_plan "$s")
   for line in "${lines[@]}"; do
     read -r _ box role run cyc outname <<<"$line"

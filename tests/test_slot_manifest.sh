@@ -20,6 +20,16 @@ check "manifest keeps the slot number" "$(jq -r .slot "$d/data/test/slots/slot-0
 unset BENCH_ONLY_BOXES
 write_slot_manifest 0 999
 check "unfiltered manifest is the same" "$(jq -r '[.boxes[].box] | join(" ")' "$d/data/test/slots/slot-0.json")" "box-0 box-4"
-check "failures log is truncated only without a filter" "$(grep -c 'BENCH_ONLY_BOXES' lib/cycle.sh | awk '{print ($1 >= 2) ? "yes" : "no"}')" yes
+printf 'old line\n' > "$d/f.log"
+BENCH_ONLY_BOXES="box-4" reset_log_unless_filtered "$d/f.log"
+check "a filtered start/collect keeps the earlier failure lines" "$(cat "$d/f.log")" "old line"
+unset BENCH_ONLY_BOXES
+reset_log_unless_filtered "$d/f.log"
+check "an unfiltered start/collect starts the log afresh" "$(wc -c < "$d/f.log")" 0
+check "both logs go through reset_log_unless_filtered" "$(grep -c 'reset_log_unless_filtered "' lib/cycle.sh)" 2
+check "no bare truncation of a failures log remains" "$(grep -cE '^\s*: > .*failures' lib/cycle.sh)" 0
+# schedule_on: the remote chain must fail when a timer is not armed (systemd-run refused), not just on an SSH error.
+check "schedule_on chains its systemd-run calls with &&" "$(grep -A10 '^schedule_on()' lib/cycle.sh | grep -c 'systemd-run.*\\$')" 2
+check "schedule_on verifies both timers exist before reporting" "$(grep -A12 '^schedule_on()' lib/cycle.sh | grep -c 'list-timers.*bench-load.timer bench-stop.timer')" 1
 check "an empty filtered plan is refused" "$(grep -c 'no box in slot' lib/cycle.sh)" 1
 echo PASS
