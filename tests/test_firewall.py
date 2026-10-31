@@ -65,10 +65,15 @@ class FirewallTest(unittest.TestCase):
             self.assertEqual(proc.returncode, 0, proc.stderr)
             self.assertIn("-s 10.0.0.0/24 -j RETURN", log)
             self.assertIn("10.0.0.0/24", (Path(d) / "saved").read_text())
+        for bad in ("10.0.0.0/240", "10.0.0.0/8", "0.0.0.0/0", "10.0.0.0/15"):
+            with tempfile.TemporaryDirectory() as d:
+                proc, log = run_with_fake_iptables(d, [bad])
+                self.assertEqual(proc.returncode, 2, bad)   # a typo must not open the hubs to the internet
+                self.assertEqual(log, "", bad)
         with tempfile.TemporaryDirectory() as d:
-            proc, log = run_with_fake_iptables(d, ["10.0.0.0/240"])
-            self.assertEqual(proc.returncode, 2)
-            self.assertEqual(log, "")
+            proc, log = run_with_fake_iptables(d, ["172.16.0.0/16"])
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            self.assertIn("-s 172.16.0.0/16 -j RETURN", log)
 
 
 if __name__ == "__main__":

@@ -18,7 +18,9 @@ fi
 # saved entry on --restore is dropped so the gate still goes up (fail closed, never open).
 addrs=()
 for ip in "${raw[@]}"; do
-  if [[ "$ip" =~ ^[0-9]{1,3}(\.[0-9]{1,3}){3}(/([0-9]|[12][0-9]|3[012]))?$ ]]; then
+  # A subnet needs a prefix of /16 or longer: a typo like /2 would open the hubs (InfluxDB 1.x is
+  # unauthenticated) to a quarter of the internet.
+  if [[ "$ip" =~ ^[0-9]{1,3}(\.[0-9]{1,3}){3}(/(1[6-9]|2[0-9]|3[012]))?$ ]]; then
     addrs+=("$ip")
   elif ((restore)); then
     echo "ignoring bad saved address $ip" >&2

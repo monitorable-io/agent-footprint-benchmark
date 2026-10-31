@@ -62,12 +62,13 @@ regen_cycle_schedule() {
 }
 
 # write_slot_manifest SLOT STARTED_EPOCH: data/<year>/slots/slot-<s>.json from the slot's schedule files.
+# Always the whole slot (BENCH_ONLY_BOXES is ignored here): a one-box redo must not shrink the manifest.
 write_slot_manifest() {
   local s=$1 started=$2 box role run cyc outname f files=()
   while read -r _ box role run cyc outname; do
     f="$(cycle_dir "$cyc")/schedule-$outname.json"
     [[ -f "$f" ]] && files+=("$f")
-  done < <(slot_plan "$s")
+  done < <(unset BENCH_ONLY_BOXES; slot_plan "$s")
   if ((${#files[@]})); then
     jq -s --argjson s "$s" --argjson st "$started" '{slot: $s, startedAt: $st, boxes: [.[] | select(.slot == $s)]}' "${files[@]}"
   else
@@ -100,11 +101,16 @@ cmd_cycle() {
       [[ "$s" =~ ^[0-3]$ ]] || die "usage: bench cycle start <0|1|2|3>"
       local sd; sd=$(slots_dir); mkdir -p "$sd"
       local failures="$sd/slot-$s.failures.log" started line box role run cyc outname outdir touched=()
-      : > "$failures"
+      local lines; mapfile -t lines < <(slot_plan "$s")
+      ((${#lines[@]})) || die "no box in slot $s matches BENCH_ONLY_BOXES='${BENCH_ONLY_BOXES:-}' (space-separated box names, e.g. \"box-4 box-7\")"
+      if [[ -n "${BENCH_ONLY_BOXES:-}" ]]; then
+        log "slot $s: redoing only ${BENCH_ONLY_BOXES} (failures log appended, manifest covers the whole slot)"
+      else
+        : > "$failures"
+      fi
       started=$(date +%s)
       export SLOT=$s
       [[ -n "${BOX_SINK_IP:-}" ]] && sink_retarget "$s"
-      local lines; mapfile -t lines < <(slot_plan "$s")
       for line in "${lines[@]}"; do
         read -r _ box role run cyc outname <<<"$line"
         outdir=$(cycle_dir "$cyc"); mkdir -p "$outdir"; touched+=("$outdir")
