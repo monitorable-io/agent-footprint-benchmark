@@ -58,6 +58,18 @@ class FirewallTest(unittest.TestCase):
             self.assertIn("-j DROP", log)
             self.assertIn("iptables -N DOCKER-USER", log)
 
+    def test_cidr_is_accepted_and_bad_cidr_refused(self):
+        # The bed's private network (Pulse's agent refuses plain HTTP to a public address) is allowed as a subnet.
+        with tempfile.TemporaryDirectory() as d:
+            proc, log = run_with_fake_iptables(d, ["192.0.2.10", "10.0.0.0/24"])
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            self.assertIn("-s 10.0.0.0/24 -j RETURN", log)
+            self.assertIn("10.0.0.0/24", (Path(d) / "saved").read_text())
+        with tempfile.TemporaryDirectory() as d:
+            proc, log = run_with_fake_iptables(d, ["10.0.0.0/240"])
+            self.assertEqual(proc.returncode, 2)
+            self.assertEqual(log, "")
+
 
 if __name__ == "__main__":
     unittest.main()

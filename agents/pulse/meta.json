@@ -20,7 +20,7 @@
   ],
   "footnotes": [
     "Auto-update stays at its default (on).",
-    "The agent installer and its reports travel over plain HTTP between the agent box and the sink box (no hostname for TLS); the installer is checksum-pinned."
+    "The agent talks to the Pulse server over the bed's private network (10.0.0.0/24) in plain HTTP: the agent refuses an http:// server URL unless the host is loopback or a private address, and the sink has no TLS hostname. The installer it fetches from the server is checksum-pinned."
   ],
   "sourceUrl": "https://github.com/rcourtman/Pulse/blob/main/docs/UNIFIED_AGENT.md"
 }

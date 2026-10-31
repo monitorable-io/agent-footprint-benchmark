@@ -10,7 +10,9 @@ agent_env() {
     die "agent $agent needs the sink but BOX_SINK_IP is empty (bench vm create sink && bench sink up)"
   fi
   export BESZEL_HUB_URL="${BESZEL_HUB_URL:-http://$sink:8090}"
-  export PULSE_URL="${PULSE_URL:-http://$sink:7655}"
+  # Pulse's agent refuses a plain-HTTP server URL unless the host is loopback or a private address:
+  # it reaches the sink over the bed's private network (BOX_SINK_PRIVATE_IP) when there is one.
+  export PULSE_URL="${PULSE_URL:-http://${BOX_SINK_PRIVATE_IP:-$sink}:7655}"
   export SINK_IP="$sink"
   # Only upper-case names listed by the agent; never the operator's own credentials.
   while read -r key; do

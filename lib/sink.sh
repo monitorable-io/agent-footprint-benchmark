@@ -29,9 +29,12 @@ cmd_sink() {
 }
 
 # sink_allow_boxes: rewrite the sink's DOCKER-USER allow-list with every box that has an address
-# (plain `ufw allow` does nothing for Docker-published ports).
+# (plain `ufw allow` does nothing for Docker-published ports), plus SINK_ALLOW_EXTRA (bench.env:
+# the bed's private subnet, which Pulse's agent uses to reach its server).
 sink_allow_boxes() {
   local n addrs=() key a
+  # shellcheck disable=SC2206
+  [[ -n "${SINK_ALLOW_EXTRA:-}" ]] && addrs=($SINK_ALLOW_EXTRA)
   for n in $(seq 0 $((BOX_COUNT - 1))); do
     key="BOX_BOX_${n}_IP"
     [[ -n "${!key:-}" ]] || continue
