@@ -5,7 +5,7 @@ disk writes, network bytes, install time and on-disk size, measured on
 identical cheap VPSes over 24 hours idle plus one loaded hour, three times,
 with every 10-second sample published here.
 
-**Status: harness built, run not started (2026-10-29).** Results land in
+**Status: harness built, bed rented, run not started (2026-10-31).** Results land in
 `data/2026/` with the run; the write-up will be at
 `https://monitorable.io/benchmarks/agent-footprint-2026/`.
 
@@ -36,7 +36,8 @@ detected by inode change or a CPU counter moving backwards and logged.
 `summarize.py` turns the CSVs into `results.json`: idle window = hours 1–24
 after the install finished (the first hour is reported separately as a
 warm-up peak), loaded window = the stress hour after it. CPU % is CPU-time
-delta over wall time on the one vCPU. Per-24 h figures are the idle window
+delta over wall time, as a share of one vCPU (the boxes have two; a value of
+100 % means one core busy). Per-24 h figures are the idle window
 scaled to 24 h. The headline is the median of the three per-cycle values;
 samples are never pooled across cycles. Rows are sorted by idle PSS.
 
@@ -45,12 +46,25 @@ Rules that keep rows comparable, and the deviations, are listed in each
 
 ## The bed
 
-13 boxes of one type (Onidel Cloud, Amsterdam, 1 vCPU / 2 GB, Ubuntu 26.04
-LTS): 11 agent boxes, a control box, and a sink box running the hubs the
-self-hosted agents need (Beszel hub, Prometheus, InfluxDB 1.x, Pulse server,
-a Glances poller) so that polled agents do real work. Every box runs Docker
-with two idle containers for the whole cycle. Agents move one box along each
-cycle so box variance averages out.
+10 boxes of one type (Hetzner Cloud CX23, Helsinki `hel1`: 2 shared vCPU,
+4 GB, 40 GB, Ubuntu 26.04 LTS): 9 measured boxes `box-0`…`box-8` and a sink
+box running the hubs the self-hosted agents need (Beszel hub, Prometheus,
+InfluxDB 1.x, Pulse server, a Glances poller) so that polled agents do real
+work. Every box runs Docker with two idle containers for the whole cycle.
+
+The account holds at most 10 servers, so the 12 roles (11 agents and the
+control box, which runs only the harness) take turns: **4 slots of about
+26 h**, 9 roles per slot, every role 3 times on 3 different boxes
+(`lib/rotation.sh`; `./bench cycle plan` prints the table). Between slots a
+box is **rebuilt in place** from the stock image (same server, same address);
+no box is destroyed during the run, and `bench vm destroy` refuses unless
+`BENCH_ALLOW_DESTROY=1`. The n-th run of a role is filed as `cycle-n`, so
+the results read as three cycles per agent; `data/<year>/slots/` keeps the
+slot manifests, and each install record carries the box's CPU model (shared
+vCPU may be Intel or AMD) for the write-up to footnote.
+
+Other providers: `BENCH_PROVIDER=onidel` selects the Onidel Cloud client
+(`lib/onidel.sh`, create/destroy by API) kept from the first plan.
 
 ## Reproduce one agent in an hour
 
@@ -66,10 +80,13 @@ cp bench.env.example bench.env && chmod 600 bench.env
 python3 summarize.py data/2026
 ```
 
-For the full run: `./bench quote` (prices, nothing rented), `./bench vm create
-…`, `./bench sink up`, `./bench cycle start 0`, `./bench collect 0` after 25
-h, repeat for cycles 1 and 2, `./bench vm destroy …`, `python3 summarize.py
-data/2026`. `docs/RUN-2026.md` is the run log.
+For the full run: `./bench quote` (prices from the API, nothing rented),
+rent the boxes (`./bench vm create …` where the provider allows it; the 2026
+bed was ordered by hand), fill `BOX_*_IP`, `./bench sink up`, then per slot
+`./bench cycle start <s>`, `./bench cycle status` after an hour,
+`./bench collect <s>` after 26 h, for s = 0…3; `python3 summarize.py
+data/2026`. `BENCH_ONLY_BOXES="box-4" ./bench cycle start <s>` redoes one
+box. `docs/RUN-2026.md` is the run log.
 
 ## Adding an agent
 
@@ -84,15 +101,15 @@ first comment, print `VERSION=` and `UNITS=` at the end) and `meta.json`
 
 `tests/run.sh`: shellcheck on every script, `docker compose config` on the
 sink, and the Python unit tests (collector parsing, restart detection, nft
-rule shapes, install recording and secret redaction, Onidel client on
-fixtures, summarize on synthetic cycles). `tests/test_*_lxd.sh` are the
-dry runs against a local LXD VM.
+rule shapes, install recording and secret redaction, the Hetzner and Onidel
+clients on recorded fixtures, the slot schedule, summarize on synthetic
+cycles). `tests/test_*_lxd.sh` are the dry runs against a local LXD VM.
 
 ## Security notes
 
 Keys live only in `bench.env` (0600, gitignored) and reach a box as a 0600
-file; the operator's Onidel and SSH credentials never leave the operator
-host. Install logs are redacted before they are recorded. Polled agents'
+file; the operator's cloud API token and SSH credentials never leave the
+operator host (the token travels in a curl config, never on a command line). Install logs are redacted before they are recorded. Polled agents'
 ports are reachable from the sink only; the sink's hub ports are reachable
 from the agent boxes only (gated in `DOCKER-USER`, since Docker publishes
 past ufw). Pulse's installer travels over plain HTTP between two benchmark
