@@ -23,6 +23,7 @@ cmd_sink() {
       sink_allow_boxes
       log "UIs: ssh -L 8090:127.0.0.1:8090 -L 7655:127.0.0.1:7655 root@$(box_addr sink)  then http://localhost:8090 and :7655";;
     down) ssh_box sink "cd /opt/bench/sink && docker compose down";;
+    reset) shift; sink_reset_hubs "$@";;
     status) ssh_box sink "cd /opt/bench/sink && docker compose ps && systemctl is-active glances-poller || true";;
     *) die "usage: bench sink up|down|status";;
   esac
@@ -61,13 +62,25 @@ sink_addr_of() {
 }
 
 # sink_retarget S: re-template Prometheus' target and the Glances poller for slot S's boxes (a slot
-# without node-exporter or glances blanks the target and stops the poller).
+# without node-exporter or glances blanks the target and stops the poller). The repo's sink/ is copied
+# first, so the sink always runs the checked-out scripts.
 sink_retarget() {
   local s=$1 node_ip="" glances_ip=""
   node_ip=$(sink_addr_of node-exporter "$s")
   glances_ip=$(sink_addr_of glances "$s")
+  scp_box sink "$BENCH_ROOT/sink" /opt/bench/
   ssh_box sink "bash /opt/bench/sink/up.sh '$node_ip' '$glances_ip'" | grep -E "prometheus:|SINK_UP" || true
   sink_allow_boxes
+}
+
+# sink_reset_hubs [--dry-run] [HOSTNAME...]: forget the Beszel systems and Pulse agents of the boxes about
+# to be rebuilt (none named = all of them) and keep Beszel's universal token permanent; sink/reset-hubs.py
+# explains why. Hub admin credentials travel on stdin, never in argv.
+sink_reset_hubs() {
+  scp_box sink "$BENCH_ROOT/sink/reset-hubs.py" /opt/bench/sink/reset-hubs.py
+  printf '%s\n' "${BESZEL_ADMIN_EMAIL:-}" "${BESZEL_ADMIN_PASSWORD:-}" "${BESZEL_TOKEN:-}" "${PULSE_ADMIN_USER:-}" "${PULSE_ADMIN_PASSWORD:-}" \
+    | ssh_box_stdin sink "python3 /opt/bench/sink/reset-hubs.py $*" | sed 's/^/sink: /'
+  [[ "${PIPESTATUS[1]}" == 0 ]] || die "sink: reset-hubs failed (hub admin credentials in bench.env?)"
 }
 
 # sink_status: the Prometheus target health and the poller's last line, so an unpolled row is visible.

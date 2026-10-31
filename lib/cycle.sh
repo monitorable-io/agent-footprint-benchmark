@@ -116,6 +116,9 @@ cmd_cycle() {
       reset_log_unless_filtered "$failures"
       started=$(date +%s)
       export SLOT=$s
+      # The hubs must forget the boxes being rebuilt first (full slot: every record; redo: those boxes).
+      # shellcheck disable=SC2086
+      [[ -n "${BOX_SINK_IP:-}" ]] && sink_reset_hubs ${BENCH_ONLY_BOXES:-}
       [[ -n "${BOX_SINK_IP:-}" ]] && sink_retarget "$s"
       for line in "${lines[@]}"; do
         read -r _ box role run cyc outname <<<"$line"

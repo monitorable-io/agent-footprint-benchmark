@@ -83,10 +83,14 @@ python3 summarize.py data/2026
 For the full run: `./bench quote` (prices from the API, nothing rented),
 rent the boxes (`./bench vm create …` where the provider allows it; the 2026
 bed was ordered by hand), fill `BOX_*_IP`, `./bench sink up`, then per slot
-`./bench cycle start <s>`, `./bench cycle status` after an hour,
-`./bench collect <s>` after 26 h, for s = 0…3; `python3 summarize.py
-data/2026`. `BENCH_ONLY_BOXES="box-4" ./bench cycle start <s>` redoes one
-box. `docs/RUN-2026.md` is the run log.
+`./bench cycle start <s>` (it first makes the hubs forget the boxes it is
+about to rebuild: Beszel refuses a rebuilt box's new fingerprint while the
+old record exists, Pulse binds its token to one Docker host; `bench sink
+reset --dry-run` shows what it would forget), `./bench cycle status` right
+after and again after an hour, `./bench collect <s>` after 26 h, for
+s = 0…3; `python3 summarize.py data/2026`. `BENCH_ONLY_BOXES="box-4"
+./bench cycle start <s>` redoes one box (and forgets only it on the hubs).
+`docs/RUN-2026.md` is the run log.
 
 ## Adding an agent
 

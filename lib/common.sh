@@ -53,6 +53,20 @@ ssh_box() {
   fi
 }
 
+# ssh_box_stdin NAME CMD...: like ssh_box, but the caller's stdin reaches the command (ssh_box passes -n,
+# which closes it). Used to hand credentials to a script on the box without putting them in argv.
+ssh_box_stdin() {
+  local name=$1; shift
+  local ip
+  ip=$(box_ip "$name")
+  if [[ "$ip" == lxd:* ]]; then
+    lxc exec "${ip#lxd:}" -- bash -c "$*"
+  else
+    # shellcheck disable=SC2046,SC2029
+    ssh $(ssh_opts | sed 's/^-n //') "root@$ip" "$@"
+  fi
+}
+
 # scp_box NAME SRC DST: copy a local path (recursively) to the box.
 scp_box() {
   local name=$1 src=$2 dst=$3

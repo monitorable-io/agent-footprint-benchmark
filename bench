@@ -19,7 +19,7 @@ usage: bench <subcommand> [args]
   vm list|rebuild|create|destroy <box>
                              rebuild = reinstall the image in place (Hetzner); destroy is refused on Hetzner
                              boxes unless BENCH_ALLOW_DESTROY=1
-  sink up|down|status        the hub box for the polled agents
+  sink up|down|status|reset  the hub box for the polled agents (reset [--dry-run] [box...]: hubs forget those boxes)
   provision <box> [--no-cron] [--ports a,b]
   install <agent> <box>      documented install, timed, collector started
   cycle plan [<s>]           the slot table: which role runs on which box, filed as which cycle
