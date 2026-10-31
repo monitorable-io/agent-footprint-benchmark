@@ -1,0 +1,64 @@
+{
+  "images": [
+    {
+      "id": 67794396,
+      "name": "ubuntu-22.04",
+      "description": "Ubuntu 22.04",
+      "type": "system",
+      "status": "available",
+      "os_flavor": "ubuntu",
+      "os_version": "22.04",
+      "architecture": "x86"
+    },
+    {
+      "id": 103908130,
+      "name": "ubuntu-22.04",
+      "description": "Ubuntu 22.04",
+      "type": "system",
+      "status": "available",
+      "os_flavor": "ubuntu",
+      "os_version": "22.04",
+      "architecture": "arm"
+    },
+    {
+      "id": 161547269,
+      "name": "ubuntu-24.04",
+      "description": "Ubuntu 24.04",
+      "type": "system",
+      "status": "available",
+      "os_flavor": "ubuntu",
+      "os_version": "24.04",
+      "architecture": "x86"
+    },
+    {
+      "id": 161547270,
+      "name": "ubuntu-24.04",
+      "description": "Ubuntu 24.04",
+      "type": "system",
+      "status": "available",
+      "os_flavor": "ubuntu",
+      "os_version": "24.04",
+      "architecture": "arm"
+    },
+    {
+      "id": 387894169,
+      "name": "ubuntu-26.04",
+      "description": "Ubuntu 26.04",
+      "type": "system",
+      "status": "available",
+      "os_flavor": "ubuntu",
+      "os_version": "26.04",
+      "architecture": "x86"
+    },
+    {
+      "id": 387894171,
+      "name": "ubuntu-26.04",
+      "description": "Ubuntu 26.04",
+      "type": "system",
+      "status": "available",
+      "os_flavor": "ubuntu",
+      "os_version": "26.04",
+      "architecture": "arm"
+    }
+  ]
+}

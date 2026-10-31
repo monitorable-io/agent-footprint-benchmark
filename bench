@@ -15,13 +15,16 @@ usage() {
   cat <<'USAGE'
 usage: bench <subcommand> [args]
 
-  quote                      show the Onidel plan, template and price (billing gate)
-  vm list|create|destroy|reimage <name>
+  quote                      the provider's plan, image and price (BENCH_PROVIDER: hcloud | onidel); rents nothing
+  vm list|rebuild|create|destroy <box>
+                             rebuild = reinstall the image in place (Hetzner); destroy is refused on Hetzner
+                             boxes unless BENCH_ALLOW_DESTROY=1
   sink up|down|status        the hub box for the polled agents
   provision <box> [--no-cron] [--ports a,b]
   install <agent> <box>      documented install, timed, collector started
-  cycle start <k>|status     one 25 h cycle (k = 0, 1, 2)
-  collect <k>                fetch the cycle's CSVs into data/<year>/cycle-<k+1>/
+  cycle plan [<s>]           the slot table: which role runs on which box, filed as which cycle
+  cycle start <s>|status     one ~26 h slot (s = 0..3): rebuild, provision, install, timers on the boxes
+  collect <s>                fetch the slot's CSVs into the cycle dirs its roles belong to
   summarize [<year>]         data/<year> -> results.json + results.md
 USAGE
 }

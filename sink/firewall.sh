@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Docker publishes ports past ufw (DNAT happens before INPUT), so the sink's hub ports are gated in
 # DOCKER-USER instead: new connections to them are dropped unless the source is an allowed box.
-# Usage: firewall.sh <allowed-ip> [<allowed-ip> ...]   (idempotent; rewrites the allow-list atomically)
+# Usage: firewall.sh <allowed-ip-or-cidr> [...]     (idempotent; rewrites the allow-list atomically)
 #        firewall.sh --restore                          (replay the saved list; used by the systemd unit)
 set -euo pipefail
 PORTS=8090,8086,7655
@@ -18,7 +18,9 @@ fi
 # saved entry on --restore is dropped so the gate still goes up (fail closed, never open).
 addrs=()
 for ip in "${raw[@]}"; do
-  if [[ "$ip" =~ ^[0-9]{1,3}(\.[0-9]{1,3}){3}$ ]]; then
+  # A subnet needs a prefix of /16 or longer: a typo like /2 would open the hubs (InfluxDB 1.x is
+  # unauthenticated) to a quarter of the internet.
+  if [[ "$ip" =~ ^[0-9]{1,3}(\.[0-9]{1,3}){3}(/(1[6-9]|2[0-9]|3[012]))?$ ]]; then
     addrs+=("$ip")
   elif ((restore)); then
     echo "ignoring bad saved address $ip" >&2

@@ -20,7 +20,7 @@ def run_bench(env_text, *args):
 
 
 ENV = (
-    "ONIDEL_TOKEN=fixture\nONIDEL_INSTANCE_TYPE=vhp\nONIDEL_LOCATION=Amsterdam\n"
+    "BENCH_PROVIDER=onidel\nONIDEL_TOKEN=fixture\nONIDEL_INSTANCE_TYPE=vhp\nONIDEL_LOCATION=Amsterdam\n"
     "ONIDEL_VCPU=1\nONIDEL_RAM=2048\nONIDEL_DISK=20\nONIDEL_TEMPLATE=\"Ubuntu 26.04\"\n"
     "ONIDEL_SSH_KEY_ID=a3f2e5d8-1234-4abc-9876-543210fedcba\n"
 )
@@ -62,6 +62,18 @@ class AgentEnvTest(unittest.TestCase):
         self.assertIn("DD_SITE=s1", r.stdout)
         self.assertNotIn("ONIDEL", r.stdout)
         self.assertNotIn("SSH_KEY", r.stdout)
+
+    def test_pulse_url_prefers_the_sink_private_address(self):
+        script = (
+            'BENCH_ROOT="%s"; . "$BENCH_ROOT/lib/common.sh"; . "$BENCH_ROOT/lib/install.sh"; '
+            'PULSE_TOKEN=t PULSE_INSTALLER_SHA256=s BOX_SINK_IP=192.0.2.9 BOX_SINK_PRIVATE_IP=10.0.0.11 agent_env pulse; '
+            'echo ---; BESZEL_KEY=k BESZEL_TOKEN=t BOX_SINK_IP=192.0.2.9 BOX_SINK_PRIVATE_IP=10.0.0.11 agent_env beszel' % ROOT
+        )
+        r = subprocess.run(["bash", "-c", script], capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("PULSE_URL=http://10.0.0.11:7655", r.stdout)
+        self.assertIn("BESZEL_HUB_URL=http://192.0.2.9:8090", r.stdout)   # Beszel keeps the public address
+        self.assertNotIn("BOX_SINK", r.stdout)
 
     def test_agent_env_refuses_forbidden_or_odd_keys(self):
         with tempfile.TemporaryDirectory() as d:

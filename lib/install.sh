@@ -10,7 +10,9 @@ agent_env() {
     die "agent $agent needs the sink but BOX_SINK_IP is empty (bench vm create sink && bench sink up)"
   fi
   export BESZEL_HUB_URL="${BESZEL_HUB_URL:-http://$sink:8090}"
-  export PULSE_URL="${PULSE_URL:-http://$sink:7655}"
+  # Pulse's agent refuses a plain-HTTP server URL unless the host is loopback or a private address:
+  # it reaches the sink over the bed's private network (BOX_SINK_PRIVATE_IP) when there is one.
+  export PULSE_URL="${PULSE_URL:-http://${BOX_SINK_PRIVATE_IP:-$sink}:7655}"
   export SINK_IP="$sink"
   # Only upper-case names listed by the agent; never the operator's own credentials.
   while read -r key; do
@@ -61,11 +63,15 @@ cmd_install() {
 
   local net_ports
   net_ports=$(jq -r '.ports | map(tostring) | join(",")' "$dir/meta.json")
+  # A fresh box has no collector running; on a redo the unit may be active with old globs (the vendor
+  # install's apt run can even restart it through needrestart), so restart it and start the files afresh.
   log "$box: starting the collector"
   ssh_box "$box" "printf 'GLOBS=%s\nNET_PORTS=%s\n' '$(collector_globs "$agent")' '${net_ports:+--net-ports $net_ports}' > /etc/bench-collector.env \
     && cp /opt/bench/collector/bench-collector.service /etc/systemd/system/ \
-    && systemctl daemon-reload && systemctl enable --now bench-collector > /dev/null 2>&1 && systemctl is-active bench-collector"
+    && systemctl daemon-reload && systemctl stop bench-collector > /dev/null 2>&1; rm -f /var/lib/bench/samples.csv /var/lib/bench/events.csv \
+    && systemctl enable bench-collector > /dev/null 2>&1 && systemctl restart bench-collector && systemctl is-active bench-collector"
   mkdir -p "$BENCH_ROOT/.runs"
+  rm -f "${BENCH_ROOT:?}/.runs/$box-$agent-install.json"   # never let a stale record stand in for a failed fetch
   fetch_box "$box" /var/lib/bench/install.json "$BENCH_ROOT/.runs/$box-$agent-install.json"
   jq -r '"\(.agent): \(.status) in \(.seconds)s, version \(.version), units \(.units|join(","))"' "$BENCH_ROOT/.runs/$box-$agent-install.json"
 }

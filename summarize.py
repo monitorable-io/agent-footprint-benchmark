@@ -3,7 +3,8 @@
 
 Per agent and cycle: the idle window is hours 1-24 after the install finished (the first hour is
 reported separately as a warm-up peak), the loaded window is the stress hour after it. CPU % is the
-cgroup's CPU-time delta over wall time on the box's single vCPU. Counters that move backwards (a
+cgroup's CPU-time delta over wall time, as a share of one vCPU (100 % = one core busy; the 2026 boxes
+have two). Counters that move backwards (a
 recreated cgroup) count as a delta from zero. The headline value per metric is the median of the
 three per-cycle values; samples are never pooled across cycles.
 """
@@ -26,8 +27,8 @@ METRICS = [
     ("rss_idle_median_mb", "Memory (RSS), idle median", "MB", True),
     ("memory_peak_mb", "Memory peak (cgroup), whole cycle", "MB", True),
     ("first_hour_peak_mb", "Memory (PSS) peak, first hour after install", "MB", True),
-    ("cpu_idle_pct", "CPU, idle (one vCPU)", "%", True),
-    ("cpu_loaded_pct", "CPU, under load (one vCPU)", "%", True),
+    ("cpu_idle_pct", "CPU, idle (% of one vCPU)", "%", True),
+    ("cpu_loaded_pct", "CPU, under load (% of one vCPU)", "%", True),
     ("disk_written_mb_24h", "Disk written per 24 h", "MB", True),
     ("journal_mb_24h", "Log volume handed to journald per 24 h", "MB", True),
     ("net_out_mb_24h", "Network out per 24 h", "MB", True),

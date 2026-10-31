@@ -1,0 +1,43 @@
+{
+  "pricing": {
+    "currency": "EUR",
+    "vat_rate": "0.000000",
+    "primary_ips": [
+      {
+        "type": "ipv4",
+        "prices": [
+          {
+            "location": "hel1",
+            "price_hourly": {
+              "net": "0.0008000000",
+              "gross": "0.0008000000000000"
+            },
+            "price_monthly": {
+              "net": "0.5000000000",
+              "gross": "0.5000000000000000"
+            }
+          }
+        ]
+      }
+    ],
+    "server_types": [
+      {
+        "id": 114,
+        "name": "cx23",
+        "prices": [
+          {
+            "location": "hel1",
+            "price_hourly": {
+              "net": "0.0088000000",
+              "gross": "0.0088000000000000"
+            },
+            "price_monthly": {
+              "net": "5.4900000000",
+              "gross": "5.4900000000000000"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

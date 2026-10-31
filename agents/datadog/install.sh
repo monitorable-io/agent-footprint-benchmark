@@ -7,5 +7,5 @@ cd "$(dirname "$0")"
 # shellcheck disable=SC1091
 [[ -f env ]] && . ./env
 DD_API_KEY="$DD_API_KEY" DD_SITE="$DD_SITE" bash -c "$(curl -L https://install.datadoghq.com/scripts/install_script_agent7.sh)"
-echo "VERSION=$(datadog-agent version 2>/dev/null | head -1)"
+echo "VERSION=$(datadog-agent version 2>/dev/null | head -1 | sed 's/ - .*//')"
 echo "UNITS=$(systemctl list-units 'datadog-agent*' --all --no-legend --plain | awk '{print $1}' | paste -sd, -)"

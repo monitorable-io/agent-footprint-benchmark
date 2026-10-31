@@ -21,5 +21,5 @@ if [[ -f "$launcher" ]]; then
 else
   echo "vendor systemd launcher not found at $launcher (is cron installed on this box?)" >&2; exit 2
 fi
-echo "VERSION=$(grep -m1 -oE '[Vv]ersion[: ]+[0-9.]+' /etc/hetrixtools/hetrixtools_agent.sh | grep -oE '[0-9.]+$' || echo unknown)"
+echo "VERSION=$(grep -m1 -oE '^Version="?[0-9.]+' /etc/hetrixtools/hetrixtools_agent.sh | grep -oE '[0-9.]+$' || echo unknown)"
 echo "UNITS=$(systemctl list-units 'hetrixtools*' --all --no-legend --plain | awk '{print $1}' | paste -sd, -)"

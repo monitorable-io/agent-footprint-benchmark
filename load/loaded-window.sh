@@ -4,7 +4,7 @@
 set -u
 DURATION=${1:-3600}
 echo "LOAD_START $(date +%s)"
-stress-ng --cpu 1 --vm 1 --vm-bytes 512M --vm-keep --hdd 1 --hdd-bytes 1G --temp-path /var/tmp --timeout "${DURATION}s" --metrics-brief &
+stress-ng --cpu "$(nproc)" --vm 1 --vm-bytes 512M --vm-keep --hdd 1 --hdd-bytes 1G --temp-path /var/tmp --timeout "${DURATION}s" --metrics-brief &
 stress_pid=$!
 end=$(( $(date +%s) + DURATION ))
 while (( $(date +%s) < end )); do

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Onidel Cloud API client. Sourced by bench.
+# Onidel Cloud API client (BENCH_PROVIDER=onidel). Sourced by bench; the vm_* dispatchers live in common.sh.
 #
 # API (read from https://developers.onidel.com/api-reference/openapi.yaml, 2026-10-29):
 #   base URL      https://api.cloud.onidel.com
@@ -20,23 +20,14 @@ ONIDEL_API="${ONIDEL_API:-https://api.cloud.onidel.com}"
 
 # auth_config: a curl config carrying the bearer header, so the token is never in argv (ps-visible).
 auth_config() { printf 'header = "Authorization: Bearer %s"\n' "$ONIDEL_TOKEN"; }
-ONIDEL_FIXTURES=""
 HOURS_PER_MONTH=672
-
-# strip_fixtures ARGS...: consumes a leading `--fixtures DIR`, leaves the rest in REST[].
-strip_fixtures() {
-  REST=()
-  while (($#)); do
-    if [[ "$1" == "--fixtures" ]]; then ONIDEL_FIXTURES=$2; shift 2; else REST+=("$1"); shift; fi
-  done
-}
 
 # onidel_get PATH [QUERY]: GET as JSON; with fixtures, reads <dir>/<first path segment>.json.
 onidel_get() {
   local path=$1 query=${2:-}
-  if [[ -n "$ONIDEL_FIXTURES" ]]; then
+  if [[ -n "$BENCH_FIXTURES" ]]; then
     local f
-    f="$ONIDEL_FIXTURES/$(tr -d '/' <<<"${path%%\?*}").json"
+    f="$BENCH_FIXTURES/$(tr -d '/' <<<"${path%%\?*}").json"
     [[ -f "$f" ]] || die "fixture missing: $f"
     cat "$f"
     return
@@ -47,7 +38,7 @@ onidel_get() {
 
 onidel_post() {
   local path=$1 body=$2
-  [[ -z "$ONIDEL_FIXTURES" ]] || die "no fixture for POST $path"
+  [[ -z "$BENCH_FIXTURES" ]] || die "no fixture for POST $path"
   require_env ONIDEL_TOKEN
   curl -fsS -X POST -K <(auth_config) -H 'Content-Type: application/json' \
     -H 'Accept: application/json' --data "$body" "$ONIDEL_API$path"
@@ -55,7 +46,7 @@ onidel_post() {
 
 onidel_delete() {
   local path=$1
-  [[ -z "$ONIDEL_FIXTURES" ]] || die "no fixture for DELETE $path"
+  [[ -z "$BENCH_FIXTURES" ]] || die "no fixture for DELETE $path"
   require_env ONIDEL_TOKEN
   curl -fsS -X DELETE -K <(auth_config) -H 'Accept: application/json' "$ONIDEL_API$path"
 }
@@ -83,7 +74,7 @@ resolve_template() {
 }
 
 # vm_quote: the billing gate. Prints plan, template and price; never creates anything.
-vm_quote() {
+onidel_vm_quote() {
   require_env ONIDEL_VCPU ONIDEL_RAM ONIDEL_DISK
   local type_id tmpl price
   type_id=$(resolve_instance_type)
@@ -104,7 +95,7 @@ vm_quote() {
   printf '  hourly billing in %s: not knowable from the API; bench vm create asks for payment_cycle=hourly and stops if refused.\n' "$ONIDEL_LOCATION"
 }
 
-vm_list() {
+onidel_vm_list() {
   onidel_get /vm | jq -r '.[] | [.name, .status, (.main_ipv4 // "-"), .id] | @tsv' | column -t
 }
 
@@ -113,20 +104,8 @@ vm_id_of() {
   onidel_get /vm | jq -r --arg n "$1" '[.[] | select(.name == $n)] | first | .id // empty'
 }
 
-# write_env_var KEY VALUE: set KEY in bench.env in place (keeps mode 0600).
-write_env_var() {
-  local key=$1 value=$2
-  if grep -q "^$key=" "$BENCH_ENV"; then
-    sed -i "s|^$key=.*|$key=$value|" "$BENCH_ENV"
-  else
-    printf '%s=%s\n' "$key" "$value" >> "$BENCH_ENV"
-  fi
-}
-
-env_key_for() { printf 'BOX_%s' "$(tr '[:lower:]-' '[:upper:]_' <<<"$1")"; }
-
 # vm_create NAME: provision one box, wait for an address, record BOX_<NAME>_IP and _ID.
-vm_create() {
+onidel_vm_create() {
   local name=$1
   require_env ONIDEL_VCPU ONIDEL_RAM ONIDEL_DISK ONIDEL_SSH_KEY_ID
   [[ -z "$(vm_id_of "$name")" ]] || die "a VM named $name already exists (bench vm list)"
@@ -154,7 +133,7 @@ vm_create() {
   log "$name is $ip (id $id)"
 }
 
-vm_destroy() {
+onidel_vm_destroy() {
   local name=$1 id
   id=$(vm_id_of "$name")
   [[ -n "$id" ]] || { log "$name: no such VM, nothing to destroy"; return 0; }
@@ -166,26 +145,14 @@ vm_destroy() {
   log "destroyed $name ($id)"
 }
 
-vm_reimage() {
+onidel_vm_reimage() {
   local name=$1
-  vm_destroy "$name"
+  onidel_vm_destroy "$name"
   local _i
   for _i in $(seq 1 30); do
     [[ -z "$(vm_id_of "$name")" ]] && break
     sleep 10
   done
-  vm_create "$name"
+  onidel_vm_create "$name"
 }
 
-cmd_quote() { strip_fixtures "$@"; load_env; vm_quote; }
-
-cmd_vm() {
-  strip_fixtures "$@"
-  load_env
-  local sub=${REST[0]:-}
-  case "$sub" in
-    list) vm_list;;
-    create|destroy|reimage) [[ -n "${REST[1]:-}" ]] || die "usage: bench vm $sub <name>"; "vm_$sub" "${REST[1]}";;
-    *) die "usage: bench vm list|create|destroy|reimage <name>";;
-  esac
-}
