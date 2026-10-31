@@ -61,10 +61,13 @@ cmd_install() {
 
   local net_ports
   net_ports=$(jq -r '.ports | map(tostring) | join(",")' "$dir/meta.json")
+  # A fresh box has no collector running; on a redo the unit may be active with old globs (the vendor
+  # install's apt run can even restart it through needrestart), so restart it and start the files afresh.
   log "$box: starting the collector"
   ssh_box "$box" "printf 'GLOBS=%s\nNET_PORTS=%s\n' '$(collector_globs "$agent")' '${net_ports:+--net-ports $net_ports}' > /etc/bench-collector.env \
     && cp /opt/bench/collector/bench-collector.service /etc/systemd/system/ \
-    && systemctl daemon-reload && systemctl enable --now bench-collector > /dev/null 2>&1 && systemctl is-active bench-collector"
+    && systemctl daemon-reload && systemctl stop bench-collector > /dev/null 2>&1; rm -f /var/lib/bench/samples.csv /var/lib/bench/events.csv \
+    && systemctl enable bench-collector > /dev/null 2>&1 && systemctl restart bench-collector && systemctl is-active bench-collector"
   mkdir -p "$BENCH_ROOT/.runs"
   fetch_box "$box" /var/lib/bench/install.json "$BENCH_ROOT/.runs/$box-$agent-install.json"
   jq -r '"\(.agent): \(.status) in \(.seconds)s, version \(.version), units \(.units|join(","))"' "$BENCH_ROOT/.runs/$box-$agent-install.json"

@@ -20,4 +20,7 @@ out2=$(merge_meta "$d/meta.json" "$d/install.json" "$d/schedule-control.json" "$
 check "footprint optional" "$(jq -r '.footprint // "none"' <<<"$out2")" none
 check "no world-open ports from cycle" "$(grep -c -- '--ports' lib/cycle.sh)" 0
 check "no caller of the old rotation left" "$(grep -c 'box_for\|agent_at' lib/*.sh | awk -F: '{s+=$2} END{print s}')" 0
+check "install restarts the collector with the new globs (never enable --now on a running unit)" "$(grep -c 'systemctl restart bench-collector' lib/install.sh)" 1
+check "install never leaves a running collector untouched" "$(grep -c 'enable --now bench-collector' lib/install.sh)" 0
+check "install starts from empty sample files" "$(grep -c 'rm -f /var/lib/bench/samples.csv /var/lib/bench/events.csv' lib/install.sh)" 1
 echo PASS
