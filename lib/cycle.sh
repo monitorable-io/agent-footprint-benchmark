@@ -116,10 +116,22 @@ cmd_cycle() {
       reset_log_unless_filtered "$failures"
       started=$(date +%s)
       export SLOT=$s
-      # The hubs must forget the boxes being rebuilt first (full slot: every record; redo: those boxes).
-      # shellcheck disable=SC2086
-      [[ -n "${BOX_SINK_IP:-}" ]] && sink_reset_hubs ${BENCH_ONLY_BOXES:-}
-      [[ -n "${BOX_SINK_IP:-}" ]] && sink_retarget "$s"
+      if [[ -n "${BOX_SINK_IP:-}" ]]; then
+        # The hubs forget exactly the boxes about to be rebuilt (a redo: only those), and the slot's
+        # Pulse box gets a token of its own: Pulse binds a token to one Docker host and revokes it when
+        # the last host using it is removed.
+        local names=() pulse_box=""
+        for line in "${lines[@]}"; do
+          read -r _ box role _ _ _ <<<"$line"
+          names+=("$box"); [[ "$role" == pulse ]] && pulse_box=$box
+        done
+        if [[ -n "$pulse_box" ]]; then
+          sink_reset_hubs --pulse-token "bench slot-$s $pulse_box" "${names[@]}"
+        else
+          sink_reset_hubs "${names[@]}"
+        fi
+        sink_retarget "$s"
+      fi
       for line in "${lines[@]}"; do
         read -r _ box role run cyc outname <<<"$line"
         outdir=$(cycle_dir "$cyc"); mkdir -p "$outdir"; touched+=("$outdir")

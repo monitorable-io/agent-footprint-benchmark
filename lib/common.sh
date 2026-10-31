@@ -35,9 +35,10 @@ box_ip() {
   printf '%s' "${!key}"
 }
 
-ssh_opts() {
-  printf '%s' "-n -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 -i ${SSH_KEY_PATH:-$HOME/.ssh/id_ed25519}"
+ssh_opts_base() {
+  printf '%s' "-o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 -i ${SSH_KEY_PATH:-$HOME/.ssh/id_ed25519}"
 }
+ssh_opts() { printf -- '-n %s' "$(ssh_opts_base)"; }   # -n: stdin closed (commands never read it)
 
 # ssh_box NAME CMD...: run a command on the box as root. A BOX_<NAME>_IP of the form
 # lxd:<instance> addresses a local LXD instance instead (dry runs), through lxc exec.
@@ -63,7 +64,7 @@ ssh_box_stdin() {
     lxc exec "${ip#lxd:}" -- bash -c "$*"
   else
     # shellcheck disable=SC2046,SC2029
-    ssh $(ssh_opts | sed 's/^-n //') "root@$ip" "$@"
+    ssh $(ssh_opts_base) "root@$ip" "$@"
   fi
 }
 

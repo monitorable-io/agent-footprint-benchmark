@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# bench sink up|down|status: the hub box for the polled agents.
+# bench sink up|down|status|reset: the hub box for the polled agents (reset: see sink_reset_hubs).
 
 # box_addr NAME: the address other boxes use to reach NAME (lxd: boxes resolve to their first IPv4).
 box_addr() {
@@ -23,9 +23,9 @@ cmd_sink() {
       sink_allow_boxes
       log "UIs: ssh -L 8090:127.0.0.1:8090 -L 7655:127.0.0.1:7655 root@$(box_addr sink)  then http://localhost:8090 and :7655";;
     down) ssh_box sink "cd /opt/bench/sink && docker compose down";;
-    reset) shift; sink_reset_hubs "$@";;
+    reset) shift; sink_reset_guard "$@"; sink_reset_hubs "$@";;
     status) ssh_box sink "cd /opt/bench/sink && docker compose ps && systemctl is-active glances-poller || true";;
-    *) die "usage: bench sink up|down|status";;
+    *) die "usage: bench sink up|down|status|reset [--dry-run] [--pulse-token NAME] (--all | box...)";;
   esac
 }
 
@@ -73,14 +73,42 @@ sink_retarget() {
   sink_allow_boxes
 }
 
-# sink_reset_hubs [--dry-run] [HOSTNAME...]: forget the Beszel systems and Pulse agents of the boxes about
-# to be rebuilt (none named = all of them) and keep Beszel's universal token permanent; sink/reset-hubs.py
-# explains why. Hub admin credentials travel on stdin, never in argv.
+# sink_reset_hubs [--dry-run] [--pulse-token NAME] (--all | BOX...): the hubs forget the named boxes
+# (sink/reset-hubs.py explains why), Beszel's universal token stays permanent and, with --pulse-token, a
+# scoped Pulse agent token for this slot is created and exported as PULSE_TOKEN for the installs that
+# follow in this process. Hub admin credentials travel on stdin, never in argv; the token line never
+# reaches the logs. Any failure aborts the caller.
 sink_reset_hubs() {
+  local a args=() out rc=0 line tok
+  for a in "$@"; do args+=("$(printf '%q' "$a")"); done
   scp_box sink "$BENCH_ROOT/sink/reset-hubs.py" /opt/bench/sink/reset-hubs.py
-  printf '%s\n' "${BESZEL_ADMIN_EMAIL:-}" "${BESZEL_ADMIN_PASSWORD:-}" "${BESZEL_TOKEN:-}" "${PULSE_ADMIN_USER:-}" "${PULSE_ADMIN_PASSWORD:-}" \
-    | ssh_box_stdin sink "python3 /opt/bench/sink/reset-hubs.py $*" | sed 's/^/sink: /'
-  [[ "${PIPESTATUS[1]}" == 0 ]] || die "sink: reset-hubs failed (hub admin credentials in bench.env?)"
+  out=$(printf '%s\n' "${BESZEL_ADMIN_EMAIL:-}" "${BESZEL_ADMIN_PASSWORD:-}" "${BESZEL_TOKEN:-}" "${PULSE_ADMIN_USER:-}" "${PULSE_ADMIN_PASSWORD:-}" \
+    | ssh_box_stdin sink "python3 /opt/bench/sink/reset-hubs.py ${args[*]}") || rc=$?
+  while IFS= read -r line; do
+    [[ "$line" == PULSE_TOKEN=* ]] && continue
+    [[ -n "$line" ]] && log "sink: $line"
+  done <<<"$out"
+  [[ "$rc" == 0 ]] || die "sink: reset-hubs failed (exit $rc; hub admin credentials in bench.env? sink reachable?)"
+  tok=$(grep '^PULSE_TOKEN=' <<<"$out" | tail -1 | cut -d= -f2-)
+  if [[ -n "$tok" ]]; then
+    export PULSE_TOKEN="$tok"
+    log "sink: this slot's Pulse agent token is exported for the install (bench.env's PULSE_TOKEN is not used)"
+  fi
+}
+
+# sink_reset_guard ARGS...: `bench sink reset --all` must not run while a slot's boxes are still measuring:
+# it would forget the live systems/agents (and Pulse would revoke the token of the last one).
+sink_reset_guard() {
+  local all=0 dry=0 a f last now
+  for a in "$@"; do [[ "$a" == --all ]] && all=1; [[ "$a" == --dry-run ]] && dry=1; done
+  ((all && !dry)) || return 0
+  now=$(date +%s)
+  for f in "$BENCH_ROOT"/data/*/slots/slot-*.json; do
+    [[ -f "$f" ]] || continue
+    last=$(jq -r '[.boxes[].stop] | max // 0' "$f")
+    ((last > now)) && die "sink reset --all refused: $(basename "$f") runs until $(date -u -d @"$last" +%FT%TZ); name the boxes instead"
+  done
+  return 0
 }
 
 # sink_status: the Prometheus target health and the poller's last line, so an unpolled row is visible.
