@@ -1,0 +1,6 @@
+{
+  "provider": "Hetzner Cloud",
+  "location": "Helsinki (HEL1)",
+  "plan": "CX23: 2 vCPU AMD EPYC (shared), 4 GB RAM, 40 GB NVMe",
+  "image": "Ubuntu 26.04 LTS"
+}
