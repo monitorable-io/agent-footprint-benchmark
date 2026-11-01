@@ -82,7 +82,22 @@ write_slot_manifest() {
     jq -s --argjson s "$s" --argjson st "$started" '{slot: $s, startedAt: $st, boxes: [.[] | select(.slot == $s)]}' "${files[@]}"
   else
     jq -n --argjson s "$s" --argjson st "$started" '{slot: $s, startedAt: $st, boxes: []}'
-  fi > "$(slots_dir)/slot-$s.json"
+  fi > "$(slots_dir)/slot-$s.json.tmp" && mv -f "$(slots_dir)/slot-$s.json.tmp" "$(slots_dir)/slot-$s.json"
+}
+
+# cycle_start_guard S: a full start while any slot's boxes are still measuring would rebuild them and
+# lose that slot's samples. BENCH_ONLY_BOXES (a deliberate redo of named boxes) is the exception.
+cycle_start_guard() {
+  local f last now
+  [[ -z "${BENCH_ONLY_BOXES:-}" ]] || return 0
+  now=$(date +%s)
+  for f in "$(slots_dir)"/slot-*.json; do
+    [[ -f "$f" ]] || continue
+    last=$(jq -r '[.boxes[].stop] | max // 0' "$f" 2>/dev/null || echo 0)
+    [[ "$last" =~ ^[0-9]+$ ]] || last=0
+    ((last > now)) && die "refused: $(basename "$f") runs until $(date -u -d @"$last" +%FT%TZ); a start now would rebuild its boxes (BENCH_ONLY_BOXES=\"box-N\" redoes one box)"
+  done
+  return 0
 }
 
 # merge_meta META INSTALL SCHEDULE [FOOTPRINT] > merged meta.json for one agent+cycle.
@@ -108,6 +123,7 @@ cmd_cycle() {
     start)
       load_env
       [[ "$s" =~ ^[0-3]$ ]] || die "usage: bench cycle start <0|1|2|3>"
+      cycle_start_guard "$s"
       local sd; sd=$(slots_dir); mkdir -p "$sd"
       local failures="$sd/slot-$s.failures.log" started line box role run cyc outname outdir touched=()
       local lines; mapfile -t lines < <(slot_plan "$s")
