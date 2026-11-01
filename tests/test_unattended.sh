@@ -58,6 +58,11 @@ check "append lands at the end" "$(tail -1 "$rl")" "- halted line"
 runlog_mark 'no such anchor' "text"
 check "a missing anchor appends instead of losing the line" "$(tail -1 "$rl")" "- [x] no such anchor text"
 check "no trailing blank lines pile up" "$(tail -c1 "$rl" | xxd -p)" "0a"
+runlog_append "- target http://46.62.144.243:9100/metrics up, box 10.0.0.11 reachable"
+check "the run log never gets an address or a URL from automated lines" "$(tail -1 "$rl")" "- target <url> up, box <ip> reachable"
+check "sink line becomes counts and a code" "$(auto_sink_summary "sink: prometheus targets [('http://46.62.144.243:9100/metrics', 'up')]; poller 2026-11-01T16:50:36Z 200")" "sink: targets 1/1 up; poller 200"
+check "an empty target list is reported as such" "$(auto_sink_summary "sink: prometheus targets []; poller ")" "sink: targets 0/0 up; poller none"
+check "an unreachable sink is named" "$(auto_sink_summary "sink: unreachable")" "sink: unreachable"
 
 # --- init markers
 rm -rf "$d/data/test/auto"; rm -f "$d/data/test/slots/slot-2.json" "$d/data/test/slots/slot-3.json"
@@ -71,13 +76,18 @@ check "init leaves the decision at the running slot" "$(AUTO_NOW=9700 auto_decid
 calls="$d/calls"; : > "$calls"
 cmd_collect() { echo "collect $1" >> "$calls"; : > "$d/data/test/slots/slot-$1.collect-failures.log"; samples_for_slot "$1"; }
 cmd_summarize() { echo summarize >> "$calls"; }
-cmd_cycle() { echo "cycle $1 $2" >> "$calls"; if [[ "$1" == start ]]; then manifest "$2" 200000 290000; : > "$d/data/test/slots/slot-$2.failures.log"; else echo "x box-0 cycle-1 active rows=1"; fi; }
+cmd_cycle() { echo "cycle $1 $2" >> "$calls"; if [[ "$1" == start ]]; then manifest "$2" 200000 290000; : > "$d/data/test/slots/slot-$2.failures.log"; else echo "x box-0 cycle-1 active rows=1"; echo "sink: prometheus targets [('http://1.2.3.4:9100/metrics', 'up')]; poller 2026-11-01T16:50:36Z 200"; fi; }
 sink_reset_hubs() { echo "sink: beszel: would forget box-6 (1.2.3.4, up)"; echo "sink: pulse: would forget box-0 (abc…)"; } >&2
 auto_notify() { echo "notify $1" >> "$calls"; }
 AUTO_NOW=100120 auto_tick > /dev/null 2>&1
 check "tick collected slot 1 then started slot 2, with the immediate status" "$(paste -sd' ' "$calls")" "collect 1 summarize notify bench: slot 2 collected cycle start 2 cycle status 2 notify bench: slot 3 started"
 check "the collect line reached the run log" "$(grep -c 'collect 1` at: .*unattended runner' "$rl")" 1
 check "the start line reached the run log with the hub check" "$(grep -c 'cycle start 2` at: .*beszel box-6 up; pulse box-0 registered' "$rl")" 1
+check "the start line carries derived sink states, no address" "$(grep -c 'cycle start 2` at: .*sink: targets 1/1 up; poller 200; hubs' "$rl")" 1
+check "no address reached the run log at all" "$(grep -c '1\.2\.3\.4' "$rl")" 0
+sink_reset_hubs() { echo "sink: beszel: would forget box-6 (1.2.3.4, down)"; } >&2
+check "a down Beszel box is flagged with its state only" "$(auto_hubcheck 2)" "hubs: ATTENTION beszel box-6 is down; ATTENTION pulse box-0 not registered"
+sink_reset_hubs() { echo "sink: beszel: would forget box-6 (1.2.3.4, up)"; echo "sink: pulse: would forget box-0 (abc…)"; } >&2
 check "a second tick while measuring only waits" "$(AUTO_NOW=200100 auto_tick 2>&1 >/dev/null | grep -c 'measuring; collect at')" 1
 # --- a collect failure halts; the next slot is NOT started
 : > "$calls"

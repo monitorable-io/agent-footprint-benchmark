@@ -86,10 +86,15 @@ auto_code_ref() {
 # --- run log ----------------------------------------------------------------------------------------
 # runlog_edit MODE PREFIX LINE: mark = replace the line "- [ ] PREFIX…" with LINE; after = insert LINE
 # after the line "- [x] PREFIX…"; append = add LINE at the end. A missing anchor appends LINE instead.
+# The run log is pushed: the automated lines carry derived states, never raw box output, and any
+# IPv4 address or URL that still reaches them is redacted here (the local auto.log keeps the full text).
+runlog_redact() { sed -E 's#https?://[^ )>]+#<url>#g; s#\b([0-9]{1,3}\.){3}[0-9]{1,3}\b#<ip>#g'; }
+
 runlog_edit() {
-  local f; f=$(runlog_file)
-  [[ -f "$f" ]] || { log "auto: no run log at $f (bench auto init adds the worktree); not recorded: $3"; return 0; }
-  python3 -I - "$f" "$1" "$2" "$3" <<'PY'
+  local f line; f=$(runlog_file)
+  line=$(runlog_redact <<<"$3")
+  [[ -f "$f" ]] || { log "auto: no run log at $f (bench auto init adds the worktree); not recorded: $line"; return 0; }
+  python3 -I - "$f" "$1" "$2" "$line" <<'PY'
 import sys
 path, mode, prefix, line = sys.argv[1:5]
 lines = open(path).read().split("\n")
@@ -139,15 +144,28 @@ auto_hubcheck() {
   [[ -n "$p" ]] && names+=("$p")
   ((${#names[@]})) || { printf 'hubs: no beszel/pulse row in this slot'; return 0; }
   if ! out=$( ( sink_reset_hubs --dry-run "${names[@]}" ) 2>&1 ); then
-    printf 'hubs: ATTENTION hub check failed (%s)' "$(tail -1 <<<"$out")"; return 0
+    printf '%s\n' "$out" >&2
+    printf 'hubs: ATTENTION hub check failed (see auto.log)'; return 0
   fi
   if [[ -n "$b" ]]; then
-    if grep -q "beszel: would forget $b (.*, up)" <<<"$out"; then res+=("beszel $b up"); else res+=("ATTENTION beszel $b not up ($(grep -o 'beszel: .*' <<<"$out" | paste -sd'/' || true))"); fi
+    if grep -q "beszel: would forget $b (.*, up)" <<<"$out"; then res+=("beszel $b up")
+    else res+=("ATTENTION beszel $b $(grep -oE "would forget $b \([^)]*\)" <<<"$out" | sed -E 's/.*, ([^,)]*)\)$/is \1/' | head -1 || true)"); fi
   fi
   if [[ -n "$p" ]]; then
     if grep -q "pulse: would forget $p (" <<<"$out"; then res+=("pulse $p registered"); else res+=("ATTENTION pulse $p not registered"); fi
   fi
   printf 'hubs: %s' "$(printf '%s; ' "${res[@]}" | sed 's/; $//')"
+}
+
+# auto_sink_summary LINE -> "sink: targets U/T up; poller CODE" from sink_status's line (no URLs, no IPs).
+auto_sink_summary() {
+  local line=$1 t u code
+  [[ -n "$line" ]] || { printf 'sink: no status line'; return 0; }
+  [[ "$line" == *unreachable* ]] && { printf 'sink: unreachable'; return 0; }
+  t=$(grep -o "'http" <<<"$line" | wc -l); u=$(grep -o "'up')" <<<"$line" | wc -l)
+  code=$(grep -oE 'poller .*' <<<"$line" | awk '{print $NF}')
+  [[ "$code" =~ ^[0-9]{3}$ ]] || code="none"
+  printf 'sink: targets %s/%s up; poller %s' "$u" "$t" "$code"
 }
 
 # auto_status SLOT LABEL -> a one-line summary on stdout; the full output goes to the log (stderr).
@@ -160,7 +178,7 @@ auto_status() {
   n=$(BENCH_ONLY_BOXES='' slot_plan "$s" | wc -l)
   active=$(grep -c ' active rows=' <<<"$out" || true)
   hub=$(auto_hubcheck "$s")
-  summary="$active/$n rows active; $(grep '^sink:' <<<"$out" | head -1 || true); $hub"
+  summary="$active/$n rows active; $(auto_sink_summary "$(grep '^sink:' <<<"$out" | head -1 || true)"); $hub"
   if [[ "$label" == "+1 h" ]]; then
     date -u +%FT%TZ > "$(auto_dir)/slot-$s.status-1h"
     runlog_after "\`./bench cycle start $s\` at:" "- [x] \`./bench cycle status $s\` at $(auto_utc "$t") (+1 h, unattended runner): $summary"
