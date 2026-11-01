@@ -26,6 +26,9 @@ usage: bench <subcommand> [args]
   cycle start <s>|status     one ~26 h slot (s = 0..3): rebuild, provision, install, timers on the boxes
   collect <s>                fetch the slot's CSVs into the cycle dirs its roles belong to
   summarize [<year>]         data/<year> -> results.json + results.md
+  auto init|tick|status|decide|resume|cron-line
+                             the unattended runner: a cron tick collects a finished slot, starts the
+                             next one, checks it, and writes the run log (lib/unattended.sh)
 USAGE
 }
 

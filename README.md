@@ -94,6 +94,17 @@ data/2026`. `BENCH_ONLY_BOXES="box-4" ./bench cycle start <s>` redoes one
 box (and forgets only it on the hubs). `bench sink reset --all` is refused
 while a slot is running. `docs/RUN-2026.md` is the run log.
 
+The rest of a run needs no session: `./bench auto init` (markers for the
+work already done by hand, a worktree of the data branch for the run log,
+the cron line), then that line in the crontab of the host. Every tick
+(`./bench auto tick`) reads the slot manifests and the markers in
+`data/<year>/auto/`, collects a slot once its last stop has passed, starts
+the next slot in the same tick, runs `cycle status` and a hub check right
+after and again at +1 h, and writes each step to the run log (committed and
+pushed). A collect with a failure halts the runner instead of starting the
+next slot, since the start would rebuild the uncollected boxes: fix by
+hand, then `./bench auto resume`. `./bench auto status` shows where it is.
+
 ## Adding an agent
 
 Create `agents/<name>/install.sh` (documented commands only, source URL in the
