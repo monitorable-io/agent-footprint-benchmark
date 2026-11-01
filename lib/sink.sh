@@ -89,7 +89,8 @@ sink_reset_hubs() {
     [[ -n "$line" ]] && log "sink: $line"
   done <<<"$out"
   [[ "$rc" == 0 ]] || die "sink: reset-hubs failed (exit $rc; hub admin credentials in bench.env? sink reachable?)"
-  tok=$(grep '^PULSE_TOKEN=' <<<"$out" | tail -1 | cut -d= -f2-)
+  # A slot without a Pulse role returns no token line: grep's exit 1 must not trip errexit via pipefail.
+  tok=$(grep '^PULSE_TOKEN=' <<<"$out" | tail -1 | cut -d= -f2- || true)
   if [[ -n "$tok" ]]; then
     export PULSE_TOKEN="$tok"
     log "sink: this slot's Pulse agent token is exported for the install (bench.env's PULSE_TOKEN is not used)"
