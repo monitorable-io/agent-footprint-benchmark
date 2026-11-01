@@ -12,8 +12,10 @@ printf '%s\n' "$@" > "$STUB_DIR/ssh.args"
 cat > "$STUB_DIR/ssh.stdin"
 echo "beszel: forgot box-3 (192.0.2.13, down)"
 echo "pulse: forgot box-3 (agent-3…)"
-echo "pulse: created agent token 'bench slot-1 box-3'"
-echo "PULSE_TOKEN=raw-slot-token-value"
+if [[ -z "${STUB_NO_TOKEN:-}" ]]; then
+  echo "pulse: created agent token 'bench slot-1 box-3'"
+  echo "PULSE_TOKEN=raw-slot-token-value"
+fi
 exit "${STUB_EXIT:-0}"
 STUB
 cat > "$tmp/bin/scp" <<'STUB'
@@ -40,6 +42,15 @@ grep -q "sink: pulse: forgot box-3" "$tmp/log" || fail "forget line not logged"
 grep -q "raw-slot-token-value" "$tmp/log" && fail "token line reached the log"
 [[ "$PULSE_TOKEN" == raw-slot-token-value ]] || fail "PULSE_TOKEN not exported: $PULSE_TOKEN"
 grep -q "token is exported" "$tmp/log" || fail "export not announced"
+
+# No --pulse-token (a slot without a Pulse role): the stub prints no token line; the call must succeed
+# and leave PULSE_TOKEN alone (this exact path aborted slot 2 silently on 2026-11-01 under pipefail).
+export PULSE_TOKEN=setup-day-token STUB_NO_TOKEN=1
+sink_reset_hubs box-0 box-6 2> "$tmp/log4" || fail "call without --pulse-token failed: $(cat "$tmp/log4")"
+[[ "$PULSE_TOKEN" == setup-day-token ]] || fail "PULSE_TOKEN changed without a token line: $PULSE_TOKEN"
+grep -q "sink: pulse: forgot box-3" "$tmp/log4" || fail "forget line not logged (no-token path)"
+grep -q "token is exported" "$tmp/log4" && fail "export announced without a token"
+unset STUB_NO_TOKEN
 
 # A remote failure aborts the caller (die), in a subshell so this test survives.
 if (STUB_EXIT=3 sink_reset_hubs box-3 2> "$tmp/log2"); then fail "remote exit 3 did not abort"; fi
