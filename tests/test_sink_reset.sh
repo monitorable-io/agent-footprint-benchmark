@@ -43,8 +43,23 @@ grep -q "raw-slot-token-value" "$tmp/log" && fail "token line reached the log"
 [[ "$PULSE_TOKEN" == raw-slot-token-value ]] || fail "PULSE_TOKEN not exported: $PULSE_TOKEN"
 grep -q "token is exported" "$tmp/log" || fail "export not announced"
 
+# The slot token must survive the `load_env` that cmd_install runs before agent_env reads PULSE_TOKEN:
+# on 2026-11-02 (slot 3) bench.env's setup-day token came back through that re-source and Pulse box-0
+# was rejected with 401 for 41 minutes.
+printf 'PULSE_TOKEN=setup-day-token\nPULSE_INSTALLER_SHA256=sha-from-env\n' > "$tmp/bench.env"; chmod 0600 "$tmp/bench.env"
+export BOX_SINK_PRIVATE_IP=10.0.0.11
+(
+  BENCH_ENV="$tmp/bench.env"
+  . lib/install.sh
+  load_env
+  agent_env pulse > "$tmp/env.pulse"
+)
+grep -qx 'PULSE_TOKEN=raw-slot-token-value' "$tmp/env.pulse" || fail "slot token lost after load_env: $(grep PULSE_TOKEN "$tmp/env.pulse")"
+grep -qx 'PULSE_INSTALLER_SHA256=sha-from-env' "$tmp/env.pulse" || fail "bench.env values other than the token must still be read: $(cat "$tmp/env.pulse")"
+
 # No --pulse-token (a slot without a Pulse role): the stub prints no token line; the call must succeed
 # and leave PULSE_TOKEN alone (this exact path aborted slot 2 silently on 2026-11-01 under pipefail).
+# shellcheck disable=SC2031  # the subshell above changed PULSE_TOKEN on purpose; this is a fresh export
 export PULSE_TOKEN=setup-day-token STUB_NO_TOKEN=1
 sink_reset_hubs box-0 box-6 2> "$tmp/log4" || fail "call without --pulse-token failed: $(cat "$tmp/log4")"
 [[ "$PULSE_TOKEN" == setup-day-token ]] || fail "PULSE_TOKEN changed without a token line: $PULSE_TOKEN"

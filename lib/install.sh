@@ -14,6 +14,8 @@ agent_env() {
   # it reaches the sink over the bed's private network (BOX_SINK_PRIVATE_IP) when there is one.
   export PULSE_URL="${PULSE_URL:-http://${BOX_SINK_PRIVATE_IP:-$sink}:7655}"
   export SINK_IP="$sink"
+  # The slot's own Pulse token (sink_reset_hubs) outranks bench.env's, which load_env has just re-read.
+  [[ -z "${BENCH_SLOT_PULSE_TOKEN:-}" ]] || export PULSE_TOKEN="$BENCH_SLOT_PULSE_TOKEN"
   # Only upper-case names listed by the agent; never the operator's own credentials.
   while read -r key; do
     [[ -n "$key" ]] || continue
