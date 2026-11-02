@@ -41,6 +41,7 @@ grep -q "reset-hubs.py --pulse-token bench\\\\ slot-1\\\\ box-3 box-3" "$tmp/ssh
 grep -q "sink: pulse: forgot box-3" "$tmp/log" || fail "forget line not logged"
 grep -q "raw-slot-token-value" "$tmp/log" && fail "token line reached the log"
 [[ "$PULSE_TOKEN" == raw-slot-token-value ]] || fail "PULSE_TOKEN not exported: $PULSE_TOKEN"
+[[ "${BENCH_SLOT_PULSE_TOKEN:-}" == raw-slot-token-value ]] || fail "BENCH_SLOT_PULSE_TOKEN not exported: ${BENCH_SLOT_PULSE_TOKEN:-}"
 grep -q "token is exported" "$tmp/log" || fail "export not announced"
 
 # The slot token must survive the `load_env` that cmd_install runs before agent_env reads PULSE_TOKEN:
@@ -56,6 +57,9 @@ export BOX_SINK_PRIVATE_IP=10.0.0.11
 )
 grep -qx 'PULSE_TOKEN=raw-slot-token-value' "$tmp/env.pulse" || fail "slot token lost after load_env: $(grep PULSE_TOKEN "$tmp/env.pulse")"
 grep -qx 'PULSE_INSTALLER_SHA256=sha-from-env' "$tmp/env.pulse" || fail "bench.env values other than the token must still be read: $(cat "$tmp/env.pulse")"
+printf 'BENCH_SLOT_PULSE_TOKEN=operator-copy\n' >> "$tmp/bench.env"
+if (BENCH_ENV="$tmp/bench.env"; load_env 2> "$tmp/log5"); then fail "load_env accepted BENCH_SLOT_PULSE_TOKEN in bench.env"; fi
+grep -q "must not define BENCH_SLOT_PULSE_TOKEN" "$tmp/log5" || fail "load_env message: $(cat "$tmp/log5")"
 
 # No --pulse-token (a slot without a Pulse role): the stub prints no token line; the call must succeed
 # and leave PULSE_TOKEN alone (this exact path aborted slot 2 silently on 2026-11-01 under pipefail).

@@ -91,7 +91,9 @@ the last host that used it; `bench sink reset --dry-run box-3` shows what
 it would do), `./bench cycle status` right after and again after an hour,
 `./bench collect <s>` after 26 h, for s = 0…3; `python3 summarize.py
 data/2026`. `BENCH_ONLY_BOXES="box-4" ./bench cycle start <s>` redoes one
-box (and forgets only it on the hubs). `bench sink reset --all` is refused
+box (and forgets only it on the hubs). A plain `bench install pulse box-N`
+has no slot token and warns: it writes bench.env's setup-day `PULSE_TOKEN`,
+which Pulse revoked with the last host that used it. `bench sink reset --all` is refused
 while a slot is running. `docs/RUN-2026.md` is the run log.
 
 The rest of a run needs no session: `./bench auto init` (markers for the

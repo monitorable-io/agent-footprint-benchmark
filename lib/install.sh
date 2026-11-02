@@ -36,6 +36,11 @@ cmd_install() {
   load_env
   local dir="$BENCH_ROOT/agents/$agent"
   [[ -f "$dir/meta.json" ]] || die "unknown agent $agent (agents/*/)"
+  # Outside `cycle start` there is no slot token: bench.env's setup-day PULSE_TOKEN goes to the box, and
+  # Pulse has revoked it if the last host that used it was forgotten (401 on every report).
+  if [[ "$agent" == pulse && -z "${BENCH_SLOT_PULSE_TOKEN:-}" ]]; then
+    log "pulse: using bench.env's setup-day PULSE_TOKEN (revoked once its last host was forgotten); a measured box is redone with BENCH_ONLY_BOXES=\"$box\" ./bench cycle start <s>, which mints a token"
+  fi
   local envfile
   envfile=$(mktemp)
   chmod 0600 "$envfile"

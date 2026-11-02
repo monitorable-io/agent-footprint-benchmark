@@ -21,6 +21,8 @@ load_env() {
   local mode
   mode=$(stat -c %a "$BENCH_ENV")
   [[ "$mode" == "600" ]] || die "bench.env must be mode 0600 (is $mode)"
+  # Set by bench cycle start for the slot's Pulse install; a copy in bench.env would override it.
+  grep -q '^BENCH_SLOT_PULSE_TOKEN=' "$BENCH_ENV" && die "bench.env must not define BENCH_SLOT_PULSE_TOKEN (bench cycle start sets it)"
   set -a
   # shellcheck disable=SC1090
   . "$BENCH_ENV"
