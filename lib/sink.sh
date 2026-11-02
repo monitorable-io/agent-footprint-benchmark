@@ -75,9 +75,12 @@ sink_retarget() {
 
 # sink_reset_hubs [--dry-run] [--pulse-token NAME] (--all | BOX...): the hubs forget the named boxes
 # (sink/reset-hubs.py explains why), Beszel's universal token stays permanent and, with --pulse-token, a
-# scoped Pulse agent token for this slot is created and exported as PULSE_TOKEN for the installs that
-# follow in this process. Hub admin credentials travel on stdin, never in argv; the token line never
-# reaches the logs. Any failure aborts the caller.
+# scoped Pulse agent token for this slot is created and exported as PULSE_TOKEN *and* BENCH_SLOT_PULSE_TOKEN
+# for the installs that follow in this process: cmd_install re-sources bench.env (load_env) before
+# agent_env reads PULSE_TOKEN, which put the setup-day token back on 2026-11-02 (slot 3, Pulse box-0
+# rejected with 401 for 41 min); agent_env prefers BENCH_SLOT_PULSE_TOKEN, which bench.env never sets.
+# Hub admin credentials travel on stdin, never in argv; the token line never reaches the logs. Any
+# failure aborts the caller.
 sink_reset_hubs() {
   local a args=() out rc=0 line tok
   for a in "$@"; do args+=("$(printf '%q' "$a")"); done
@@ -92,7 +95,7 @@ sink_reset_hubs() {
   # A slot without a Pulse role returns no token line: grep's exit 1 must not trip errexit via pipefail.
   tok=$(grep '^PULSE_TOKEN=' <<<"$out" | tail -1 | cut -d= -f2- || true)
   if [[ -n "$tok" ]]; then
-    export PULSE_TOKEN="$tok"
+    export PULSE_TOKEN="$tok" BENCH_SLOT_PULSE_TOKEN="$tok"
     log "sink: this slot's Pulse agent token is exported for the install (bench.env's PULSE_TOKEN is not used)"
   fi
 }

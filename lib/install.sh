@@ -14,6 +14,8 @@ agent_env() {
   # it reaches the sink over the bed's private network (BOX_SINK_PRIVATE_IP) when there is one.
   export PULSE_URL="${PULSE_URL:-http://${BOX_SINK_PRIVATE_IP:-$sink}:7655}"
   export SINK_IP="$sink"
+  # The slot's own Pulse token (sink_reset_hubs) outranks bench.env's, which load_env has just re-read.
+  [[ -z "${BENCH_SLOT_PULSE_TOKEN:-}" ]] || export PULSE_TOKEN="$BENCH_SLOT_PULSE_TOKEN"
   # Only upper-case names listed by the agent; never the operator's own credentials.
   while read -r key; do
     [[ -n "$key" ]] || continue
@@ -34,6 +36,11 @@ cmd_install() {
   load_env
   local dir="$BENCH_ROOT/agents/$agent"
   [[ -f "$dir/meta.json" ]] || die "unknown agent $agent (agents/*/)"
+  # Outside `cycle start` there is no slot token: bench.env's setup-day PULSE_TOKEN goes to the box, and
+  # Pulse has revoked it if the last host that used it was forgotten (401 on every report).
+  if [[ "$agent" == pulse && -z "${BENCH_SLOT_PULSE_TOKEN:-}" ]]; then
+    log "pulse: using bench.env's setup-day PULSE_TOKEN (revoked once its last host was forgotten); a measured box is redone with BENCH_ONLY_BOXES=\"$box\" ./bench cycle start <s>, which mints a token"
+  fi
   local envfile
   envfile=$(mktemp)
   chmod 0600 "$envfile"
