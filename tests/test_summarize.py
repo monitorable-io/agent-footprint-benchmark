@@ -123,8 +123,10 @@ class SummarizeTest(unittest.TestCase):
         self.assertEqual(set(r["run"]["cycles"][0]), {"start", "end"})
         self.assertEqual(set(r["metrics"][0]), {"key", "label", "unit", "lowerIsBetter"})
         row = r["rows"][0]
-        self.assertEqual(set(row), {"key", "name", "version", "licence", "sourceUrl", "installUrl", "unitNames", "reportsTo",
+        self.assertEqual(set(row), {"key", "name", "version", "versions", "licence", "sourceUrl", "installUrl", "unitNames", "reportsTo",
                                     "intervalSeconds", "us", "footnotes", "values"})
+        self.assertEqual(self.row("alpha")["versions"], ["v1.0", "v1.1", "v1.2"])
+        self.assertIsNone(r["control"]["values"]["install_seconds"]["median"])
         self.assertEqual(set(row["values"]), {m["key"] for m in r["metrics"]})
         self.assertEqual(set(row["values"]["pss_idle_median_mb"]), {"median", "cycles"})
         self.assertEqual(r["run"]["kernel"], "7.0.0-27-generic")
@@ -190,3 +192,52 @@ class SummarizeTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ReviewFixesTest(unittest.TestCase):
+    """Findings of the 2026 data review: overlapping sampler rows, cgroups whose processes are never seen, the commit flag."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name) / "2026"
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_duplicate_sample_rows_are_not_summed(self):
+        """A restarted sampler writes the same timestamp twice; the gauges must not double."""
+        write_cycle(self.root, 0, {"alpha": AGENTS["alpha"]}, control=False)
+        gz = self.root / "cycle-1" / "alpha.csv.gz"
+        lines = gzip.decompress(gz.read_bytes()).decode().splitlines()
+        dup = [ln for ln in lines[1:] if ",system.slice/alpha.service," in ln][500]
+        gz.write_bytes(gzip.compress("\n".join(lines + [dup, dup]).encode() + b"\n"))
+        rows, _ = sm.load_rows(gz)
+        self.assertEqual(len(rows), len({(r["ts"], r["cgroup"]) for r in rows}))
+        res = sm.summarize(self.root, harness_commit="x")
+        peak = res["rows"][0]["values"]["memory_peak_mb"]["cycles"][0]
+        self.assertAlmostEqual(peak, 100 + 50 + 5, places=1)  # warm-up bump + 5 MB, not twice that
+
+    def test_cgroup_with_no_visible_process_is_na_and_footnoted(self):
+        write_cycle(self.root, 0, {"alpha": AGENTS["alpha"], "ghost": {"kind": "push", "pss": [0, 0, 0], "cpu": 10.0}}, control=False)
+        gz = self.root / "cycle-1" / "ghost.csv.gz"
+        out = []
+        for ln in gzip.decompress(gz.read_bytes()).decode().splitlines():
+            cells = ln.split(",")
+            if cells[1].startswith("system.slice/"):
+                cells[8] = cells[9] = cells[12] = cells[13] = "0"  # pss, rss, pids, threads: nobody home
+            out.append(",".join(cells))
+        gz.write_bytes(gzip.compress("\n".join(out).encode() + b"\n"))
+        res = sm.summarize(self.root, harness_commit="x")
+        ghost = next(r for r in res["rows"] if r["key"] == "ghost")
+        for k in ("pss_idle_median_mb", "pss_idle_p95_mb", "rss_idle_median_mb", "first_hour_peak_mb", "pids_median", "threads_median"):
+            self.assertIsNone(ghost["values"][k]["median"], k)
+        self.assertAlmostEqual(ghost["values"]["cpu_idle_pct"]["median"], 10.0, places=1)
+        self.assertTrue(any("No process was found" in n for n in ghost["footnotes"]))
+        self.assertEqual([r["key"] for r in res["rows"]], ["alpha", "ghost"])  # n/a sorts last
+        self.assertIn("n/a", sm.to_markdown(res))
+
+    def test_harness_commit_flag(self):
+        write_cycle(self.root, 0, {"alpha": AGENTS["alpha"]}, control=False)
+        out = self.root / "r.json"
+        sm.main([str(self.root), "--out", str(out), "--md", str(self.root / "r.md"), "--harness-commit", "903c57c..ea882d1"])
+        self.assertEqual(json.loads(out.read_text())["run"]["harnessCommit"], "903c57c..ea882d1")
