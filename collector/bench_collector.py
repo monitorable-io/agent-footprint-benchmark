@@ -2,13 +2,15 @@
 """Sample a set of cgroups every N seconds into a CSV. Stdlib only.
 
 Reads the kernel's own accounting for each matched cgroup (cpu.stat, memory.*, io.stat,
-pids.current), PSS/RSS from /proc/<pid>/smaps_rollup over the cgroup's processes, and
-bytes in/out from nftables counters (collector/netcounters.py). Restarts are detected by
-the cgroup directory's inode changing.
+pids.current), PSS/RSS from /proc/<pid>/smaps_rollup over the processes of the cgroup and
+of every cgroup below it, and bytes in/out from nftables counters (collector/netcounters.py).
+Restarts are detected by the cgroup directory's inode changing; the inode map is persisted
+next to the CSV so a restart that happens while the sampler itself restarts is still logged.
 """
 import argparse
 import csv
 import glob
+import json
 import os
 import re
 import sys
@@ -94,11 +96,7 @@ def read_cgroup(root, path):
                     wbytes += int(v)
     except OSError:
         pass
-    procs = []
-    try:
-        procs = [int(x) for x in (d / "cgroup.procs").read_text().split()]
-    except OSError:
-        pass
+    procs = read_procs(d)
     return {
         "cpu_usage_usec": cpu.get("usage_usec", 0),
         "memory_current": _read_int(d / "memory.current"),
@@ -110,6 +108,66 @@ def read_cgroup(root, path):
         "pids": len(procs),  # processes; pids.current would count every thread
         "procs": procs,
     }
+
+
+def read_procs(d):
+    """Pids in cgroup `d` and every cgroup below it. A slice's units live in child cgroups (HetrixTools'
+    minutely transient unit); a child that vanishes mid-walk is skipped (os.walk ignores errors)."""
+    procs = []
+    for dirpath, _dirs, files in os.walk(d):
+        if "cgroup.procs" in files:
+            try:
+                procs.extend(int(x) for x in (Path(dirpath) / "cgroup.procs").read_text().split())
+            except (OSError, ValueError):
+                continue
+    return procs
+
+
+def inode_state_path(out):
+    """<samples>.inodes.json next to the CSV."""
+    return Path(out).with_suffix(".inodes.json")
+
+
+def load_inode_state(path):
+    """The cgroup -> inode map the previous sampler process saved; {} if none or unreadable."""
+    try:
+        data = json.loads(Path(path).read_text())
+        return {str(k): int(v) for k, v in data.items()} if isinstance(data, dict) else {}
+    except (OSError, ValueError, TypeError, AttributeError):
+        return {}
+
+
+def save_inode_state(path, cgroups):
+    tmp = Path(str(path) + ".tmp")
+    tmp.write_text(json.dumps(cgroups, sort_keys=True))
+    os.replace(tmp, path)
+
+
+def startup_events(saved, cur):
+    """First-tick events of a new sampler process: every cgroup appears (nft rules are re-armed), except
+    one whose inode differs from the saved map, which is a restart."""
+    events = [("cgroup_gone", p) for p in sorted(set(saved) - set(cur))]
+    for path in sorted(cur):
+        events.append(("restart" if path in saved and saved[path] != cur[path] else "cgroup_appeared", path))
+    return events
+
+
+def last_written_ts(csv_path):
+    """ts of the last complete sample row in the CSV, or None (no file, header only)."""
+    try:
+        with open(csv_path, "rb") as f:
+            f.seek(0, os.SEEK_END)
+            f.seek(max(0, f.tell() - 65536))
+            tail = f.read().decode("utf-8", "replace")
+    except OSError:
+        return None
+    lines = tail.split("\n")
+    complete = lines[:-1]  # the part after the last newline is empty or a torn write
+    for line in reversed(complete):
+        first = line.split(",", 1)[0]
+        if first.isdigit():
+            return int(first)
+    return None
 
 
 def read_pss_rss(proc, pids):
@@ -187,7 +245,10 @@ def main(argv=None):
     ap.add_argument("--net-ports", default="", help="comma-separated TCP ports: count bytes by port instead of by cgroup "
                     "(socket-activated or polled rows); attributed to the row's first cgroup")
     ap.add_argument("--once", action="store_true", help="one tick, then exit (for tests)")
+    ap.add_argument("--ticks", type=int, default=0, help="stop after this many ticks (for tests); 0 = run forever")
     args = ap.parse_args(argv)
+    if args.once:
+        args.ticks = 1
 
     net_ports = [int(p) for p in args.net_ports.split(",") if p.strip()]
     snapshot = {}
@@ -218,16 +279,24 @@ def main(argv=None):
     ev = csv.writer(events)
     ev.writerow([int(time.time()), "start", "", " ".join(args.globs)])
 
-    known = {}
+    state_path = inode_state_path(args.out)
+    saved = load_inode_state(state_path)
+    # The previous process may have written this window already (a unit restart overlaps the two
+    # processes for a moment): never write a second row for a window it wrote.
+    last_ts = last_written_ts(args.out)
+    known = None
     last_cpu = {}
+    ticks = 0
     try:
         while True:
             ts = int(time.time())
             cur = discover(args.root, args.globs)
-            fresh = [path for event, path in diff_discovery(known, cur) if event in ("cgroup_appeared", "restart")]
-            for event, path in diff_discovery(known, cur):
+            changes = startup_events(saved, cur) if known is None else diff_discovery(known, cur)
+            fresh = [path for event, path in changes if event in ("cgroup_appeared", "restart")]
+            for event, path in changes:
                 ev.writerow([ts, event, path, cur.get(path, "")])
             known = cur
+            save_inode_state(state_path, known)
             first_path["value"] = next(iter(known), None)
             if args.netcounters:
                 snapshot = netcounters.read_all()
@@ -243,9 +312,11 @@ def main(argv=None):
                         netcounters.ensure_rules(path, netcounters.key_for(path))
                     except Exception as e:  # nft refused: keep sampling, record it
                         ev.writerow([ts, "netcounter_error", path, str(e)[:200]])
-            for row in rows:
-                out.write(row + "\n")
-            if args.once:
+            if last_ts is None or ts // args.interval > last_ts // args.interval:
+                for row in rows:
+                    out.write(row + "\n")
+            ticks += 1
+            if args.ticks and ticks >= args.ticks:
                 break
             time.sleep(max(0.0, args.interval - (time.time() % args.interval)))
     finally:

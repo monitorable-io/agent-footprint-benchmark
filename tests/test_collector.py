@@ -165,5 +165,109 @@ class CsvTest(unittest.TestCase):
         self.assertEqual(box[16:], ["0.42", "1500000", "77"])
 
 
+class ChildCgroupTest(unittest.TestCase):
+    """HetrixTools runs as a minutely transient unit inside its slice: the pilot read only the
+    slice's own cgroup.procs and saw no process in 27,006 samples."""
+
+    def _slice(self, root):
+        sl = root / "system.slice" / "system-x.slice"
+        for name, pid in (("x-1.service", 101), ("x-2.service", 102)):
+            (sl / name).mkdir(parents=True)
+            (sl / name / "cgroup.procs").write_text(f"{pid}\n")
+        (sl / "cgroup.procs").write_text("")
+        return sl
+
+    def test_read_cgroup_sums_child_cgroup_procs(self):
+        with tempfile.TemporaryDirectory() as d:
+            self._slice(Path(d))
+            s = bc.read_cgroup(d, "system.slice/system-x.slice")
+            self.assertEqual(s["pids"], 2)
+            self.assertEqual(sorted(s["procs"]), [101, 102])
+
+    def test_read_cgroup_tolerates_vanishing_child(self):
+        # A transient unit that exits between listing and reading: its cgroup.procs is gone.
+        with tempfile.TemporaryDirectory() as d:
+            sl = self._slice(Path(d))
+            gone = sl / "x-3.service"
+            gone.mkdir()
+            os.symlink(gone / "no-such-file", gone / "cgroup.procs")  # read -> FileNotFoundError
+            s = bc.read_cgroup(d, "system.slice/system-x.slice")
+            self.assertEqual(sorted(s["procs"]), [101, 102])
+
+
+class SamplerRestartTest(unittest.TestCase):
+    def _run(self, d, extra=(), clock=None):
+        out, ev = Path(d) / "samples.csv", Path(d) / "events.csv"
+        args = ["--root", str(CG), "--proc", str(PROC), "--globs", "system.slice/netdata.service",
+                "--out", str(out), "--events", str(ev), *extra]
+        if clock is None:
+            bc.main(args + ["--once"])
+        else:
+            from unittest import mock
+            now = [clock]
+
+            def sleep(s):
+                now[0] += s
+
+            with mock.patch.object(bc.time, "time", lambda: now[0]), mock.patch.object(bc.time, "sleep", sleep):
+                bc.main(args)
+        return out, ev
+
+    def test_restart_detected_across_sampler_restart(self):
+        # The agent was restarted while the sampler was down (or in the sampler's own restart tick):
+        # the persisted inode map is what tells.
+        import json
+        with tempfile.TemporaryDirectory() as d:
+            (Path(d) / "samples.inodes.json").write_text(json.dumps({"system.slice/netdata.service": 100}))
+            out, ev = self._run(d)
+            events = [line.split(",")[1:3] for line in ev.read_text().splitlines()[1:]]
+            self.assertIn(["restart", "system.slice/netdata.service"], events)
+            saved = json.loads((Path(d) / "samples.inodes.json").read_text())
+            self.assertEqual(saved, {"system.slice/netdata.service": os.stat(CG / "system.slice/netdata.service").st_ino})
+
+    def test_no_restart_when_inode_unchanged(self):
+        import json
+        with tempfile.TemporaryDirectory() as d:
+            ino = os.stat(CG / "system.slice/netdata.service").st_ino
+            (Path(d) / "samples.inodes.json").write_text(json.dumps({"system.slice/netdata.service": ino}))
+            out, ev = self._run(d)
+            self.assertNotIn(",restart,", ev.read_text())
+            self.assertIn(",cgroup_appeared,system.slice/netdata.service,", ev.read_text())
+
+    def test_load_inode_state_tolerates_missing_or_broken_file(self):
+        with tempfile.TemporaryDirectory() as d:
+            self.assertEqual(bc.load_inode_state(Path(d) / "none.json"), {})
+            (Path(d) / "bad.json").write_text("{not json")
+            self.assertEqual(bc.load_inode_state(Path(d) / "bad.json"), {})
+
+    def test_last_written_ts(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "s.csv"
+            self.assertIsNone(bc.last_written_ts(p))
+            p.write_text(bc.HEADER + "\n")
+            self.assertIsNone(bc.last_written_ts(p))
+            p.write_text(bc.HEADER + "\n990,a,1\n1000,a,1\n1000,box,\n")
+            self.assertEqual(bc.last_written_ts(p), 1000)
+            p.write_text(bc.HEADER + "\n1000,box,\n10")  # a torn last line is ignored
+            self.assertEqual(bc.last_written_ts(p), 1000)
+
+    def test_second_process_skips_already_written_ts(self):
+        with tempfile.TemporaryDirectory() as d:
+            out = Path(d) / "samples.csv"
+            out.write_text(bc.HEADER + "\n1000,system.slice/netdata.service,1" + ",0" * 16 + "\n1000,box,\n")
+            self._run(d, extra=["--ticks", "2"], clock=1000.2)
+            ts = [line.split(",")[0] for line in out.read_text().splitlines()[1:]]
+            self.assertEqual(ts, ["1000", "1000", "1010", "1010"])  # nothing new for 1000; one tick at 1010
+
+    def test_second_process_skips_rest_of_written_window(self):
+        # Review Focus 2: one row per 10-second window even when the new process starts mid-window.
+        with tempfile.TemporaryDirectory() as d:
+            out = Path(d) / "samples.csv"
+            out.write_text(bc.HEADER + "\n1000,box,\n")
+            self._run(d, extra=["--ticks", "2"], clock=1003.5)
+            ts = [line.split(",")[0] for line in out.read_text().splitlines()[1:]]
+            self.assertEqual(ts, ["1000", "1010", "1010"])
+
+
 if __name__ == "__main__":
     unittest.main()
