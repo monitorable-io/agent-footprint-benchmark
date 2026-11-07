@@ -118,7 +118,8 @@ class SummarizeTest(unittest.TestCase):
     def test_results_json_has_spec_keys(self):
         r = self.results
         self.assertEqual(set(r), {"slug", "title", "checked", "run", "metrics", "rows", "control"})
-        self.assertEqual(set(r["run"]), {"provider", "location", "plan", "image", "kernel", "harnessCommit", "cycles"})
+        self.assertEqual(set(r["run"]), {"provider", "location", "plan", "image", "kernel", "harnessCommit", "cycles", "notes"})
+        self.assertEqual(r["run"]["notes"], [])  # run.json without notes
         self.assertEqual(len(r["run"]["cycles"]), 3)
         self.assertEqual(set(r["run"]["cycles"][0]), {"start", "end"})
         self.assertEqual(set(r["metrics"][0]), {"key", "label", "unit", "lowerIsBetter"})
@@ -235,6 +236,44 @@ class ReviewFixesTest(unittest.TestCase):
         self.assertTrue(any("No process was found" in n for n in ghost["footnotes"]))
         self.assertEqual([r["key"] for r in res["rows"]], ["alpha", "ghost"])  # n/a sorts last
         self.assertIn("n/a", sm.to_markdown(res))
+
+    def test_memory_current_idle_median(self):
+        # cgroup memory.current, median over the idle window (the first hour's bump is excluded);
+        # synthetic rows carry memory.current = PSS.
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d) / "2026"
+            for k in range(3):
+                write_cycle(root, k, {"alpha": AGENTS["alpha"]}, control=False)
+            alpha = sm.summarize(root, harness_commit="x")["rows"][0]
+        m = alpha["values"]["memory_current_idle_median_mb"]
+        self.assertEqual(m["cycles"], [100.0, 110.0, 90.0])
+        self.assertEqual(m["median"], 100.0)
+        keys = [k for k, *_ in sm.METRICS]
+        self.assertEqual(keys.index("memory_current_idle_median_mb"), keys.index("rss_idle_median_mb") + 1)
+
+    def test_memory_current_present_when_no_process_is_visible(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d) / "2026"
+            write_cycle(root, 0, {"ghost": {"kind": "push", "pss": [7, 7, 7], "cpu": 1.0}}, control=False)
+            gz = root / "cycle-1" / "ghost.csv.gz"
+            out = []
+            for ln in gzip.decompress(gz.read_bytes()).decode().splitlines():
+                cells = ln.split(",")
+                if cells[1].startswith("system.slice/"):
+                    cells[8] = cells[9] = cells[12] = cells[13] = "0"
+                out.append(",".join(cells))
+            gz.write_bytes(gzip.compress("\n".join(out).encode() + b"\n"))
+            ghost = sm.summarize(root, harness_commit="x")["rows"][0]
+        self.assertIsNone(ghost["values"]["pss_idle_median_mb"]["median"])
+        self.assertEqual(ghost["values"]["memory_current_idle_median_mb"]["median"], 7.0)
+
+    def test_run_notes_carried(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d) / "2026"
+            write_cycle(root, 0, {"alpha": AGENTS["alpha"]}, control=False)
+            notes = ["Ubuntu's apt-daily timers were masked.", "Docker bridge traffic is excluded."]
+            (root / "run.json").write_text(json.dumps({"provider": "P", "notes": notes}))
+            self.assertEqual(sm.summarize(root, harness_commit="x")["run"]["notes"], notes)
 
     def test_harness_commit_flag(self):
         write_cycle(self.root, 0, {"alpha": AGENTS["alpha"]}, control=False)

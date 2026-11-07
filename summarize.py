@@ -25,6 +25,7 @@ METRICS = [
     ("pss_idle_median_mb", "Memory (PSS), idle median", "MB", True),
     ("pss_idle_p95_mb", "Memory (PSS), idle p95", "MB", True),
     ("rss_idle_median_mb", "Memory (RSS), idle median", "MB", True),
+    ("memory_current_idle_median_mb", "Memory (cgroup memory.current), idle median", "MB", True),
     ("memory_peak_mb", "Memory peak (cgroup), whole cycle", "MB", True),
     ("first_hour_peak_mb", "Memory (PSS) peak, first hour after install", "MB", True),
     ("cpu_idle_pct", "CPU, idle (% of one vCPU)", "%", True),
@@ -128,6 +129,7 @@ def cycle_metrics(rows, meta, box_rows=()):
     idle_ts = _by_ts(idle)
     pss = [v["pss"] for v in idle_ts.values()]
     rss = [v["rss"] for v in idle_ts.values()]
+    mem_current = [v["memory_current"] for v in idle_ts.values()]
     no_process = bool(idle_ts) and max(v["pids"] for v in idle_ts.values()) == 0 and max(pss) == 0
     if no_process:
         meta.setdefault("footnotes", []).append(
@@ -148,6 +150,9 @@ def cycle_metrics(rows, meta, box_rows=()):
         "pss_idle_median_mb": None if no_process else statistics.median(pss) / MB if pss else 0.0,
         "pss_idle_p95_mb": None if no_process else _p95(pss) / MB,
         "rss_idle_median_mb": None if no_process else statistics.median(rss) / MB if rss else 0.0,
+        # The kernel's charge to the cgroup (anon + file + kernel): hierarchical, so it stands for a row
+        # whose processes are not visible, and it is what PSS is compared against in the methods.
+        "memory_current_idle_median_mb": statistics.median(mem_current) / MB if mem_current else 0.0,
         "memory_peak_mb": max((v["memory_peak"] for v in _by_ts(rows).values()), default=0) / MB,
         "first_hour_peak_mb": None if no_process else max((v["pss"] for v in _by_ts(warm).values()), default=0) / MB,
         "cpu_idle_pct": counter_total(idle, "cpu_usage_usec") / (idle_wall * 1e6) * 100,
@@ -254,6 +259,7 @@ def summarize(root, harness_commit=None):
             "kernel": kernel,
             "harnessCommit": harness_commit or _git_head(root),
             "cycles": spans,
+            "notes": list(run_facts.get("notes", [])),
         },
         "metrics": [{"key": k, "label": label, "unit": unit, "lowerIsBetter": lower} for k, label, unit, lower in METRICS],
         "rows": rows,
