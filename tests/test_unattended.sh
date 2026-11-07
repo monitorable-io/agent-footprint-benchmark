@@ -57,6 +57,14 @@ check "halted wins over everything" "$(AUTO_NOW=12000 auto_decide)" "halted"
 rm -f "$d/data/test/auto/halted"; : > "$d/data/test/auto/done"
 check "done marker -> done" "$(AUTO_NOW=100 auto_decide)" "done"
 
+# --- a fresh run (data/<year>/ holds only run.json, no slots/): the tick says so and does nothing
+YEAR=fresh; mkdir -p "$d/data/fresh/auto"; echo '{}' > "$d/data/fresh/run.json"
+check "fresh run: no slots dir -> none" "$(AUTO_NOW=1000 auto_decide)" "none"
+AUTO_NOW=1000 auto_tick > /dev/null 2>&1
+check "fresh run: the tick reports nothing to do" "$(grep -c 'nothing to do' "$d/data/fresh/auto/STATUS")" 1
+check "fresh run: no marker written" "$(find "$d/data/fresh/auto" -mindepth 1 ! -name STATUS ! -name tick.lock | wc -l)" 0
+YEAR="test"
+
 # --- the running-slot guard of cycle start
 rm -f "$d/data/test/auto/done"; manifest 1 6000 4102444800   # the guard reads the real clock: a stop in 2100
 check "cycle start is refused while a slot's boxes still measure" "$( (cycle_start_guard 2) 2>&1 | grep -c 'refused: slot-1.json runs until')" 1

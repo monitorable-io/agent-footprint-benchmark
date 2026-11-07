@@ -187,7 +187,7 @@ def _git_head(root):
 
 def summarize(root, harness_commit=None):
     root = Path(root)
-    year = root.name
+    year = root.name.split("-", 1)[0]  # data/2026-pilot is a 2026 run too
     run_facts = json.loads((root / "run.json").read_text()) if (root / "run.json").exists() else {}
     cycles = sorted(p for p in root.glob("cycle-*") if p.is_dir())
     per_agent = defaultdict(list)

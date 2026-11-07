@@ -267,6 +267,15 @@ class ReviewFixesTest(unittest.TestCase):
         self.assertIsNone(ghost["values"]["pss_idle_median_mb"]["median"])
         self.assertEqual(ghost["values"]["memory_current_idle_median_mb"]["median"], 7.0)
 
+    def test_year_is_the_directory_s_leading_year(self):
+        # data/2026-pilot reproduces the pilot's published results.json (slug and title say 2026).
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d) / "2026-pilot"
+            write_cycle(root, 0, {"alpha": AGENTS["alpha"]}, control=False)
+            res = sm.summarize(root, harness_commit="x")
+        self.assertEqual(res["slug"], "agent-footprint-2026")
+        self.assertIn("(2026)", res["title"])
+
     def test_run_notes_carried(self):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d) / "2026"
