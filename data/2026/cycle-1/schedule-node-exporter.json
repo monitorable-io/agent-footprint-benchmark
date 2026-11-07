@@ -1,0 +1,11 @@
+{
+  "agent": "node-exporter",
+  "box": "box-4",
+  "slot": 0,
+  "run": 0,
+  "installFinished": 1793455027,
+  "loadStart": 1793541427,
+  "stop": 1793545027,
+  "cpuModel": "AMD EPYC-Rome Processor",
+  "vcpus": 2
+}

@@ -1,0 +1,4 @@
+ts,event,cgroup,detail
+1793736095,start,,system.slice/monitorable-agent.service
+1793736095,cgroup_appeared,system.slice/monitorable-agent.service,8718
+1793826088,stop,,

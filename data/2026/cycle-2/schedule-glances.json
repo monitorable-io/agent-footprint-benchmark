@@ -1,0 +1,11 @@
+{
+  "agent": "glances",
+  "box": "box-6",
+  "slot": 1,
+  "run": 1,
+  "installFinished": 1793547319,
+  "loadStart": 1793633719,
+  "stop": 1793637319,
+  "cpuModel": "AMD EPYC-Rome Processor",
+  "vcpus": 2
+}

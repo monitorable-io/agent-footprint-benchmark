@@ -60,6 +60,7 @@ def load_rows(path):
     """(unit rows, box rows) of a samples CSV (plain or .gz); unit rows carry ints, box rows the load."""
     opener = gzip.open if str(path).endswith(".gz") else open
     rows, box = [], []
+    seen = set()  # (ts, cgroup): two sampler processes overlap for a few seconds when the unit is restarted
     with opener(path, "rt", newline="") as f:
         for r in csv.DictReader(f):
             if r["cgroup"] == "box":
@@ -68,6 +69,10 @@ def load_rows(path):
                 except ValueError:
                     pass
                 continue
+            key = (r["ts"], r["cgroup"])
+            if key in seen:
+                continue
+            seen.add(key)
             row = {"ts": int(r["ts"]), "cgroup": r["cgroup"]}
             for k in COUNTERS + GAUGES:
                 row[k] = int(r[k] or 0)
@@ -123,6 +128,12 @@ def cycle_metrics(rows, meta, box_rows=()):
     idle_ts = _by_ts(idle)
     pss = [v["pss"] for v in idle_ts.values()]
     rss = [v["rss"] for v in idle_ts.values()]
+    no_process = bool(idle_ts) and max(v["pids"] for v in idle_ts.values()) == 0 and max(pss) == 0
+    if no_process:
+        meta.setdefault("footnotes", []).append(
+            "No process was found in the agent's cgroup at any sample (its processes live in child cgroups or are short-lived), "
+            "so the per-process figures (PSS, RSS, first-hour peak, processes, threads) are not available for this row; "
+            "the cgroup's CPU, memory peak, disk and network counters are hierarchical and unaffected.")
     idle_wall = max(1, (idle[-1]["ts"] - idle[0]["ts"])) if len(idle) > 1 else 1
     load_wall = max(1, (loaded[-1]["ts"] - loaded[0]["ts"])) if len(loaded) > 1 else 1
     per_day = DAY / idle_wall
@@ -134,11 +145,11 @@ def cycle_metrics(rows, meta, box_rows=()):
     disk_bytes = footprint.get("disk_bytes", install.get("disk_bytes", 0))
     journal = footprint.get("journal_bytes")
     return {
-        "pss_idle_median_mb": statistics.median(pss) / MB if pss else 0.0,
-        "pss_idle_p95_mb": _p95(pss) / MB,
-        "rss_idle_median_mb": statistics.median(rss) / MB if rss else 0.0,
+        "pss_idle_median_mb": None if no_process else statistics.median(pss) / MB if pss else 0.0,
+        "pss_idle_p95_mb": None if no_process else _p95(pss) / MB,
+        "rss_idle_median_mb": None if no_process else statistics.median(rss) / MB if rss else 0.0,
         "memory_peak_mb": max((v["memory_peak"] for v in _by_ts(rows).values()), default=0) / MB,
-        "first_hour_peak_mb": max((v["pss"] for v in _by_ts(warm).values()), default=0) / MB,
+        "first_hour_peak_mb": None if no_process else max((v["pss"] for v in _by_ts(warm).values()), default=0) / MB,
         "cpu_idle_pct": counter_total(idle, "cpu_usage_usec") / (idle_wall * 1e6) * 100,
         "cpu_loaded_pct": counter_total(loaded, "cpu_usage_usec") / (load_wall * 1e6) * 100,
         "disk_written_mb_24h": counter_total(idle, "io_wbytes") * per_day / MB,
@@ -146,10 +157,10 @@ def cycle_metrics(rows, meta, box_rows=()):
         "net_out_mb_24h": out_b / MB,
         "net_in_mb_24h": in_b / MB,
         "net_headline_mb_24h": headline / MB,
-        "install_seconds": float(install.get("seconds", 0)),
+        "install_seconds": None if meta.get("name") in ("control", "none") else float(install.get("seconds", 0)),
         "disk_footprint_mb": disk_bytes / MB,
-        "pids_median": statistics.median(v["pids"] for v in idle_ts.values()) if idle_ts else 0,
-        "threads_median": statistics.median(v["threads"] for v in idle_ts.values()) if idle_ts else 0,
+        "pids_median": None if no_process else statistics.median(v["pids"] for v in idle_ts.values()) if idle_ts else 0,
+        "threads_median": None if no_process else statistics.median(v["threads"] for v in idle_ts.values()) if idle_ts else 0,
     }
 
 
@@ -175,6 +186,7 @@ def summarize(root, harness_commit=None):
     run_facts = json.loads((root / "run.json").read_text()) if (root / "run.json").exists() else {}
     cycles = sorted(p for p in root.glob("cycle-*") if p.is_dir())
     per_agent = defaultdict(list)
+    versions = defaultdict(list)
     metas = {}
     footnotes = defaultdict(list)
     spans = []
@@ -196,6 +208,7 @@ def summarize(root, harness_commit=None):
                 meta["footnotes"].append(f"Cycle {cdir.name[-1]}: install failed or no samples; not counted.")
             else:
                 per_agent[name].append(cycle_metrics(rows, meta, box_rows))
+                versions[name].append(meta.get("install", {}).get("version", ""))
             for note in base_notes:
                 if note not in footnotes[name]:
                     footnotes[name].append(note)
@@ -214,6 +227,7 @@ def summarize(root, harness_commit=None):
             "key": name,
             "name": DISPLAY.get(name, name),
             "version": install.get("version", ""),
+            "versions": versions.get(name, []),
             "licence": meta.get("licence", ""),
             "sourceUrl": meta.get("sourceUrl", ""),
             "installUrl": meta.get("sourceUrl", ""),
@@ -269,9 +283,10 @@ def main(argv=None):
     ap.add_argument("root", help="data/<year>")
     ap.add_argument("--out", help="results.json path (default <root>/results.json)")
     ap.add_argument("--md", help="results.md path (default <root>/results.md)")
+    ap.add_argument("--harness-commit", help="the harness commit(s) that ran the boxes (default: this checkout's HEAD)")
     args = ap.parse_args(argv)
     root = Path(args.root)
-    results = summarize(root)
+    results = summarize(root, harness_commit=args.harness_commit)
     out = Path(args.out) if args.out else root / "results.json"
     md = Path(args.md) if args.md else root / "results.md"
     out.write_text(json.dumps(results, indent=2) + "\n")

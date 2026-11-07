@@ -1,0 +1,101 @@
+{
+  "name": "fivenines",
+  "kind": "push",
+  "cgroupGlobs": [
+    "system.slice/fivenines-agent.service"
+  ],
+  "ports": [],
+  "reportsTo": "Fivenines API (HTTPS push every 60 s)",
+  "intervalSeconds": 60,
+  "licence": "WTFPL",
+  "diskPaths": [
+    "/etc/fivenines",
+    "/opt/fivenines"
+  ],
+  "user": "fivenines",
+  "env": [
+    "FIVENINES_TOKEN"
+  ],
+  "footnotes": [
+    "Run 2 (box-2): Ubuntu's unattended-upgrades ran at 07:02 UTC on the stock image and, with the other services linked against the upgraded libraries, restarted the agent 1 time, inside the idle window; the idle medians are unaffected, this run's totals include the restart."
+  ],
+  "sourceUrl": "https://github.com/Five-Nines-io/fivenines_agent#installation",
+  "install": {
+    "agent": "fivenines",
+    "kernel": "7.0.0-15-generic",
+    "cpu_model": "AMD EPYC-Rome Processor",
+    "vcpus": 2,
+    "started": 1793638442.8732026,
+    "finished": 1793638448.259278,
+    "seconds": 5.4,
+    "status": "ok",
+    "exit_code": 0,
+    "version": "fivenines-agent 1.21.5",
+    "units": [
+      "fivenines-agent.service"
+    ],
+    "listening_ports": [
+      22,
+      53
+    ],
+    "disk_bytes": 51171470,
+    "tail": [
+      "\u001b[0;34m===============================================================\u001b[0m",
+      "\u001b[0;34m  Fivenines Agent - System Installation\u001b[0m",
+      "\u001b[0;34m===============================================================\u001b[0m",
+      "\u001b[0;32m[+]\u001b[0m Detected architecture: x86_64, libc: glibc (fivenines-agent-linux-amd64)",
+      "\u001b[0;32m[+]\u001b[0m Detected system type: systemd",
+      "\u001b[0;32m[+]\u001b[0m Creating system user fivenines",
+      "\u001b[1;33m[!]\u001b[0m Downloading fivenines-agent-linux-amd64.tar.gz...",
+      "\u001b[0;32m[+]\u001b[0m Downloaded from releases.fivenines.io",
+      "\u001b[0;32m[+]\u001b[0m Release signature verified against the embedded public key.",
+      "\u001b[0;32m[+]\u001b[0m Verified fivenines-agent-linux-amd64.tar.gz (sha256 582c066e8dbd71445c6972dfd73cfed27da3564969346c77d850c7c16f133234)",
+      "\u001b[1;33m[!]\u001b[0m Extracting agent to /opt/fivenines...",
+      "\u001b[0;32m[+]\u001b[0m Agent installed successfully at /opt/fivenines/fivenines-agent-linux-amd64",
+      "\u001b[0;32m[+]\u001b[0m SELinux is not installed on this system.",
+      "Testing connectivity...",
+      "\u001b[0;32m[+]\u001b[0m Connected to asia.fivenines.io",
+      "\u001b[0;32m[+]\u001b[0m Connected to eu.fivenines.io",
+      "\u001b[0;32m[+]\u001b[0m Connected to us.fivenines.io",
+      "\u001b[0;32m[+]\u001b[0m Connected to api.fivenines.io",
+      "\u001b[0;32m[+]\u001b[0m Detected systemd system - using systemd service",
+      "\u001b[1;33m[!]\u001b[0m Downloading fivenines-agent.service...",
+      "\u001b[0;32m[+]\u001b[0m Downloaded from releases.fivenines.io",
+      "\u001b[0;32m[+]\u001b[0m Release signature verified against the embedded public key.",
+      "\u001b[0;32m[+]\u001b[0m Verified fivenines-agent.service (sha256 549f75712665fdf94e33cd7d283621c63853a253ec6433335a354181e086f7d7)",
+      "Created symlink '/etc/systemd/system/multi-user.target.wants/fivenines-agent.service' \u2192 '/etc/systemd/system/fivenines-agent.service'.",
+      "\u001b[0;32m[+]\u001b[0m Systemd service installed and started successfully",
+      "\u001b[0;34m===============================================================\u001b[0m",
+      "\u001b[0;34m  Installation Complete!\u001b[0m",
+      "\u001b[0;34m===============================================================\u001b[0m",
+      "The agent is now running as a systemd service and will start automatically on boot.",
+      "Management commands:",
+      "  systemctl status fivenines-agent    - Check status",
+      "  journalctl -u fivenines-agent -f    - View logs",
+      "  systemctl stop/start fivenines-agent - Stop/start",
+      "Happy monitoring!",
+      "VERSION=fivenines-agent 1.21.5",
+      "UNITS=fivenines-agent.service"
+    ]
+  },
+  "schedule": {
+    "agent": "fivenines",
+    "box": "box-2",
+    "slot": 2,
+    "run": 1,
+    "installFinished": 1793638448,
+    "loadStart": 1793724848,
+    "stop": 1793728448,
+    "cpuModel": "AMD EPYC-Rome Processor",
+    "vcpus": 2
+  },
+  "footprint": {
+    "disk_bytes": 51292266,
+    "journal_bytes": 338170,
+    "window": {
+      "start": 1793642048,
+      "end": 1793724848
+    },
+    "measured": 1793734828
+  }
+}

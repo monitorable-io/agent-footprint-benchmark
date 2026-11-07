@@ -1,0 +1,22 @@
+ts,event,cgroup,detail
+1793546464,start,,system.slice/system-hetrixtools.slice system.slice/hetrixtools_agent.service
+1793546464,cgroup_appeared,system.slice/system-hetrixtools.slice,9070
+1793600689,stop,,
+1793600690,start,,system.slice/system-hetrixtools.slice system.slice/hetrixtools_agent.service
+1793600690,cgroup_appeared,system.slice/system-hetrixtools.slice,9070
+1793600697,stop,,
+1793600697,start,,system.slice/system-hetrixtools.slice system.slice/hetrixtools_agent.service
+1793600697,cgroup_appeared,system.slice/system-hetrixtools.slice,9070
+1793600727,stop,,
+1793600727,start,,system.slice/system-hetrixtools.slice system.slice/hetrixtools_agent.service
+1793600727,cgroup_appeared,system.slice/system-hetrixtools.slice,9070
+1793600853,stop,,
+1793600853,start,,system.slice/system-hetrixtools.slice system.slice/hetrixtools_agent.service
+1793600853,cgroup_appeared,system.slice/system-hetrixtools.slice,9070
+1793600861,stop,,
+1793600861,start,,system.slice/system-hetrixtools.slice system.slice/hetrixtools_agent.service
+1793600861,cgroup_appeared,system.slice/system-hetrixtools.slice,9070
+1793600878,stop,,
+1793600878,start,,system.slice/system-hetrixtools.slice system.slice/hetrixtools_agent.service
+1793600878,cgroup_appeared,system.slice/system-hetrixtools.slice,9070
+1793636456,stop,,

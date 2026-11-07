@@ -1,0 +1,114 @@
+{
+  "name": "netdata-cloud",
+  "kind": "push",
+  "cgroupGlobs": [
+    "system.slice/netdata.service",
+    "system.slice/netdata-updater.service"
+  ],
+  "ports": [],
+  "reportsTo": "Netdata Cloud (ACLK, outbound)",
+  "intervalSeconds": 1,
+  "licence": "GPL-3.0",
+  "diskPaths": [
+    "/etc/netdata",
+    "/usr/libexec/netdata",
+    "/usr/share/netdata",
+    "/var/cache/netdata",
+    "/var/lib/netdata",
+    "/var/log/netdata"
+  ],
+  "user": "netdata",
+  "env": [
+    "NETDATA_CLAIM_TOKEN",
+    "NETDATA_CLAIM_ROOMS"
+  ],
+  "package": "netdata",
+  "footnotes": [
+    "Same binary as the self-hosted row, claimed to Netdata Cloud. ML anomaly detection stays at its default (on).",
+    "kickstart's default channel is nightly; installed with --stable-channel so the version is a release readers can reproduce.",
+    "Anonymous telemetry and the daily updater timer stay at their defaults; the updater's unit is counted with the agent.",
+    "Both directions of this row's network figure are almost entirely Netdata's own go.d plugin polling the box's two Docker containers every second over the Docker bridge: inbound a steady 8 KB/s (the containers' replies; Valkey INFO is about 6.3 KB, nginx about 1 KB), outbound about 0.56 KB/s (the requests and acknowledgements). The counters exclude only loopback, so bridge traffic counts as network although it never leaves the box. Traffic that does leave the box is close to zero for the self-hosted row and about 0.6 MB per 24 h more for the row claimed to Netdata Cloud. The attribution is inferred from the sizes and cadence, not from a packet capture.",
+    "Run 3 (box-8): Ubuntu's unattended-upgrades ran at 06:33 UTC on the stock image and, with the other services linked against the upgraded libraries, restarted the agent 6 times between 06:33 and 06:35 UTC, inside the idle window; the idle medians are unaffected, this run's totals include the restarts. Netdata rewrites its database on restart: about 246 MB of this run's disk writes fell in that hour against about 10 MB in a normal hour; the one Netdata run without an upgrade (self-hosted run 3, box-7) wrote 270 MB per 24 h."
+  ],
+  "sourceUrl": "https://learn.netdata.cloud/docs/netdata-agent/installation/linux",
+  "install": {
+    "agent": "netdata-cloud",
+    "kernel": "7.0.0-30-generic",
+    "cpu_model": "AMD EPYC-Rome Processor",
+    "vcpus": 2,
+    "started": 1793639266.306973,
+    "finished": 1793639293.4818172,
+    "seconds": 27.2,
+    "status": "ok",
+    "exit_code": 0,
+    "version": "v2.12.2",
+    "units": [
+      "netdata.service"
+    ],
+    "listening_ports": [
+      22,
+      53,
+      4317,
+      8125,
+      19999
+    ],
+    "disk_bytes": 630725154,
+    "tail": [
+      " --- Attempting to claim agent to https://app.netdata.cloud --- ",
+      "10073",
+      " --- Writing claiming configuration to /etc/netdata/claim.conf --- ",
+      "[/tmp/netdata-kickstart-8CGZjMuUKm]# chown root:netdata /tmp/netdata-kickstart-8CGZjMuUKm/claim.conf.i4Eylj ",
+      " OK ",
+      "[/tmp/netdata-kickstart-8CGZjMuUKm]# chmod 0640 /tmp/netdata-kickstart-8CGZjMuUKm/claim.conf.i4Eylj ",
+      " OK ",
+      "[/tmp/netdata-kickstart-8CGZjMuUKm]# mv -f /tmp/netdata-kickstart-8CGZjMuUKm/claim.conf.i4Eylj /etc/netdata/claim.conf ",
+      " OK ",
+      "[/tmp/netdata-kickstart-8CGZjMuUKm]# /usr/sbin/netdatacli reload-claiming-state ",
+      "Netdata Agent is claimed to Netdata Cloud and is currently online.",
+      " OK ",
+      "[/tmp/netdata-kickstart-8CGZjMuUKm]# test -x //usr/libexec/netdata/netdata-updater.sh ",
+      " OK ",
+      "[/tmp/netdata-kickstart-8CGZjMuUKm]# grep -q \\--enable-auto-updates //usr/libexec/netdata/netdata-updater.sh ",
+      " OK ",
+      "[/tmp/netdata-kickstart-8CGZjMuUKm]# //usr/libexec/netdata/netdata-updater.sh --enable-auto-updates  ",
+      "Mon Nov  2 05:08:12 PM UTC 2026 : INFO: netdata-updater.sh:  Auto-updating has been ENABLED through cron, updater script linked to /etc/cron.daily/netdata-updater",
+      "Mon Nov  2 05:08:12 PM UTC 2026 : INFO: netdata-updater.sh:  If the update process fails and you have email notifications set up correctly for cron on this system, you should receive an email notification of the failure.",
+      "Mon Nov  2 05:08:12 PM UTC 2026 : INFO: netdata-updater.sh:  Successful updates will not send an email.",
+      " OK ",
+      "Successfully installed the Netdata Agent.",
+      "The following non-fatal warnings or errors were encountered:",
+      "/tmp/netdata-kickstart.sh: 501: printf: %{: invalid directive",
+      "  - Command \"/usr/bin/curl --write-out ",
+      "To view the dashboard, open your web browser and enter http://NODE:19999.",
+      "Replace NODE with the IP address or hostname of your Netdata server.",
+      "Official documentation can be found online at https://learn.netdata.cloud/docs/.",
+      "Looking to monitor all of your infrastructure with Netdata? Check out Netdata Cloud at https://app.netdata.cloud.",
+      "Join our community and connect with us on:",
+      "  - GitHub: https://github.com/netdata/netdata/discussions",
+      "  - Discord: https://discord.gg/5ygS846fR6",
+      "  - Our community forums: https://community.netdata.cloud/",
+      "VERSION=v2.12.2",
+      "UNITS=netdata.service"
+    ]
+  },
+  "schedule": {
+    "agent": "netdata-cloud",
+    "box": "box-8",
+    "slot": 2,
+    "run": 2,
+    "installFinished": 1793639293,
+    "loadStart": 1793725693,
+    "stop": 1793729293,
+    "cpuModel": "AMD EPYC-Rome Processor",
+    "vcpus": 2
+  },
+  "footprint": {
+    "disk_bytes": 793916054,
+    "journal_bytes": 30224,
+    "window": {
+      "start": 1793642893,
+      "end": 1793725693
+    },
+    "measured": 1793734899
+  }
+}

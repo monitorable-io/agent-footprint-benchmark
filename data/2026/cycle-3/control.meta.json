@@ -1,0 +1,63 @@
+{
+  "name": "none",
+  "kind": "none",
+  "cgroupGlobs": [
+    "system.slice/bench-collector.service"
+  ],
+  "ports": [],
+  "reportsTo": "nothing: the control box measures the harness itself",
+  "intervalSeconds": 10,
+  "sourceUrl": "https://github.com/monitorable-io/agent-footprint-benchmark",
+  "licence": "Apache-2.0",
+  "diskPaths": [
+    "/opt/bench"
+  ],
+  "user": "root",
+  "env": [],
+  "footnotes": [
+    "Control row: no agent; the collector measures its own cgroup.",
+    "Run 3 (box-8): Ubuntu's unattended-upgrades ran at 06:06 UTC on the stock image and, with the other services linked against the upgraded libraries, restarted the sampler, which is this row's own process, 6 times between 06:06 and 06:09 UTC, inside the idle window; the idle medians are unaffected, this run's totals include the restarts."
+  ],
+  "install": {
+    "agent": "none",
+    "kernel": "7.0.0-30-generic",
+    "cpu_model": "AMD EPYC-Rome Processor",
+    "vcpus": 2,
+    "started": 1793736211.9836998,
+    "finished": 1793736211.9911742,
+    "seconds": 0.0,
+    "status": "ok",
+    "exit_code": 0,
+    "version": "none",
+    "units": [],
+    "listening_ports": [
+      22,
+      53
+    ],
+    "disk_bytes": 48742,
+    "tail": [
+      "VERSION=none",
+      "UNITS="
+    ]
+  },
+  "schedule": {
+    "agent": "none",
+    "box": "box-8",
+    "slot": 3,
+    "run": 2,
+    "installFinished": 1793736211,
+    "loadStart": 1793822611,
+    "stop": 1793826211,
+    "cpuModel": "AMD EPYC-Rome Processor",
+    "vcpus": 2
+  },
+  "footprint": {
+    "disk_bytes": 56037,
+    "journal_bytes": 0,
+    "window": {
+      "start": 1793739811,
+      "end": 1793822611
+    },
+    "measured": 1793826702
+  }
+}
