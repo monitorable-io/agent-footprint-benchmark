@@ -295,8 +295,14 @@ def main(argv=None):
             fresh = [path for event, path in changes if event in ("cgroup_appeared", "restart")]
             for event, path in changes:
                 ev.writerow([ts, event, path, cur.get(path, "")])
+            # Saved only when it changes: a write every tick would be ~35 MB/day charged to the
+            # collector's own cgroup (the control row). A failed save is logged, never fatal.
+            if known is None or cur != known:
+                try:
+                    save_inode_state(state_path, cur)
+                except OSError as e:
+                    ev.writerow([ts, "state_error", "", str(e)[:200]])
             known = cur
-            save_inode_state(state_path, known)
             first_path["value"] = next(iter(known), None)
             if args.netcounters:
                 snapshot = netcounters.read_all()

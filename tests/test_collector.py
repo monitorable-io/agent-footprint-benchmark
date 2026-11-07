@@ -234,6 +234,29 @@ class SamplerRestartTest(unittest.TestCase):
             self.assertNotIn(",restart,", ev.read_text())
             self.assertIn(",cgroup_appeared,system.slice/netdata.service,", ev.read_text())
 
+    def test_inode_state_saved_only_when_it_changes(self):
+        # Review of PR #8: a save every tick is ~35 MB/day of writes charged to bench-collector.service,
+        # which is the published control row.
+        from unittest import mock
+        calls = []
+        real = bc.save_inode_state
+        with tempfile.TemporaryDirectory() as d, \
+                mock.patch.object(bc, "save_inode_state", lambda p, c: (calls.append(dict(c)), real(p, c))):
+            self._run(d, extra=["--ticks", "5"], clock=2000.0)
+            self.assertTrue((Path(d) / "samples.inodes.json").exists())
+        self.assertEqual(len(calls), 1)  # the first tick only; the map never changed
+
+    def test_inode_state_write_failure_does_not_stop_sampling(self):
+        from unittest import mock
+
+        def boom(path, cgroups):
+            raise OSError(28, "No space left on device")
+
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(bc, "save_inode_state", boom):
+            out, ev = self._run(d, extra=["--ticks", "2"], clock=3000.0)
+            self.assertEqual(len(out.read_text().splitlines()), 1 + 2 * 2)  # header + 2 ticks x (unit + box)
+            self.assertIn(",state_error,", ev.read_text())
+
     def test_load_inode_state_tolerates_missing_or_broken_file(self):
         with tempfile.TemporaryDirectory() as d:
             self.assertEqual(bc.load_inode_state(Path(d) / "none.json"), {})
