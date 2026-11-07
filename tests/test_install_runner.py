@@ -88,6 +88,22 @@ class RunnerTest(unittest.TestCase):
             self.assertGreaterEqual(rec["vcpus"], 1)
             self.assertIsInstance(rec["vcpus"], int)
 
+    def test_records_counted_interfaces(self):
+        # The network columns count only device-backed interfaces (collector/netcounters.py); the set is
+        # recorded with the install so the published row says what was counted.
+        import sys
+        sys.path.insert(0, str(ROOT / "tests"))
+        from test_netcounters import fake_sysfs
+        with tempfile.TemporaryDirectory() as d:
+            make_agent(d, "fake", "#!/bin/bash\necho VERSION=1\necho UNITS=x\n")
+            env = dict(os.environ, BENCH_STATE=str(Path(d) / "state"), BENCH_AGENTS=str(Path(d) / "agents"),
+                       BENCH_COLLECTOR=str(ROOT / "collector"), BENCH_SYS_CLASS_NET=str(fake_sysfs(Path(d) / "sys")))
+            Path(d, "state").mkdir()
+            r = subprocess.run(["bash", str(RUNNER), "fake"], env=env, capture_output=True, text=True)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            rec = json.loads((Path(d) / "state" / "install.json").read_text())
+            self.assertEqual(rec["counted_interfaces"], ["enp7s0", "ens3"])
+
     def test_ok_install_records_version_units_and_disk(self):
         with tempfile.TemporaryDirectory() as d:
             a = make_agent(d, "fake", "#!/bin/bash\necho VERSION=v1.2.3\necho UNITS=x.service,y.socket\n")

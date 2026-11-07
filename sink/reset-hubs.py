@@ -7,7 +7,7 @@ unless enabled with permanent=1, and while a system record still holds the token
 refused ("fingerprint mismatch"). Pulse binds an API token to one Docker host, so the next box's Docker
 module is refused with 400 while the previous host exists — and removing the last host that uses a token
 REVOKES that token (Pulse 6.6.0 monitor_agents.go), so every slot's Pulse box gets a token of its own.
-All of it bit slot 1 (2026-10-31, docs/RUN-2026.md).
+All of it bit slot 1 of the pilot (2026-10-31, docs/RUN-2026-pilot.md).
 
 usage: reset-hubs.py [--dry-run] [--allow-skip] [--pulse-token NAME] (--all | HOSTNAME ...)
   HOSTNAME ...     forget only these hosts (a slot's boxes, or a one-box redo)

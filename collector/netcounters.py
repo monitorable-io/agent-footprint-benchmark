@@ -5,14 +5,33 @@ Table `inet bench` has an output chain and an input chain; for each measured cgr
 chain matches `socket cgroupv2 level N "<path>"` and feeds a named counter (out_<key>, in_<key>).
 nft resolves the cgroup path to its id when the rule is added, so a recreated cgroup (agent
 restart) needs ensure_rules() again; the collector calls it on every appeared/restart event.
+
+Only the box's physical (device-backed) interfaces are counted: traffic over a Docker bridge or a
+veth stays on the box (the pilot counted Netdata's polling of two containers as 692 MB/day).
 """
 import json
+import os
 import re
 import subprocess
+import sys
 
 TABLE = "inet bench"
 # Only unit-name characters reach an nft rule; anything else is refused (never shell-quoted around).
 SAFE_PATH = re.compile(r"[A-Za-z0-9_.@:-]+(/[A-Za-z0-9_.@:-]+)*")  # used with fullmatch; no quotes, blanks, backslashes
+SAFE_IFNAME = re.compile(r"[A-Za-z0-9_.@:-]{1,15}")
+SYS_CLASS_NET = "/sys/class/net"
+
+
+def physical_interfaces(sys_class_net=None):
+    """Sorted names of the interfaces backed by a device (NICs, virtio): those with a `device` link in
+    sysfs. Bridges, veths, tunnels and lo have none. Routes are not consulted: a private-network NIC
+    with no default route is physical all the same."""
+    base = sys_class_net or SYS_CLASS_NET
+    try:
+        names = os.listdir(base)
+    except OSError:
+        return []
+    return sorted(n for n in names if n != "lo" and os.path.exists(os.path.join(base, n, "device")))
 
 
 def _nft(args):
@@ -56,32 +75,46 @@ def _rule_handles(chain, counter_name, run):
     return handles
 
 
-def _replace_rules(key, match_out, match_in, run):
-    """Replace the out/in rules feeding out_<key>/in_<key> (loopback traffic is never network)."""
+def _iface_match(interfaces):
+    """nft words matching the counted interfaces: a set of physical names, or (none found: an LXD test
+    container's veth) every interface but lo."""
+    if interfaces is None:
+        interfaces = physical_interfaces()
+    bad = [i for i in interfaces if not SAFE_IFNAME.fullmatch(i)]
+    if bad:
+        raise ValueError(f"refusing interface names with unsafe characters: {bad!r}")
+    if not interfaces:
+        return ["!=", '"lo"']
+    return ["{ " + ", ".join(f'"{i}"' for i in sorted(interfaces)) + " }"]
+
+
+def _replace_rules(key, match_out, match_in, run, interfaces=None):
+    """Replace the out/in rules feeding out_<key>/in_<key> (only the counted interfaces are network)."""
+    ifmatch = _iface_match(interfaces)
     for chain, prefix, match, iface in (("out", "out_", match_out, "oifname"), ("in", "in_", match_in, "iifname")):
         name = prefix + key
         for handle in _rule_handles(chain, name, run):
             run(["delete", "rule", "inet", "bench", chain, "handle", str(handle)])
         run(["add", "counter", "inet", "bench", name])
-        run(["add", "rule", "inet", "bench", chain, iface, "!=", '"lo"', *match, "counter", "name", f'"{name}"'])
+        run(["add", "rule", "inet", "bench", chain, iface, *ifmatch, *match, "counter", "name", f'"{name}"'])
 
 
-def ensure_rules(path, key, run=_nft):
+def ensure_rules(path, key, run=_nft, interfaces=None):
     """Create (or replace) the out/in rules + counters for one cgroup path."""
     if not SAFE_PATH.fullmatch(path):
         raise ValueError(f"refusing cgroup path with unsafe characters: {path!r}")
     match = ["socket", "cgroupv2", "level", str(level_for(path)), f'"{path}"']
-    _replace_rules(key, match, match, run)
+    _replace_rules(key, match, match, run, interfaces)
 
 
-def ensure_port_rules(ports, key, run=_nft):
+def ensure_port_rules(ports, key, run=_nft, interfaces=None):
     """Counters by TCP port for rows whose sockets are not in the unit's cgroup (socket activation)
     or that are polled: bytes sent from the port (out) and received on it (in)."""
     ports = [int(p) for p in ports]
     if not ports or any(p < 1 or p > 65535 for p in ports):
         raise ValueError(f"bad port list: {ports!r}")
     set_ = "{ " + ", ".join(str(p) for p in ports) + " }"
-    _replace_rules(key, ["tcp", "sport", set_], ["tcp", "dport", set_], run)
+    _replace_rules(key, ["tcp", "sport", set_], ["tcp", "dport", set_], run, interfaces)
 
 
 def read_all(run=_nft):
@@ -101,3 +134,11 @@ def read(key, run=_nft, snapshot=None):
     """(out_bytes, in_bytes) for a key from a read_all() snapshot (taken if not given); (0, 0) when absent."""
     allc = snapshot if snapshot is not None else read_all(run)
     return allc.get("out_" + key, 0), allc.get("in_" + key, 0)
+
+
+if __name__ == "__main__":
+    # `netcounters.py --physical`: the counted interfaces as JSON (install-runner.sh records them).
+    if sys.argv[1:] == ["--physical"]:
+        print(json.dumps(physical_interfaces(os.environ.get("BENCH_SYS_CLASS_NET"))))
+    else:
+        sys.exit("usage: netcounters.py --physical")

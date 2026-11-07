@@ -5,15 +5,24 @@ disk writes, network bytes, install time and on-disk size, measured on
 identical cheap VPSes over 24 hours idle plus one loaded hour, three times,
 with every 10-second sample published here.
 
-**Status: run complete (2026-10-31 → 2026-11-04, 11 agents + control, 3 runs each).**
-Results are in `data/2026/`: `results.json` and `results.md` (the headline table),
+**Status: the clean re-run is being prepared (2026-11).** The first run
+(2026-10-31 → 2026-11-04, 11 agents + control, 3 runs each) is the **pilot**:
+it found four harness defects (the collector missed processes in child
+cgroups and could write a timestamp twice, network bytes counted Docker
+bridge traffic, Ubuntu's unattended-upgrades restarted agents mid-cycle), so
+every row is measured again with the fixed harness and the current release
+of every agent. The re-run lands in `data/2026/` (`run.json` lists what the
+method changed in its `notes`); `docs/RUN-2026.md` is its run log.
+
+The pilot stays published in `data/2026-pilot/`: `results.json` and `results.md` (the headline table),
 `cycle-1…3/<agent>.csv.gz` (every 10-second sample), `<agent>.meta.json` (install
 record, schedule, footnotes), `<agent>.events.csv` (collector start/stop and the
 cgroup inode changes it noticed; the samples' `cgroup_ino` column is the complete
 record of agent restarts), `slots/` (the slot manifests) and `run.json` (the bed,
-with the kernel each box booted). `docs/RUN-2026.md` is the run log with every
-deviation; `python3 summarize.py data/2026 --harness-commit 903c57c..ea882d1`
-reproduces `results.json`. The write-up will be at
+with the kernel each box booted). `docs/RUN-2026-pilot.md` is its run log with every
+deviation; `python3 summarize.py data/2026-pilot --harness-commit 903c57c..ea882d1`
+reproduces its `results.json` with this checkout's summarize (which adds the
+`memory_current_idle_median_mb` metric and `run.notes`). The write-up will be at
 `https://monitorable.io/benchmarks/agent-footprint-2026/`.
 
 Run by [Monitorable](https://monitorable.io), whose agent is one of the rows.
@@ -97,7 +106,7 @@ mints a Pulse agent token for the slot, since Pulse revokes a token with
 the last host that used it; `bench sink reset --dry-run box-3` shows what
 it would do), `./bench cycle status` right after and again after an hour,
 `./bench collect <s>` after 26 h, for s = 0…3; `python3 summarize.py
-data/2026`. `BENCH_ONLY_BOXES="box-4" ./bench cycle start <s>` redoes one
+data/2026 --harness-commit <sha>`. `BENCH_ONLY_BOXES="box-4" ./bench cycle start <s>` redoes one
 box (and forgets only it on the hubs). A plain `bench install pulse box-N`
 has no slot token and warns: it writes bench.env's setup-day `PULSE_TOKEN`,
 which Pulse revoked with the last host that used it. `bench sink reset --all` is refused

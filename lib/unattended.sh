@@ -69,22 +69,31 @@ auto_verify_collected() {
   return 0
 }
 
+# auto_marker NAME STARTED: the marker exists and was written at or after STARTED (a slot's startedAt).
+# Markers from an earlier run left in the same auto/ directory (the pilot's, on the cron host) are older
+# than this run's manifests and count for nothing: a stale slot-0.collected would otherwise start slot 1
+# over an uncollected slot 0.
+auto_marker() {
+  local f; f="$(auto_dir)/$1"
+  [[ -f "$f" && "$2" =~ ^[0-9]+$ ]] && (( $(stat -c %Y "$f") >= $2 ))
+}
+
 # auto_decide -> one line:
 #   halted | done | none | bad-manifest S | wait EPOCH | collect S | adopt S | status1h S | start S
 auto_decide() {
   local now s last started
   now=$(auto_now)
   [[ -f "$(auto_dir)/halted" ]] && { echo halted; return 0; }
-  [[ -f "$(auto_dir)/done" ]] && { echo "done"; return 0; }
   s=$(auto_latest_slot)
   [[ -n "$s" ]] || { echo none; return 0; }
-  if [[ ! -f "$(auto_dir)/slot-$s.collected" ]]; then
+  started=$(auto_field "$s" '.startedAt // empty')
+  auto_marker "done" "$started" && { echo "done"; return 0; }
+  if ! auto_marker "slot-$s.collected" "$started"; then
     last=$(auto_field "$s" '[.boxes[].stop] | max // empty')
-    started=$(auto_field "$s" '.startedAt // empty')
     if ! [[ "$last" =~ ^[0-9]+$ && "$started" =~ ^[0-9]+$ ]]; then echo "bad-manifest $s"; return 0; fi
     if auto_samples_present "$s"; then echo "adopt $s"; return 0; fi
     if ((now >= last + AUTO_COLLECT_GRACE)); then echo "collect $s"; return 0; fi
-    if [[ ! -f "$(auto_dir)/slot-$s.status-1h" ]] && ((now >= started + AUTO_STATUS_AFTER)); then echo "status1h $s"; return 0; fi
+    if ! auto_marker "slot-$s.status-1h" "$started" && ((now >= started + AUTO_STATUS_AFTER)); then echo "status1h $s"; return 0; fi
     echo "wait $((last + AUTO_COLLECT_GRACE))"; return 0
   fi
   if ((s < SLOT_COUNT - 1)); then echo "start $((s + 1))"; return 0; fi
@@ -303,7 +312,9 @@ auto_start() {   # auto_start SLOT (plain statement; see the errexit note on top
 
 auto_finish() {
   local rc
-  if [[ -f "$(auto_dir)/done" ]]; then auto_write_status "run complete ($(cat "$(auto_dir)/done"))"; return 0; fi
+  if auto_marker "done" "$(auto_field "$(auto_latest_slot)" '.startedAt // empty')"; then
+    auto_write_status "run complete ($(cat "$(auto_dir)/done"))"; return 0
+  fi
   set +e; ( set -e; cmd_summarize ) > "$(auto_dir)/summarize-final.out" 2>&1; rc=$?; set -e
   ((rc == 0)) || log "auto: final summarize failed (auto/summarize-final.out)"
   date -u +%FT%TZ > "$(auto_dir)/done"
@@ -346,12 +357,12 @@ auto_init() {   # markers for work already done by hand, the run-log worktree, t
   now=$(auto_now); mkdir -p "$(auto_dir)"
   for s in $(seq 0 $((SLOT_COUNT - 1))); do
     [[ -f "$(auto_manifest "$s")" ]] || continue
-    if auto_samples_present "$s" && [[ ! -f "$(auto_dir)/slot-$s.collected" ]]; then
+    started=$(auto_field "$s" '.startedAt // 0')
+    if auto_samples_present "$s" && ! auto_marker "slot-$s.collected" "$started"; then
       printf 'by hand, before %s\n' "$(date -u +%FT%TZ)" > "$(auto_dir)/slot-$s.collected"
       log "auto: slot $s is collected (every row has its samples)"
     fi
-    started=$(auto_field "$s" '.startedAt // 0')
-    if ((now >= started + AUTO_STATUS_AFTER)) && [[ ! -f "$(auto_dir)/slot-$s.status-1h" ]]; then
+    if ((now >= started + AUTO_STATUS_AFTER)) && ! auto_marker "slot-$s.status-1h" "$started"; then
       printf 'by hand, before %s\n' "$(date -u +%FT%TZ)" > "$(auto_dir)/slot-$s.status-1h"
       log "auto: slot $s +1 h status taken as done by hand (started $(auto_utc "$started"))"
     fi

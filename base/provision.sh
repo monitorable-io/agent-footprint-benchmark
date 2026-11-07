@@ -22,6 +22,11 @@ log "hostname $NAME"
 hostnamectl set-hostname "$NAME"
 grep -q "[[:space:]]$NAME$" /etc/hosts || printf '127.0.1.1 %s\n' "$NAME" >> /etc/hosts
 
+# Before any apt work, so a timer cannot fire into the provisioning run either.
+log "apt timers"
+here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+bash "$here/apt-timers.sh"
+
 log "apt"
 apt-get update -q
 apt-get install -y -q ca-certificates curl gnupg nftables jq python3 stress-ng ufw

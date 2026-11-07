@@ -57,6 +57,27 @@ check "halted wins over everything" "$(AUTO_NOW=12000 auto_decide)" "halted"
 rm -f "$d/data/test/auto/halted"; : > "$d/data/test/auto/done"
 check "done marker -> done" "$(AUTO_NOW=100 auto_decide)" "done"
 
+# --- a fresh run (data/<year>/ holds only run.json, no slots/): the tick says so and does nothing
+YEAR=fresh; mkdir -p "$d/data/fresh/auto"; echo '{}' > "$d/data/fresh/run.json"
+check "fresh run: no slots dir -> none" "$(AUTO_NOW=1000 auto_decide)" "none"
+AUTO_NOW=1000 auto_tick > /dev/null 2>&1
+check "fresh run: the tick reports nothing to do" "$(grep -c 'nothing to do' "$d/data/fresh/auto/STATUS")" 1
+check "fresh run: no marker written" "$(find "$d/data/fresh/auto" -mindepth 1 ! -name STATUS ! -name tick.lock | wc -l)" 0
+# --- markers left by an earlier run in the same data/<year>/auto/ (the pilot's, on the cron host) are
+# older than the new run's manifests and count for nothing
+stale=1600000000; started=1700000000   # both before any marker this test writes for real
+for m in "done" slot-0.collected slot-0.status-1h slot-1.collected; do : > "$d/data/fresh/auto/$m"; touch -d "@$stale" "$d/data/fresh/auto/$m"; done
+check "stale done marker without a manifest -> none" "$(AUTO_NOW=$started auto_decide)" "none"
+mkdir -p "$d/data/fresh/slots"
+jq -n --argjson st "$started" '{slot: 0, startedAt: $st, boxes: [{box: "box-0", stop: ($st + 93600), cpuModel: "X", vcpus: 2}]}' > "$d/data/fresh/slots/slot-0.json"
+check "stale collected marker -> still measuring" "$(AUTO_NOW=$((started + 60)) auto_decide)" "wait $((started + 93600 + 120))"
+check "stale status marker -> the +1 h check is due" "$(AUTO_NOW=$((started + 3700)) auto_decide)" "status1h 0"
+touch -d "@$((started + 3700))" "$d/data/fresh/auto/slot-0.status-1h"
+check "a status marker newer than the manifest counts" "$(AUTO_NOW=$((started + 3800)) auto_decide)" "wait $((started + 93600 + 120))"
+touch -d "@$((started + 93800))" "$d/data/fresh/auto/slot-0.collected"
+check "a collected marker newer than the manifest counts" "$(AUTO_NOW=$((started + 93900)) auto_decide)" "start 1"
+YEAR="test"
+
 # --- the running-slot guard of cycle start
 rm -f "$d/data/test/auto/done"; manifest 1 6000 4102444800   # the guard reads the real clock: a stop in 2100
 check "cycle start is refused while a slot's boxes still measure" "$( (cycle_start_guard 2) 2>&1 | grep -c 'refused: slot-1.json runs until')" 1
@@ -164,4 +185,20 @@ rm -f "$d/data/test/auto/halted"
 auto_decide() { echo bogus; }
 auto_tick > /dev/null 2>&1
 check "an unknown decision halts" "$(grep -c "halted.*unknown decision 'bogus'" "$rl")" 1
+
+# --- a stale done marker (an earlier run's) does not skip the final summarize of this run
+YEAR=fresh; : > "$calls"; printf -- '- [ ] `./bench collect 3` at:\n' > "$d/runlog/docs/RUN-fresh.md"
+cmd_summarize() { echo summarize >> "$calls"; }
+touch -d "@$stale" "$d/data/fresh/auto/done"
+AUTO_NOW=$((started + 400000)) auto_finish > /dev/null 2>&1
+check "a stale done marker: the final summarize runs" "$(paste -sd' ' "$calls")" "summarize notify bench: RUN COMPLETE"
+check "and done is rewritten" "$(( $(stat -c %Y "$d/data/fresh/auto/done") > stale ))" 1
+: > "$calls"; auto_finish > /dev/null 2>&1
+check "a fresh done marker: finish only reports" "$(paste -sd' ' "$calls")" ""
+
+# --- init ignores an earlier run's markers: the slot is marked by hand afresh
+rm -f "$d/data/fresh/auto/slot-0.collected"; : > "$d/data/fresh/auto/slot-0.collected"; touch -d "@$stale" "$d/data/fresh/auto/slot-0.collected"
+while read -r _ _ _ _ cyc outname; do mkdir -p "$d/data/fresh/$cyc"; echo x | gzip > "$d/data/fresh/$cyc/$outname.csv.gz"; done < <(slot_plan 0)
+AUTO_NOW=$((started + 100000)) auto_init > /dev/null 2>&1 || true
+check "init re-marks a slot whose marker was stale" "$(grep -c 'by hand' "$d/data/fresh/auto/slot-0.collected")" 1
 echo PASS

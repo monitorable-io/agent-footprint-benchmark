@@ -66,11 +66,14 @@ cpu_model=$(grep -m1 '^model name' /proc/cpuinfo 2>/dev/null | cut -d: -f2- | xa
 [[ -n "$cpu_model" ]] || cpu_model=$(lscpu 2>/dev/null | awk -F: '/Model name/ {gsub(/^ +/, "", $2); print $2; exit}')
 [[ -n "$cpu_model" ]] || cpu_model=unknown
 vcpus=$(nproc 2>/dev/null || echo 0)
+# The interfaces the network columns count (device-backed only; [] = none found, every interface but lo).
+ifaces=$(python3 "${BENCH_COLLECTOR:-/opt/bench/collector}/netcounters.py" --physical 2>/dev/null) || ifaces='[]'
+[[ -n "$ifaces" ]] || ifaces='[]'
 jq -n --arg agent "$agent" --arg kernel "$kernel" --arg cpu "$cpu_model" --argjson vcpus "$vcpus" --arg started "$started" --arg finished "$finished" --arg seconds "$seconds" \
   --arg status "$status" --argjson rc "$rc" --arg version "$version" --argjson units "$units" \
-  --argjson ports "$ports" --argjson disk "$disk" --arg logtail "$redacted" \
+  --argjson ports "$ports" --argjson disk "$disk" --arg logtail "$redacted" --argjson ifaces "$ifaces" \
   '{agent: $agent, kernel: $kernel, cpu_model: $cpu, vcpus: $vcpus, started: ($started|tonumber), finished: ($finished|tonumber), seconds: ($seconds|tonumber),
     status: $status, exit_code: $rc, version: $version, units: $units, listening_ports: $ports,
-    disk_bytes: $disk, tail: ($logtail | split("\n") | map(select(length > 0)))}' > "$state/install.json"
+    disk_bytes: $disk, counted_interfaces: $ifaces, tail: ($logtail | split("\n") | map(select(length > 0)))}' > "$state/install.json"
 echo "INSTALL_$status $agent ${seconds}s rc=$rc version=$version"
 exit 0
