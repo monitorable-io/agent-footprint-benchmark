@@ -5,8 +5,12 @@ disk writes, network bytes, install time and on-disk size, measured on
 identical cheap VPSes over 24 hours idle plus one loaded hour, three times,
 with every 10-second sample published here.
 
-**Status: harness built, bed rented, run not started (2026-10-31).** Results land in
-`data/2026/` with the run; the write-up will be at
+**Status: run complete (2026-10-31 → 2026-11-04, 11 agents + control, 3 runs each).**
+Results are in `data/2026/`: `results.json` and `results.md` (the headline table),
+`cycle-1…3/<agent>.csv.gz` (every 10-second sample), `<agent>.meta.json` (install
+record, schedule, footnotes), `<agent>.events.csv` (restarts), `slots/` (the slot
+manifests) and `run.json` (the bed). `docs/RUN-2026.md` is the run log with every
+deviation. The write-up will be at
 `https://monitorable.io/benchmarks/agent-footprint-2026/`.
 
 Run by [Monitorable](https://monitorable.io), whose agent is one of the rows.
