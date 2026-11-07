@@ -15,15 +15,16 @@
   "user": "root",
   "env": [],
   "footnotes": [
-    "Control row: no agent; the collector measures its own cgroup."
+    "Control row: no agent; the collector measures its own cgroup.",
+    "Run 1 (box-2): Ubuntu's unattended-upgrades ran at 06:20 UTC on the stock image and, with the other services linked against the upgraded libraries, restarted the sampler, which is this row's own process, 6 times between 06:20 and 06:24 UTC, inside the idle window; the idle medians are unaffected, this run's totals include the restarts."
   ],
   "install": {
     "agent": "none",
     "kernel": "7.0.0-15-generic",
     "cpu_model": "AMD EPYC-Rome Processor",
     "vcpus": 2,
-    "started": 1793546709.308986164,
-    "finished": 1793546709.313901123,
+    "started": 1793546709.3089862,
+    "finished": 1793546709.3139012,
     "seconds": 0.0,
     "status": "ok",
     "exit_code": 0,

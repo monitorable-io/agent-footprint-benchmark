@@ -21,7 +21,8 @@
   "package": "datadog-agent",
   "footnotes": [
     "Every datadog-agent* unit is summed (7.84+ runs a process manager).",
-    "Ubuntu's unattended-upgrades ran once during the cycle (about 06:30 UTC) on the stock image and, with the other services linked against the upgraded libraries, restarted this agent several times within a few minutes. The restarts fall in the idle window; the idle medians are unaffected, the cycle's totals include them."
+    "The memory peak is the sum of each datadog-agent* unit's own high-water mark over the cycle; those peaks did not happen at the same moment, so the figure overstates the coincident peak.",
+    "Run 3 (box-4): Ubuntu's unattended-upgrades ran at 06:13 UTC on the stock image and, with the other services linked against the upgraded libraries, restarted the agent 1 time, inside the idle window; the idle medians are unaffected, this run's totals include the restart."
   ],
   "sourceUrl": "https://docs.datadoghq.com/agent/basic_agent_usage/ubuntu/",
   "install": {

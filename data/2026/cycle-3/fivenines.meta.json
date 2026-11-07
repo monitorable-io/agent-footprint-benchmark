@@ -17,7 +17,7 @@
     "FIVENINES_TOKEN"
   ],
   "footnotes": [
-    "Ubuntu's unattended-upgrades ran once during the cycle (about 06:30 UTC) on the stock image and, with the other services linked against the upgraded libraries, restarted this agent several times within a few minutes. The restarts fall in the idle window; the idle medians are unaffected, the cycle's totals include them."
+    "Run 3 (box-5): Ubuntu's unattended-upgrades ran at 06:19 UTC on the stock image and, with the other services linked against the upgraded libraries, restarted the agent 1 time, inside the idle window; the idle medians are unaffected, this run's totals include the restart."
   ],
   "sourceUrl": "https://github.com/Five-Nines-io/fivenines_agent#installation",
   "install": {

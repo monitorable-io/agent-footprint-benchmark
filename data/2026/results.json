@@ -7,8 +7,8 @@
     "location": "Helsinki (HEL1)",
     "plan": "CX23: 2 vCPU AMD EPYC (shared), 4 GB RAM, 40 GB NVMe",
     "image": "Ubuntu 26.04 LTS",
-    "kernel": "7.0.0-15 to 7.0.0-42-generic (the stock image's kernel moved between rebuilds; each cycle's meta.json records its own)",
-    "harnessCommit": "ea882d1",
+    "kernel": "7.0.0-15/-30/-38/-42-generic (differs by box, see kernels)",
+    "harnessCommit": "903c57c..ea882d1",
     "cycles": [
       {
         "start": 1793454442,
@@ -124,159 +124,14 @@
   ],
   "rows": [
     {
-      "key": "hetrixtools",
-      "name": "HetrixTools agent",
-      "version": "2.4.2",
-      "licence": "open source, no LICENSE file",
-      "sourceUrl": "https://github.com/hetrixtools/agent",
-      "installUrl": "https://github.com/hetrixtools/agent",
-      "unitNames": [
-        "hetrixtools_agent.service",
-        "hetrixtools_agent_1793735940-9831.service",
-        "hetrixtools_agent.timer"
-      ],
-      "reportsTo": "sm.hetrixtools.net (wget POST once a minute)",
-      "intervalSeconds": 60,
-      "us": false,
-      "footnotes": [
-        "This box has no cron, so the vendor installer's own systemd path runs: a minutely timer starting a transient unit per run. Those runs are placed in a persistent slice (one word added to the vendor launcher) so the kernel's accounting for them survives each run; the timer's launcher unit is counted too.",
-        "Memory (PSS, RSS), process and thread counts are missing for this row: the agent's minutely runs live in per-run child cgroups of the slice, and the sampler reads processes from the matched cgroup only, so it saw none. The cgroup's own hierarchical figures are right: memory.current idle median 3.8 MB (p95 4.2 MB), cgroup peak about 14 MB; CPU, disk and network are hierarchical and unaffected."
-      ],
-      "values": {
-        "pss_idle_median_mb": {
-          "median": 0.0,
-          "cycles": [
-            0.0,
-            0.0,
-            0.0
-          ]
-        },
-        "pss_idle_p95_mb": {
-          "median": 0.0,
-          "cycles": [
-            0.0,
-            0.0,
-            0.0
-          ]
-        },
-        "rss_idle_median_mb": {
-          "median": 0.0,
-          "cycles": [
-            0.0,
-            0.0,
-            0.0
-          ]
-        },
-        "memory_peak_mb": {
-          "median": 14.430208,
-          "cycles": [
-            14.6432,
-            14.221312,
-            14.430208
-          ]
-        },
-        "first_hour_peak_mb": {
-          "median": 0.0,
-          "cycles": [
-            0.0,
-            0.0,
-            0.0
-          ]
-        },
-        "cpu_idle_pct": {
-          "median": 16.85494192897693,
-          "cycles": [
-            17.13174970407054,
-            12.01983797801667,
-            16.85494192897693
-          ]
-        },
-        "cpu_loaded_pct": {
-          "median": 12.29702852367688,
-          "cycles": [
-            12.29702852367688,
-            10.853813899721448,
-            12.925271504178273
-          ]
-        },
-        "disk_written_mb_24h": {
-          "median": 5.898952433868825,
-          "cycles": [
-            5.898952433868825,
-            5.898952433868825,
-            5.898952433868825
-          ]
-        },
-        "journal_mb_24h": {
-          "median": 4.4829485217391305,
-          "cycles": [
-            4.487696347826087,
-            4.4829485217391305,
-            4.4752664347826085
-          ]
-        },
-        "net_out_mb_24h": {
-          "median": 3.7738881314168378,
-          "cycles": [
-            3.7243513661070176,
-            3.803054784394251,
-            3.7738881314168378
-          ]
-        },
-        "net_in_mb_24h": {
-          "median": 6.435971378185771,
-          "cycles": [
-            6.40740897209808,
-            6.452876724242058,
-            6.435971378185771
-          ]
-        },
-        "net_headline_mb_24h": {
-          "median": 3.7738881314168378,
-          "cycles": [
-            3.7243513661070176,
-            3.803054784394251,
-            3.7738881314168378
-          ]
-        },
-        "install_seconds": {
-          "median": 2.1,
-          "cycles": [
-            2.1,
-            1.9,
-            2.1
-          ]
-        },
-        "disk_footprint_mb": {
-          "median": 0.080777,
-          "cycles": [
-            0.080777,
-            0.080773,
-            0.080787
-          ]
-        },
-        "pids_median": {
-          "median": 0.0,
-          "cycles": [
-            0,
-            0.0,
-            0.0
-          ]
-        },
-        "threads_median": {
-          "median": 0.0,
-          "cycles": [
-            0,
-            0.0,
-            0.0
-          ]
-        }
-      }
-    },
-    {
       "key": "beszel",
       "name": "Beszel agent",
       "version": "beszel-agent 0.21.1",
+      "versions": [
+        "beszel-agent 0.21.1",
+        "beszel-agent 0.21.1",
+        "beszel-agent 0.21.1"
+      ],
       "licence": "MIT",
       "sourceUrl": "https://beszel.dev/guide/agent-installation",
       "installUrl": "https://beszel.dev/guide/agent-installation",
@@ -287,7 +142,10 @@
       "intervalSeconds": 60,
       "us": false,
       "footnotes": [
-        "Run 1 (box-0): the agent could not register with the hub for its first 31 minutes (the hub's universal token had expired; enabled permanently by hand) and retried every 5 s. Inside the excluded first hour, so only this run's first-hour peak carries it."
+        "Run 1 (box-0): the agent could not register with the hub for its first 31 minutes (the hub's universal token had expired; enabled permanently by hand) and retried every 5 s. Inside the excluded first hour, so only this run's first-hour peak carries it.",
+        "Run 1 (box-0): Ubuntu's unattended-upgrades ran at 06:38 UTC on the stock image and, with the other services linked against the upgraded libraries, restarted the agent 1 time, inside the idle window; the idle medians are unaffected, this run's totals include the restart.",
+        "Run 2 (box-3): Ubuntu's unattended-upgrades ran at 06:40 UTC on the stock image and, with the other services linked against the upgraded libraries, restarted the agent 1 time, inside the idle window; the idle medians are unaffected, this run's totals include the restart.",
+        "Run 3 (box-6): Ubuntu's unattended-upgrades ran at 06:28 UTC on the stock image and, with the other services linked against the upgraded libraries, restarted the agent 1 time, inside the idle window; the idle medians are unaffected, this run's totals include the restart."
       ],
       "values": {
         "pss_idle_median_mb": {
@@ -317,7 +175,7 @@
         "memory_peak_mb": {
           "median": 117.415936,
           "cycles": [
-            122.18368,
+            117.420032,
             117.415936,
             117.3504
           ]
@@ -424,6 +282,11 @@
       "key": "node-exporter",
       "name": "node_exporter",
       "version": "v1.12.1",
+      "versions": [
+        "v1.12.1",
+        "v1.12.1",
+        "v1.12.1"
+      ],
       "licence": "Apache-2.0",
       "sourceUrl": "https://prometheus.io/docs/guides/node-exporter/",
       "installUrl": "https://prometheus.io/docs/guides/node-exporter/",
@@ -572,6 +435,11 @@
       "key": "monitorable",
       "name": "Monitorable agent",
       "version": "monitorable-agent version v1.5.0",
+      "versions": [
+        "monitorable-agent version v1.5.0",
+        "monitorable-agent version v1.5.0",
+        "monitorable-agent version v1.5.0"
+      ],
       "licence": "Apache-2.0",
       "sourceUrl": "https://monitorable.io/docs/agent/install/",
       "installUrl": "https://monitorable.io/docs/agent/install/",
@@ -610,10 +478,10 @@
           ]
         },
         "memory_peak_mb": {
-          "median": 19.259392,
+          "median": 18.976768,
           "cycles": [
             19.259392,
-            37.953536,
+            18.976768,
             18.702336
           ]
         },
@@ -719,6 +587,11 @@
       "key": "fivenines",
       "name": "Fivenines agent",
       "version": "fivenines-agent 1.22.0",
+      "versions": [
+        "fivenines-agent 1.21.4",
+        "fivenines-agent 1.21.5",
+        "fivenines-agent 1.22.0"
+      ],
       "licence": "WTFPL",
       "sourceUrl": "https://github.com/Five-Nines-io/fivenines_agent#installation",
       "installUrl": "https://github.com/Five-Nines-io/fivenines_agent#installation",
@@ -729,7 +602,9 @@
       "intervalSeconds": 60,
       "us": false,
       "footnotes": [
-        "Ubuntu's unattended-upgrades ran once during the cycle (about 06:30 UTC) on the stock image and, with the other services linked against the upgraded libraries, restarted this agent several times within a few minutes. The restarts fall in the idle window; the idle medians are unaffected, the cycle's totals include them."
+        "Run 1 (box-8): Ubuntu's unattended-upgrades ran at 06:15 UTC on the stock image and, with the other services linked against the upgraded libraries, restarted the agent 1 time, inside the idle window; the idle medians are unaffected, this run's totals include the restart.",
+        "Run 2 (box-2): Ubuntu's unattended-upgrades ran at 07:02 UTC on the stock image and, with the other services linked against the upgraded libraries, restarted the agent 1 time, inside the idle window; the idle medians are unaffected, this run's totals include the restart.",
+        "Run 3 (box-5): Ubuntu's unattended-upgrades ran at 06:19 UTC on the stock image and, with the other services linked against the upgraded libraries, restarted the agent 1 time, inside the idle window; the idle medians are unaffected, this run's totals include the restart."
       ],
       "values": {
         "pss_idle_median_mb": {
@@ -757,11 +632,11 @@
           ]
         },
         "memory_peak_mb": {
-          "median": 127.664128,
+          "median": 127.311872,
           "cycles": [
             127.664128,
             124.256256,
-            128.663552
+            127.311872
           ]
         },
         "first_hour_peak_mb": {
@@ -866,6 +741,11 @@
       "key": "pulse",
       "name": "Pulse agent",
       "version": "v6.6.0",
+      "versions": [
+        "v6.6.0",
+        "v6.6.0",
+        "v6.6.0"
+      ],
       "licence": "MIT",
       "sourceUrl": "https://github.com/rcourtman/Pulse/blob/main/docs/UNIFIED_AGENT.md",
       "installUrl": "https://github.com/rcourtman/Pulse/blob/main/docs/UNIFIED_AGENT.md",
@@ -886,7 +766,7 @@
           "cycles": [
             49.2544,
             49.614848,
-            49.790976
+            49.78688
           ]
         },
         "pss_idle_p95_mb": {
@@ -894,7 +774,7 @@
           "cycles": [
             50.204672,
             50.798592,
-            50.95424
+            50.950144
           ]
         },
         "rss_idle_median_mb": {
@@ -902,15 +782,15 @@
           "cycles": [
             49.262592,
             49.62304,
-            49.799168
+            49.795072
           ]
         },
         "memory_peak_mb": {
-          "median": 33.75104,
+          "median": 17.317888,
           "cycles": [
-            37.486592,
+            18.743296,
             17.317888,
-            33.75104
+            16.91648
           ]
         },
         "first_hour_peak_mb": {
@@ -1015,6 +895,11 @@
       "key": "glances",
       "name": "Glances",
       "version": "4.5.8",
+      "versions": [
+        "4.5.8",
+        "4.5.8",
+        "4.5.8"
+      ],
       "licence": "LGPL-3.0",
       "sourceUrl": "https://github.com/nicolargo/glances#installation",
       "installUrl": "https://github.com/nicolargo/glances#installation",
@@ -1028,7 +913,10 @@
         "Glances ships no systemd unit; the harness adds a two-line one that runs `glances -w`.",
         "Runs as root (pipx install as root, the documented route); port 61208 is reachable from the sink only.",
         "Network bytes are counted by TCP port (the listening socket is not in the service's cgroup under socket activation, and polled traffic is what this row sends).",
-        "Ubuntu's unattended-upgrades ran once during the cycle (about 06:30 UTC) on the stock image and, with the other services linked against the upgraded libraries, restarted this agent several times within a few minutes. The restarts fall in the idle window; the idle medians are unaffected, the cycle's totals include them."
+        "The network figure is the harness's own poller fetching /api/4/all every 3 s (Glances' refresh period); each reply is about 137 KB, which is the 3.9 GB per 24 h. Scale it to your own polling interval.",
+        "Run 1 (box-3): Ubuntu's unattended-upgrades ran at 06:19 UTC on the stock image and, with the other services linked against the upgraded libraries, restarted the agent 7 times between 06:19 and 06:21 UTC, inside the idle window; the idle medians are unaffected, this run's totals include the restarts.",
+        "Run 2 (box-6): Ubuntu's unattended-upgrades ran at 06:28 UTC on the stock image and, with the other services linked against the upgraded libraries, restarted the agent 7 times between 06:28 and 06:31 UTC, inside the idle window; the idle medians are unaffected, this run's totals include the restarts.",
+        "Run 3 (box-0): Ubuntu's unattended-upgrades ran at 06:30 UTC on the stock image and, with the other services linked against the upgraded libraries, restarted the agent 7 times between 06:30 and 06:34 UTC, inside the idle window; the idle medians are unaffected, this run's totals include the restarts."
       ],
       "values": {
         "pss_idle_median_mb": {
@@ -1056,9 +944,9 @@
           ]
         },
         "memory_peak_mb": {
-          "median": 75.780096,
+          "median": 75.53024,
           "cycles": [
-            122.011648,
+            75.53024,
             75.526144,
             75.780096
           ]
@@ -1074,7 +962,7 @@
         "cpu_idle_pct": {
           "median": 2.280797853605508,
           "cycles": [
-            1.690157074525909,
+            1.6901153086121512,
             2.2958892692354147,
             2.280797853605508
           ]
@@ -1165,6 +1053,11 @@
       "key": "telegraf",
       "name": "Telegraf",
       "version": "Telegraf 1.40.3 (git: HEAD@41b45388)",
+      "versions": [
+        "Telegraf 1.40.2 (git: HEAD@2e0a2ed1)",
+        "Telegraf 1.40.2 (git: HEAD@2e0a2ed1)",
+        "Telegraf 1.40.3 (git: HEAD@41b45388)"
+      ],
       "licence": "MIT",
       "sourceUrl": "https://docs.influxdata.com/telegraf/v1/install/",
       "installUrl": "https://docs.influxdata.com/telegraf/v1/install/",
@@ -1312,6 +1205,11 @@
       "key": "datadog",
       "name": "Datadog Agent",
       "version": "Agent 7.85.0",
+      "versions": [
+        "Agent 7.85.0",
+        "Agent 7.85.0",
+        "Agent 7.85.0"
+      ],
       "licence": "Apache-2.0",
       "sourceUrl": "https://docs.datadoghq.com/agent/basic_agent_usage/ubuntu/",
       "installUrl": "https://docs.datadoghq.com/agent/basic_agent_usage/ubuntu/",
@@ -1340,7 +1238,9 @@
       "us": false,
       "footnotes": [
         "Every datadog-agent* unit is summed (7.84+ runs a process manager).",
-        "Ubuntu's unattended-upgrades ran once during the cycle (about 06:30 UTC) on the stock image and, with the other services linked against the upgraded libraries, restarted this agent several times within a few minutes. The restarts fall in the idle window; the idle medians are unaffected, the cycle's totals include them."
+        "The memory peak is the sum of each datadog-agent* unit's own high-water mark over the cycle; those peaks did not happen at the same moment, so the figure overstates the coincident peak.",
+        "Run 2 (box-1): Ubuntu's unattended-upgrades ran at 06:05 UTC on the stock image and, with the other services linked against the upgraded libraries, restarted the agent 1 time, inside the idle window; the idle medians are unaffected, this run's totals include the restart.",
+        "Run 3 (box-4): Ubuntu's unattended-upgrades ran at 06:13 UTC on the stock image and, with the other services linked against the upgraded libraries, restarted the agent 1 time, inside the idle window; the idle medians are unaffected, this run's totals include the restart."
       ],
       "values": {
         "pss_idle_median_mb": {
@@ -1477,6 +1377,11 @@
       "key": "netdata-cloud",
       "name": "Netdata (claimed to Netdata Cloud)",
       "version": "v2.12.2",
+      "versions": [
+        "v2.12.2",
+        "v2.12.2",
+        "v2.12.2"
+      ],
       "licence": "GPL-3.0",
       "sourceUrl": "https://learn.netdata.cloud/docs/netdata-agent/installation/linux",
       "installUrl": "https://learn.netdata.cloud/docs/netdata-agent/installation/linux",
@@ -1490,8 +1395,10 @@
         "Same binary as the self-hosted row, claimed to Netdata Cloud. ML anomaly detection stays at its default (on).",
         "kickstart's default channel is nightly; installed with --stable-channel so the version is a release readers can reproduce.",
         "Anonymous telemetry and the daily updater timer stay at their defaults; the updater's unit is counted with the agent.",
-        "Nearly all of this row's inbound bytes are a steady 8 KB/s from Netdata's go.d plugin polling the box's two Docker containers every second over the Docker bridge (Valkey INFO is about 6.3 KB, nginx about 1 KB), traffic that never leaves the box. The headline network figure for this row (bytes out) does not include it.",
-        "Ubuntu's unattended-upgrades ran once during the cycle (about 06:30 UTC) on the stock image and, with the other services linked against the upgraded libraries, restarted this agent several times within a few minutes. The restarts fall in the idle window; the idle medians are unaffected, the cycle's totals include them."
+        "Both directions of this row's network figure are almost entirely Netdata's own go.d plugin polling the box's two Docker containers every second over the Docker bridge: inbound a steady 8 KB/s (the containers' replies; Valkey INFO is about 6.3 KB, nginx about 1 KB), outbound about 0.56 KB/s (the requests and acknowledgements). The counters exclude only loopback, so bridge traffic counts as network although it never leaves the box. Traffic that does leave the box is close to zero for the self-hosted row and about 0.6 MB per 24 h more for the row claimed to Netdata Cloud. The attribution is inferred from the sizes and cadence, not from a packet capture.",
+        "Run 1 (box-2): Ubuntu's unattended-upgrades ran at 06:22 UTC on the stock image and, with the other services linked against the upgraded libraries, restarted the agent 9 times between 06:22 and 06:26 UTC, inside the idle window; the idle medians are unaffected, this run's totals include the restarts. Netdata rewrites its database on restart: about 354 MB of this run's disk writes fell in that hour against about 10 MB in a normal hour; the one Netdata run without an upgrade (self-hosted run 3, box-7) wrote 270 MB per 24 h.",
+        "Run 2 (box-5): Ubuntu's unattended-upgrades ran at 06:24 UTC on the stock image and, with the other services linked against the upgraded libraries, restarted the agent 6 times between 06:24 and 06:27 UTC, inside the idle window; the idle medians are unaffected, this run's totals include the restarts. Netdata rewrites its database on restart: about 229 MB of this run's disk writes fell in that hour against about 10 MB in a normal hour; the one Netdata run without an upgrade (self-hosted run 3, box-7) wrote 270 MB per 24 h.",
+        "Run 3 (box-8): Ubuntu's unattended-upgrades ran at 06:33 UTC on the stock image and, with the other services linked against the upgraded libraries, restarted the agent 6 times between 06:33 and 06:35 UTC, inside the idle window; the idle medians are unaffected, this run's totals include the restarts. Netdata rewrites its database on restart: about 246 MB of this run's disk writes fell in that hour against about 10 MB in a normal hour; the one Netdata run without an upgrade (self-hosted run 3, box-7) wrote 270 MB per 24 h."
       ],
       "values": {
         "pss_idle_median_mb": {
@@ -1503,11 +1410,11 @@
           ]
         },
         "pss_idle_p95_mb": {
-          "median": 356.23424,
+          "median": 356.230144,
           "cycles": [
             359.7056,
             354.681856,
-            356.23424
+            356.230144
           ]
         },
         "rss_idle_median_mb": {
@@ -1519,11 +1426,11 @@
           ]
         },
         "memory_peak_mb": {
-          "median": 285.728768,
+          "median": 276.369408,
           "cycles": [
             285.728768,
             269.819904,
-            514.17088
+            276.369408
           ]
         },
         "first_hour_peak_mb": {
@@ -1535,11 +1442,11 @@
           ]
         },
         "cpu_idle_pct": {
-          "median": 3.7602665080323714,
+          "median": 3.7602024930547167,
           "cycles": [
             3.7261144775939123,
             3.9383967870515764,
-            3.7602665080323714
+            3.7602024930547167
           ]
         },
         "cpu_loaded_pct": {
@@ -1551,11 +1458,11 @@
           ]
         },
         "disk_written_mb_24h": {
-          "median": 516.4661093948545,
+          "median": 516.4019903466602,
           "cycles": [
             575.6308924652736,
             431.8717118106052,
-            516.4661093948545
+            516.4019903466602
           ]
         },
         "journal_mb_24h": {
@@ -1628,6 +1535,11 @@
       "key": "netdata",
       "name": "Netdata (self-hosted)",
       "version": "v2.12.2",
+      "versions": [
+        "v2.12.2",
+        "v2.12.2",
+        "v2.12.2"
+      ],
       "licence": "GPL-3.0",
       "sourceUrl": "https://learn.netdata.cloud/docs/netdata-agent/installation/linux",
       "installUrl": "https://learn.netdata.cloud/docs/netdata-agent/installation/linux",
@@ -1641,8 +1553,9 @@
         "ML anomaly detection stays at its default (on).",
         "kickstart's default channel is nightly; installed with --stable-channel so the version is a release readers can reproduce.",
         "Anonymous telemetry and the daily updater timer stay at their defaults; the updater's unit is counted with the agent.",
-        "Nearly all of this row's inbound bytes are a steady 8 KB/s from Netdata's go.d plugin polling the box's two Docker containers every second over the Docker bridge (Valkey INFO is about 6.3 KB, nginx about 1 KB), traffic that never leaves the box. The headline network figure for this row (bytes out) does not include it.",
-        "Ubuntu's unattended-upgrades ran once during the cycle (about 06:30 UTC) on the stock image and, with the other services linked against the upgraded libraries, restarted this agent several times within a few minutes. The restarts fall in the idle window; the idle medians are unaffected, the cycle's totals include them."
+        "Both directions of this row's network figure are almost entirely Netdata's own go.d plugin polling the box's two Docker containers every second over the Docker bridge: inbound a steady 8 KB/s (the containers' replies; Valkey INFO is about 6.3 KB, nginx about 1 KB), outbound about 0.56 KB/s (the requests and acknowledgements). The counters exclude only loopback, so bridge traffic counts as network although it never leaves the box. Traffic that does leave the box is close to zero for the self-hosted row and about 0.6 MB per 24 h more for the row claimed to Netdata Cloud. The attribution is inferred from the sizes and cadence, not from a packet capture.",
+        "Run 1 (box-1): Ubuntu's unattended-upgrades ran at 06:25 UTC on the stock image and, with the other services linked against the upgraded libraries, restarted the agent 6 times between 06:25 and 06:29 UTC, inside the idle window; the idle medians are unaffected, this run's totals include the restarts. Netdata rewrites its database on restart: about 285 MB of this run's disk writes fell in that hour against about 10 MB in a normal hour; the one Netdata run without an upgrade (self-hosted run 3, box-7) wrote 270 MB per 24 h.",
+        "Run 2 (box-4): Ubuntu's unattended-upgrades ran at 06:33 UTC on the stock image and, with the other services linked against the upgraded libraries, restarted the agent 6 times between 06:33 and 06:37 UTC, inside the idle window; the idle medians are unaffected, this run's totals include the restarts. Netdata rewrites its database on restart: about 235 MB of this run's disk writes fell in that hour against about 10 MB in a normal hour; the one Netdata run without an upgrade (self-hosted run 3, box-7) wrote 270 MB per 24 h."
       ],
       "values": {
         "pss_idle_median_mb": {
@@ -1774,12 +1687,151 @@
           ]
         }
       }
+    },
+    {
+      "key": "hetrixtools",
+      "name": "HetrixTools agent",
+      "version": "2.4.2",
+      "versions": [
+        "2.4.2",
+        "2.4.2",
+        "2.4.2"
+      ],
+      "licence": "open source, no LICENSE file",
+      "sourceUrl": "https://github.com/hetrixtools/agent",
+      "installUrl": "https://github.com/hetrixtools/agent",
+      "unitNames": [
+        "hetrixtools_agent.service",
+        "hetrixtools_agent_1793735940-9831.service",
+        "hetrixtools_agent.timer"
+      ],
+      "reportsTo": "sm.hetrixtools.net (wget POST once a minute)",
+      "intervalSeconds": 60,
+      "us": false,
+      "footnotes": [
+        "This box has no cron, so the vendor installer's own systemd path runs: a minutely timer starting a transient unit per run. Those runs are placed in a persistent slice (one word added to the vendor launcher) so the kernel's accounting for them survives each run; the timer's launcher unit is counted too.",
+        "The agent's minutely runs live in per-run child cgroups of its slice, and the sampler lists processes of the matched cgroup only, so it never saw one: the per-process figures (PSS, RSS, first-hour peak, processes, threads) are n/a for this row. The slice's hierarchical counters are right: CPU 12 to 17 % of one vCPU, memory.current idle median 3.8 MB (p95 4.2 MB), cgroup memory peak about 14 MB, disk and network as shown. memory.current is not the same quantity as the PSS column (Beszel's memory.current is 8.4 MB against a PSS of 18 MB), so this row cannot be ranked on memory against the others.",
+        "No process was found in the agent's cgroup at any sample (its processes live in child cgroups or are short-lived), so the per-process figures (PSS, RSS, first-hour peak, processes, threads) are not available for this row; the cgroup's CPU, memory peak, disk and network counters are hierarchical and unaffected.",
+        "No process was found in the agent's cgroup at any sample (its processes live in child cgroups or are short-lived), so the per-process figures (PSS, RSS, first-hour peak, processes, threads) are not available for this row; the cgroup's CPU, memory peak, disk and network counters are hierarchical and unaffected.",
+        "No process was found in the agent's cgroup at any sample (its processes live in child cgroups or are short-lived), so the per-process figures (PSS, RSS, first-hour peak, processes, threads) are not available for this row; the cgroup's CPU, memory peak, disk and network counters are hierarchical and unaffected."
+      ],
+      "values": {
+        "pss_idle_median_mb": {
+          "median": null,
+          "cycles": []
+        },
+        "pss_idle_p95_mb": {
+          "median": null,
+          "cycles": []
+        },
+        "rss_idle_median_mb": {
+          "median": null,
+          "cycles": []
+        },
+        "memory_peak_mb": {
+          "median": 14.430208,
+          "cycles": [
+            14.6432,
+            14.221312,
+            14.430208
+          ]
+        },
+        "first_hour_peak_mb": {
+          "median": null,
+          "cycles": []
+        },
+        "cpu_idle_pct": {
+          "median": 16.85494192897693,
+          "cycles": [
+            17.13174970407054,
+            12.01983797801667,
+            16.85494192897693
+          ]
+        },
+        "cpu_loaded_pct": {
+          "median": 12.29702852367688,
+          "cycles": [
+            12.29702852367688,
+            10.853813899721448,
+            12.925271504178273
+          ]
+        },
+        "disk_written_mb_24h": {
+          "median": 5.898952433868825,
+          "cycles": [
+            5.898952433868825,
+            5.898952433868825,
+            5.898952433868825
+          ]
+        },
+        "journal_mb_24h": {
+          "median": 4.4829485217391305,
+          "cycles": [
+            4.487696347826087,
+            4.4829485217391305,
+            4.4752664347826085
+          ]
+        },
+        "net_out_mb_24h": {
+          "median": 3.7738881314168378,
+          "cycles": [
+            3.7243513661070176,
+            3.803054784394251,
+            3.7738881314168378
+          ]
+        },
+        "net_in_mb_24h": {
+          "median": 6.435971378185771,
+          "cycles": [
+            6.40740897209808,
+            6.452876724242058,
+            6.435971378185771
+          ]
+        },
+        "net_headline_mb_24h": {
+          "median": 3.7738881314168378,
+          "cycles": [
+            3.7243513661070176,
+            3.803054784394251,
+            3.7738881314168378
+          ]
+        },
+        "install_seconds": {
+          "median": 2.1,
+          "cycles": [
+            2.1,
+            1.9,
+            2.1
+          ]
+        },
+        "disk_footprint_mb": {
+          "median": 0.080777,
+          "cycles": [
+            0.080777,
+            0.080773,
+            0.080787
+          ]
+        },
+        "pids_median": {
+          "median": null,
+          "cycles": []
+        },
+        "threads_median": {
+          "median": null,
+          "cycles": []
+        }
+      }
     }
   ],
   "control": {
     "key": "control",
     "name": "No agent (harness only)",
     "version": "none",
+    "versions": [
+      "none",
+      "none",
+      "none"
+    ],
     "licence": "Apache-2.0",
     "sourceUrl": "https://github.com/monitorable-io/agent-footprint-benchmark",
     "installUrl": "https://github.com/monitorable-io/agent-footprint-benchmark",
@@ -1788,7 +1840,10 @@
     "intervalSeconds": 10,
     "us": false,
     "footnotes": [
-      "Control row: no agent; the collector measures its own cgroup."
+      "Control row: no agent; the collector measures its own cgroup.",
+      "Run 1 (box-2): Ubuntu's unattended-upgrades ran at 06:20 UTC on the stock image and, with the other services linked against the upgraded libraries, restarted the sampler, which is this row's own process, 6 times between 06:20 and 06:24 UTC, inside the idle window; the idle medians are unaffected, this run's totals include the restarts.",
+      "Run 2 (box-5): Ubuntu's unattended-upgrades ran at 06:27 UTC on the stock image and, with the other services linked against the upgraded libraries, restarted the sampler, which is this row's own process, 6 times between 06:27 and 06:29 UTC, inside the idle window; the idle medians are unaffected, this run's totals include the restarts.",
+      "Run 3 (box-8): Ubuntu's unattended-upgrades ran at 06:06 UTC on the stock image and, with the other services linked against the upgraded libraries, restarted the sampler, which is this row's own process, 6 times between 06:06 and 06:09 UTC, inside the idle window; the idle medians are unaffected, this run's totals include the restarts."
     ],
     "values": {
       "pss_idle_median_mb": {
@@ -1816,10 +1871,10 @@
         ]
       },
       "memory_peak_mb": {
-        "median": 27.500544,
+        "median": 15.163392,
         "cycles": [
-          28.196864,
-          27.500544,
+          15.163392,
+          16.359424,
           15.089664
         ]
       },
@@ -1888,12 +1943,8 @@
         ]
       },
       "install_seconds": {
-        "median": 0.0,
-        "cycles": [
-          0.0,
-          0.0,
-          0.0
-        ]
+        "median": null,
+        "cycles": []
       },
       "disk_footprint_mb": {
         "median": 0.056037,

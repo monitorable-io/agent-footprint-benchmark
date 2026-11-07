@@ -20,7 +20,7 @@
   ],
   "footnotes": [
     "This box has no cron, so the vendor installer's own systemd path runs: a minutely timer starting a transient unit per run. Those runs are placed in a persistent slice (one word added to the vendor launcher) so the kernel's accounting for them survives each run; the timer's launcher unit is counted too.",
-    "Memory (PSS, RSS), process and thread counts are missing for this row: the agent's minutely runs live in per-run child cgroups of the slice, and the sampler reads processes from the matched cgroup only, so it saw none. The cgroup's own hierarchical figures are right: memory.current idle median 3.8 MB (p95 4.2 MB), cgroup peak about 14 MB; CPU, disk and network are hierarchical and unaffected."
+    "The agent's minutely runs live in per-run child cgroups of its slice, and the sampler lists processes of the matched cgroup only, so it never saw one: the per-process figures (PSS, RSS, first-hour peak, processes, threads) are n/a for this row. The slice's hierarchical counters are right: CPU 12 to 17 % of one vCPU, memory.current idle median 3.8 MB (p95 4.2 MB), cgroup memory peak about 14 MB, disk and network as shown. memory.current is not the same quantity as the PSS column (Beszel's memory.current is 8.4 MB against a PSS of 18 MB), so this row cannot be ranked on memory against the others."
   ],
   "sourceUrl": "https://github.com/hetrixtools/agent",
   "install": {

@@ -18,15 +18,17 @@
     "BESZEL_TOKEN",
     "BESZEL_HUB_URL"
   ],
-  "footnotes": [],
+  "footnotes": [
+    "Run 2 (box-3): Ubuntu's unattended-upgrades ran at 06:40 UTC on the stock image and, with the other services linked against the upgraded libraries, restarted the agent 1 time, inside the idle window; the idle medians are unaffected, this run's totals include the restart."
+  ],
   "sourceUrl": "https://beszel.dev/guide/agent-installation",
   "install": {
     "agent": "beszel",
     "kernel": "7.0.0-30-generic",
     "cpu_model": "AMD EPYC-Rome Processor",
     "vcpus": 2,
-    "started": 1793546829.270746065,
-    "finished": 1793546832.047945585,
+    "started": 1793546829.270746,
+    "finished": 1793546832.0479455,
     "seconds": 2.8,
     "status": "ok",
     "exit_code": 0,

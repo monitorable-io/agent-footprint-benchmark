@@ -24,8 +24,8 @@
     "kernel": "7.0.0-42-generic",
     "cpu_model": "AMD EPYC-Rome Processor",
     "vcpus": 2,
-    "started": 1793547471.498072622,
-    "finished": 1793547473.391216979,
+    "started": 1793547471.4980726,
+    "finished": 1793547473.391217,
     "seconds": 1.9,
     "status": "ok",
     "exit_code": 0,
@@ -41,8 +41,8 @@
     ],
     "disk_bytes": 23900840,
     "tail": [
-      "Created symlink '/etc/systemd/system/sockets.target.wants/node_exporter.socket' → '/etc/systemd/system/node_exporter.socket'.",
-      "Created symlink '/etc/systemd/system/multi-user.target.wants/node_exporter.service' → '/etc/systemd/system/node_exporter.service'.",
+      "Created symlink '/etc/systemd/system/sockets.target.wants/node_exporter.socket' \u2192 '/etc/systemd/system/node_exporter.socket'.",
+      "Created symlink '/etc/systemd/system/multi-user.target.wants/node_exporter.service' \u2192 '/etc/systemd/system/node_exporter.service'.",
       "VERSION=v1.12.1",
       "UNITS=node_exporter.service,node_exporter.socket"
     ]

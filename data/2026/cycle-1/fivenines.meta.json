@@ -16,15 +16,17 @@
   "env": [
     "FIVENINES_TOKEN"
   ],
-  "footnotes": [],
+  "footnotes": [
+    "Run 1 (box-8): Ubuntu's unattended-upgrades ran at 06:15 UTC on the stock image and, with the other services linked against the upgraded libraries, restarted the agent 1 time, inside the idle window; the idle medians are unaffected, this run's totals include the restart."
+  ],
   "sourceUrl": "https://github.com/Five-Nines-io/fivenines_agent#installation",
   "install": {
     "agent": "fivenines",
     "kernel": "7.0.0-30-generic",
     "cpu_model": "AMD EPYC-Rome Processor",
     "vcpus": 2,
-    "started": 1793455623.928282092,
-    "finished": 1793455628.552341844,
+    "started": 1793455623.928282,
+    "finished": 1793455628.552342,
     "seconds": 4.6,
     "status": "ok",
     "exit_code": 0,
@@ -61,7 +63,7 @@
       "\u001b[0;32m[+]\u001b[0m Downloaded from releases.fivenines.io",
       "\u001b[0;32m[+]\u001b[0m Release signature verified against the embedded public key.",
       "\u001b[0;32m[+]\u001b[0m Verified fivenines-agent.service (sha256 549f75712665fdf94e33cd7d283621c63853a253ec6433335a354181e086f7d7)",
-      "Created symlink '/etc/systemd/system/multi-user.target.wants/fivenines-agent.service' → '/etc/systemd/system/fivenines-agent.service'.",
+      "Created symlink '/etc/systemd/system/multi-user.target.wants/fivenines-agent.service' \u2192 '/etc/systemd/system/fivenines-agent.service'.",
       "\u001b[0;32m[+]\u001b[0m Systemd service installed and started successfully",
       "\u001b[0;34m===============================================================\u001b[0m",
       "\u001b[0;34m  Installation Complete!\u001b[0m",
