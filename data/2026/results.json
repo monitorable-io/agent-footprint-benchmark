@@ -8,7 +8,7 @@
     "plan": "CX23: 2 vCPU AMD EPYC (shared), 4 GB RAM, 40 GB NVMe",
     "image": "Ubuntu 26.04 LTS",
     "kernel": "7.0.0-15 to 7.0.0-42-generic (the stock image's kernel moved between rebuilds; each cycle's meta.json records its own)",
-    "harnessCommit": "c7f668b",
+    "harnessCommit": "ea882d1",
     "cycles": [
       {
         "start": 1793454442,

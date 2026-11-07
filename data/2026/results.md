@@ -15,4 +15,4 @@
 | Netdata (self-hosted) | v2.12.2 | 350.7 | 271.7 | 3.8 | 3.0 | 460.3 | 48.5 | 23.0 | 789.2 |
 | No agent (harness only) | none | 11.5 | 27.5 | 0.1 | 0.1 | 10.4 | 0.0 | 0.0 | 0.1 |
 
-Cycles: 3. Hetzner Cloud Helsinki (HEL1) CX23: 2 vCPU AMD EPYC (shared), 4 GB RAM, 40 GB NVMe, Ubuntu 26.04 LTS, kernel 7.0.0-15 to 7.0.0-42-generic (the stock image's kernel moved between rebuilds; each cycle's meta.json records its own), harness c7f668b.
+Cycles: 3. Hetzner Cloud Helsinki (HEL1) CX23: 2 vCPU AMD EPYC (shared), 4 GB RAM, 40 GB NVMe, Ubuntu 26.04 LTS, kernel 7.0.0-15 to 7.0.0-42-generic (the stock image's kernel moved between rebuilds; each cycle's meta.json records its own), harness ea882d1.
