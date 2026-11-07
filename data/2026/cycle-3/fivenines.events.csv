@@ -1,0 +1,24 @@
+ts,event,cgroup,detail
+1793735799,start,,system.slice/fivenines-agent.service
+1793735799,cgroup_appeared,system.slice/fivenines-agent.service,8769
+1793773172,stop,,
+1793773173,start,,system.slice/fivenines-agent.service
+1793773173,cgroup_appeared,system.slice/fivenines-agent.service,8769
+1793773180,restart,system.slice/fivenines-agent.service,17592
+1793773180,restart,system.slice/fivenines-agent.service,cpu counter reset
+1793773184,stop,,
+1793773184,start,,system.slice/fivenines-agent.service
+1793773184,cgroup_appeared,system.slice/fivenines-agent.service,17592
+1793773270,stop,,
+1793773270,start,,system.slice/fivenines-agent.service
+1793773270,cgroup_appeared,system.slice/fivenines-agent.service,17592
+1793773302,stop,,
+1793773302,start,,system.slice/fivenines-agent.service
+1793773302,cgroup_appeared,system.slice/fivenines-agent.service,17592
+1793773313,stop,,
+1793773313,start,,system.slice/fivenines-agent.service
+1793773313,cgroup_appeared,system.slice/fivenines-agent.service,17592
+1793773363,stop,,
+1793773363,start,,system.slice/fivenines-agent.service
+1793773363,cgroup_appeared,system.slice/fivenines-agent.service,17592
+1793825792,stop,,

@@ -1,0 +1,120 @@
+{
+  "name": "hetrixtools",
+  "kind": "push",
+  "cgroupGlobs": [
+    "system.slice/system-hetrixtools.slice",
+    "system.slice/hetrixtools_agent.service"
+  ],
+  "ports": [],
+  "reportsTo": "sm.hetrixtools.net (wget POST once a minute)",
+  "intervalSeconds": 60,
+  "licence": "open source, no LICENSE file",
+  "diskPaths": [
+    "/etc/hetrixtools",
+    "/usr/local/sbin/hetrixtools_systemd_launcher.sh"
+  ],
+  "user": "hetrixtools",
+  "env": [
+    "HETRIX_KEY",
+    "HETRIX_INSTALL_ARGS"
+  ],
+  "footnotes": [
+    "This box has no cron, so the vendor installer's own systemd path runs: a minutely timer starting a transient unit per run. Those runs are placed in a persistent slice (one word added to the vendor launcher) so the kernel's accounting for them survives each run; the timer's launcher unit is counted too.",
+    "Memory (PSS, RSS), process and thread counts are missing for this row: the agent's minutely runs live in per-run child cgroups of the slice, and the sampler reads processes from the matched cgroup only, so it saw none. The cgroup's own hierarchical figures are right: memory.current idle median 3.8 MB (p95 4.2 MB), cgroup peak about 14 MB; CPU, disk and network are hierarchical and unaffected."
+  ],
+  "sourceUrl": "https://github.com/hetrixtools/agent",
+  "install": {
+    "agent": "hetrixtools",
+    "kernel": "7.0.0-30-generic",
+    "cpu_model": "AMD EPYC-Rome Processor",
+    "vcpus": 2,
+    "started": 1793546454.835869,
+    "finished": 1793546456.9647887,
+    "seconds": 2.1,
+    "status": "ok",
+    "exit_code": 0,
+    "version": "2.4.2",
+    "units": [
+      "hetrixtools_agent.service",
+      "hetrixtools_agent_1793546456-9856.service",
+      "hetrixtools_agent.timer"
+    ],
+    "listening_ports": [
+      22,
+      53
+    ],
+    "disk_bytes": 80763,
+    "tail": [
+      "Checking root privileges...",
+      "... done.",
+      "Installing from master branch...",
+      "Checking Server ID (SID)...",
+      "... done.",
+      "Checking system utilities...",
+      "... done.",
+      "Checking if there's any old hetrixtools agent already installed...",
+      "No old hetrixtools agent found...",
+      "... done.",
+      "Creating the hetrixtools agent folder...",
+      "... done.",
+      "Fetching the agent...",
+      "... done.",
+      "Fetching the config file...",
+      "... done.",
+      "Inserting Server ID (SID) into agent config...",
+      "... done.",
+      "Checking if any services should be monitored...",
+      "... done.",
+      "Checking if software RAID should be monitored...",
+      "... done.",
+      "Checking if Drive Health should be monitored...",
+      "... done.",
+      "Checking if reboot required should be checked...",
+      "... done.",
+      "Checking if 'View running processes' should be enabled...",
+      "... done.",
+      "Checking if any ports to monitor number of connections on...",
+      "... done.",
+      "Making sure no hetrixtools agent scripts are currently running...",
+      "kill: (9667): No such process",
+      "... done.",
+      "Checking if hetrixtools user already exists...",
+      "The hetrixtools user doesn't exist, creating it now...",
+      "Assigning permissions for the selected runtime user...",
+      "... done.",
+      "Removing any old hetrixtools cronjob, if exists...",
+      "... done.",
+      "Setting up systemd timer...",
+      "... done.",
+      "Cleaning up the installation file...",
+      "... done.",
+      "Letting HetrixTools platform know the installation has been completed...",
+      "... done.",
+      "Starting the agent under the 'hetrixtools' user...",
+      "... done.",
+      "HetrixTools agent installation completed.",
+      "VERSION=2.4.2",
+      "UNITS=hetrixtools_agent.service,hetrixtools_agent_1793546456-9856.service,hetrixtools_agent.timer"
+    ]
+  },
+  "schedule": {
+    "agent": "hetrixtools",
+    "box": "box-0",
+    "slot": 1,
+    "run": 0,
+    "installFinished": 1793546456,
+    "loadStart": 1793632856,
+    "stop": 1793636456,
+    "cpuModel": "AMD EPYC-Rome Processor",
+    "vcpus": 2
+  },
+  "footprint": {
+    "disk_bytes": 80777,
+    "journal_bytes": 4300709,
+    "window": {
+      "start": 1793550056,
+      "end": 1793632856
+    },
+    "measured": 1793637903
+  }
+}

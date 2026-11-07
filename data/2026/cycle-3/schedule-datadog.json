@@ -1,0 +1,11 @@
+{
+  "agent": "datadog",
+  "box": "box-4",
+  "slot": 3,
+  "run": 2,
+  "installFinished": 1793735664,
+  "loadStart": 1793822064,
+  "stop": 1793825664,
+  "cpuModel": "AMD EPYC-Rome Processor",
+  "vcpus": 2
+}

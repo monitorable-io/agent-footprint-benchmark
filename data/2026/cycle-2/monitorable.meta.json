@@ -1,0 +1,108 @@
+{
+  "name": "monitorable",
+  "kind": "push",
+  "cgroupGlobs": [
+    "system.slice/monitorable-agent.service"
+  ],
+  "ports": [],
+  "reportsTo": "Monitorable ingest (OTLP/HTTP every 60 s)",
+  "intervalSeconds": 60,
+  "licence": "Apache-2.0",
+  "diskPaths": [
+    "/opt/monitorable",
+    "/var/lib/monitorable",
+    "/etc/monitorable"
+  ],
+  "user": "monitorable",
+  "env": [
+    "MONITORABLE_API_KEY",
+    "MONITORABLE_ENDPOINT",
+    "MONITORABLE_INSTALLER_URL"
+  ],
+  "footnotes": [
+    "Disk writes are the agent's on-disk export queue (/var/lib/monitorable/queue), updated on every 60 s batch even when every export succeeds."
+  ],
+  "sourceUrl": "https://monitorable.io/docs/agent/install/",
+  "install": {
+    "agent": "monitorable",
+    "kernel": "7.0.0-30-generic",
+    "cpu_model": "AMD EPYC-Rome Processor",
+    "vcpus": 2,
+    "started": 1793638695.5197897,
+    "finished": 1793638702.0410502,
+    "seconds": 6.5,
+    "status": "ok",
+    "exit_code": 0,
+    "version": "monitorable-agent version v1.5.0",
+    "units": [
+      "monitorable-agent.service"
+    ],
+    "listening_ports": [
+      22,
+      53
+    ],
+    "disk_bytes": 57173061,
+    "tail": [
+      "\u2705 Service started successfully!",
+      "\ud83c\udf89 Installation complete!",
+      "Service status:",
+      "\u25cf monitorable-agent.service - Monitorable agent",
+      "     Loaded: loaded (/etc/systemd/system/monitorable-agent.service; enabled; preset: enabled)",
+      "     Active: active (running) since Mon 2026-11-02 16:58:17 UTC; 4s ago",
+      " Invocation: b9ed26ea6d5444dbada26155edeff877",
+      "       Docs: https://monitorable.io/docs/agent/install/",
+      "   Main PID: 9585 (monitorable-age)",
+      "      Tasks: 8 (limit: 3647)",
+      "     Memory: 12M (peak: 12M)",
+      "        CPU: 191ms",
+      "     CGroup: /system.slice/monitorable-agent.service",
+      "             \u2514\u25009585 /opt/monitorable/monitorable-agent --config=/etc/monitorable/collector-config.yaml",
+      "Nov 02 16:58:18 box-4 monitorable-agent[9585]: 2026-11-02T16:58:18.073Z        info        extensions/extensions.go:65        Extension started.        {\"resource\": {\"service.instance.id\": \"8fd2692b-7f29-4250-849d-e52a6c6260ba\", \"service.name\": \"monitorable-agent\", \"service.version\": \"v1.5.0\"}, \"otelcol.component.id\": \"file_storage\", \"otelcol.component.kind\": \"extension\"}",
+      "Nov 02 16:58:18 box-4 monitorable-agent[9585]: 2026-11-02T16:58:18.079Z        info        filestorage@v0.162.0/client.go:310        finished compaction        {\"resource\": {\"service.instance.id\": \"8fd2692b-7f29-4250-849d-e52a6c6260ba\", \"service.name\": \"monitorable-agent\", \"service.version\": \"v1.5.0\"}, \"otelcol.component.id\": \"file_storage\", \"otelcol.component.kind\": \"extension\", \"directory\": \"/var/lib/monitorable/queue/exporter_otlp_http__metrics\", \"elapsed\": 0.001899158}",
+      "Nov 02 16:58:18 box-4 monitorable-agent[9585]: 2026-11-02T16:58:18.080Z        info        queue/persistent_queue.go:166        New queue metadata key not found, attempting to load legacy format.        {\"resource\": {\"service.instance.id\": \"8fd2692b-7f29-4250-849d-e52a6c6260ba\", \"service.name\": \"monitorable-agent\", \"service.version\": \"v1.5.0\"}, \"otelcol.component.id\": \"otlp_http\", \"otelcol.component.kind\": \"exporter\", \"otelcol.signal\": \"metrics\"}",
+      "Nov 02 16:58:18 box-4 monitorable-agent[9585]: 2026-11-02T16:58:18.081Z        info        queue/persistent_queue.go:213        Initializing new persistent queue        {\"resource\": {\"service.instance.id\": \"8fd2692b-7f29-4250-849d-e52a6c6260ba\", \"service.name\": \"monitorable-agent\", \"service.version\": \"v1.5.0\"}, \"otelcol.component.id\": \"otlp_http\", \"otelcol.component.kind\": \"exporter\", \"otelcol.signal\": \"metrics\"}",
+      "Nov 02 16:58:18 box-4 monitorable-agent[9585]: 2026-11-02T16:58:18.082Z        info        queue/persistent_queue.go:241        Successfully migrated to consolidated metadata format        {\"resource\": {\"service.instance.id\": \"8fd2692b-7f29-4250-849d-e52a6c6260ba\", \"service.name\": \"monitorable-agent\", \"service.version\": \"v1.5.0\"}, \"otelcol.component.id\": \"otlp_http\", \"otelcol.component.kind\": \"exporter\", \"otelcol.signal\": \"metrics\"}",
+      "Nov 02 16:58:18 box-4 monitorable-agent[9585]: 2026-11-02T16:58:18.082Z        info        monitorable/receiver.go:178        Starting Monitorable receiver        {\"resource\": {\"service.instance.id\": \"8fd2692b-7f29-4250-849d-e52a6c6260ba\", \"service.name\": \"monitorable-agent\", \"service.version\": \"v1.5.0\"}, \"otelcol.component.id\": \"monitorable\", \"otelcol.component.kind\": \"receiver\", \"otelcol.signal\": \"metrics\", \"collection_interval\": 60, \"capabilities\": {\"temperatures\":false,\"detected_at\":\"2026-11-02T16:58:18.071500012Z\"}}",
+      "Nov 02 16:58:18 box-4 monitorable-agent[9585]: 2026-11-02T16:58:18.082Z        info        service@v0.162.0/service.go:256        Everything is ready. Begin running and processing data.        {\"resource\": {\"service.instance.id\": \"8fd2692b-7f29-4250-849d-e52a6c6260ba\", \"service.name\": \"monitorable-agent\", \"service.version\": \"v1.5.0\"}}",
+      "Nov 02 16:58:18 box-4 monitorable-agent[9585]: 2026-11-02T16:58:18.306Z        info        monitorable/receiver.go:698        Systemd detected, collecting service snapshot        {\"resource\": {\"service.instance.id\": \"8fd2692b-7f29-4250-849d-e52a6c6260ba\", \"service.name\": \"monitorable-agent\", \"service.version\": \"v1.5.0\"}, \"otelcol.component.id\": \"monitorable\", \"otelcol.component.kind\": \"receiver\", \"otelcol.signal\": \"metrics\"}",
+      "Nov 02 16:58:18 box-4 monitorable-agent[9585]: 2026-11-02T16:58:18.347Z        info        monitorable/receiver.go:724        Docker detected, collecting container snapshot        {\"resource\": {\"service.instance.id\": \"8fd2692b-7f29-4250-849d-e52a6c6260ba\", \"service.name\": \"monitorable-agent\", \"service.version\": \"v1.5.0\"}, \"otelcol.component.id\": \"monitorable\", \"otelcol.component.kind\": \"receiver\", \"otelcol.signal\": \"metrics\"}",
+      "Nov 02 16:58:18 box-4 monitorable-agent[9585]: 2026-11-02T16:58:18.347Z        info        monitorable/ports_emit.go:110        Collecting listening-port snapshot        {\"resource\": {\"service.instance.id\": \"8fd2692b-7f29-4250-849d-e52a6c6260ba\", \"service.name\": \"monitorable-agent\", \"service.version\": \"v1.5.0\"}, \"otelcol.component.id\": \"monitorable\", \"otelcol.component.kind\": \"receiver\", \"otelcol.signal\": \"metrics\"}",
+      "\ud83d\udce1 The agent is now sending metrics to:",
+      "   https://ingest.monitorable.net/v1/metrics",
+      "\ud83d\udccb To view logs:",
+      "   journalctl -u monitorable-agent -f",
+      "\u23f9\ufe0f  To stop the service:",
+      "   systemctl stop monitorable-agent",
+      "\ud83d\udd04 To restart the service:",
+      "   systemctl restart monitorable-agent",
+      "\ud83d\udd10 Security: the agent runs as the dedicated, unprivileged 'monitorable' user under a",
+      "   sandboxed systemd unit (read-only device policy, syscall filter, no capabilities",
+      "   beyond the SMART ioctls your hardware needs).",
+      "\ud83d\udcda For more information and troubleshooting:",
+      "   https://monitorable.io/docs/agent/install/",
+      "\ud83c\udfaf Welcome to OpenTelemetry-native monitoring with Monitorable!",
+      "VERSION=monitorable-agent version v1.5.0",
+      "UNITS=monitorable-agent.service"
+    ]
+  },
+  "schedule": {
+    "agent": "monitorable",
+    "box": "box-4",
+    "slot": 2,
+    "run": 1,
+    "installFinished": 1793638702,
+    "loadStart": 1793725102,
+    "stop": 1793728702,
+    "cpuModel": "AMD EPYC-Rome Processor",
+    "vcpus": 2
+  },
+  "footprint": {
+    "disk_bytes": 57402437,
+    "journal_bytes": 0,
+    "window": {
+      "start": 1793642302,
+      "end": 1793725102
+    },
+    "measured": 1793734852
+  }
+}

@@ -1,0 +1,109 @@
+{
+  "name": "netdata",
+  "kind": "none",
+  "cgroupGlobs": [
+    "system.slice/netdata.service",
+    "system.slice/netdata-updater.service"
+  ],
+  "ports": [],
+  "reportsTo": "nothing (standalone; local dashboard on :19999, not opened)",
+  "intervalSeconds": 1,
+  "licence": "GPL-3.0",
+  "diskPaths": [
+    "/etc/netdata",
+    "/usr/libexec/netdata",
+    "/usr/share/netdata",
+    "/var/cache/netdata",
+    "/var/lib/netdata",
+    "/var/log/netdata"
+  ],
+  "user": "netdata",
+  "env": [],
+  "package": "netdata",
+  "footnotes": [
+    "ML anomaly detection stays at its default (on).",
+    "kickstart's default channel is nightly; installed with --stable-channel so the version is a release readers can reproduce.",
+    "Anonymous telemetry and the daily updater timer stay at their defaults; the updater's unit is counted with the agent.",
+    "Nearly all of this row's inbound bytes are a steady 8 KB/s from Netdata's go.d plugin polling the box's two Docker containers every second over the Docker bridge (Valkey INFO is about 6.3 KB, nginx about 1 KB), traffic that never leaves the box. The headline network figure for this row (bytes out) does not include it."
+  ],
+  "sourceUrl": "https://learn.netdata.cloud/docs/netdata-agent/installation/linux",
+  "install": {
+    "agent": "netdata",
+    "kernel": "7.0.0-42-generic",
+    "cpu_model": "AMD EPYC-Rome Processor",
+    "vcpus": 2,
+    "started": 1793639113.9446316,
+    "finished": 1793639139.7744846,
+    "seconds": 25.8,
+    "status": "ok",
+    "exit_code": 0,
+    "version": "v2.12.2",
+    "units": [
+      "netdata.service"
+    ],
+    "listening_ports": [
+      22,
+      53,
+      4317,
+      8125,
+      19999
+    ],
+    "disk_bytes": 621004472,
+    "tail": [
+      "Setting up netdata-plugin-nfacct (2.12.2)\u2026\r",
+      "Setting up netdata-plugin-apps (2.12.2)\u2026\r",
+      "Setting up netdata-plugin-go (2.12.2)\u2026\r",
+      "Setting up netdata-plugin-slabinfo (2.12.2)\u2026\r",
+      "Processing triggers for libc-bin (2.43-2ubuntu2.4)\u2026\r",
+      "Running kernel seems to be up-to-date.",
+      "No services need to be restarted.",
+      "No containers need to be restarted.",
+      "No user sessions are running outdated binaries.",
+      "No VM guests are running outdated hypervisor (qemu) binaries on this host.",
+      " OK ",
+      "[/tmp/netdata-kickstart-vv6y1lOvxB]# test -x //usr/libexec/netdata/netdata-updater.sh ",
+      " OK ",
+      "[/tmp/netdata-kickstart-vv6y1lOvxB]# grep -q \\--enable-auto-updates //usr/libexec/netdata/netdata-updater.sh ",
+      " OK ",
+      "[/tmp/netdata-kickstart-vv6y1lOvxB]# //usr/libexec/netdata/netdata-updater.sh --enable-auto-updates  ",
+      "Mon Nov  2 05:05:38 PM UTC 2026 : INFO: netdata-updater.sh:  Auto-updating has been ENABLED through cron, updater script linked to /etc/cron.daily/netdata-updater",
+      "Mon Nov  2 05:05:38 PM UTC 2026 : INFO: netdata-updater.sh:  If the update process fails and you have email notifications set up correctly for cron on this system, you should receive an email notification of the failure.",
+      "Mon Nov  2 05:05:38 PM UTC 2026 : INFO: netdata-updater.sh:  Successful updates will not send an email.",
+      " OK ",
+      "Successfully installed the Netdata Agent.",
+      "The following non-fatal warnings or errors were encountered:",
+      "/tmp/netdata-kickstart.sh: 501: printf: %{: invalid directive",
+      "  - Command \"/usr/bin/curl --write-out ",
+      "To view the dashboard, open your web browser and enter http://NODE:19999.",
+      "Replace NODE with the IP address or hostname of your Netdata server.",
+      "Official documentation can be found online at https://learn.netdata.cloud/docs/.",
+      "Looking to monitor all of your infrastructure with Netdata? Check out Netdata Cloud at https://app.netdata.cloud.",
+      "Join our community and connect with us on:",
+      "  - GitHub: https://github.com/netdata/netdata/discussions",
+      "  - Discord: https://discord.gg/5ygS846fR6",
+      "  - Our community forums: https://community.netdata.cloud/",
+      "VERSION=v2.12.2",
+      "UNITS=netdata.service"
+    ]
+  },
+  "schedule": {
+    "agent": "netdata",
+    "box": "box-7",
+    "slot": 2,
+    "run": 2,
+    "installFinished": 1793639139,
+    "loadStart": 1793725539,
+    "stop": 1793729139,
+    "cpuModel": "AMD EPYC-Rome Processor",
+    "vcpus": 2
+  },
+  "footprint": {
+    "disk_bytes": 791239073,
+    "journal_bytes": 0,
+    "window": {
+      "start": 1793642739,
+      "end": 1793725539
+    },
+    "measured": 1793734887
+  }
+}

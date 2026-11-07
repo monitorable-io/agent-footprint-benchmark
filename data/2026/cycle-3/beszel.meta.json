@@ -1,0 +1,77 @@
+{
+  "name": "beszel",
+  "kind": "polled",
+  "cgroupGlobs": [
+    "system.slice/beszel-agent.service"
+  ],
+  "ports": [],
+  "reportsTo": "Beszel hub on the sink (WebSocket, hub-driven every 60 s)",
+  "intervalSeconds": 60,
+  "licence": "MIT",
+  "diskPaths": [
+    "/opt/beszel-agent",
+    "/var/lib/beszel-agent"
+  ],
+  "user": "beszel",
+  "env": [
+    "BESZEL_KEY",
+    "BESZEL_TOKEN",
+    "BESZEL_HUB_URL"
+  ],
+  "footnotes": [],
+  "sourceUrl": "https://beszel.dev/guide/agent-installation",
+  "install": {
+    "agent": "beszel",
+    "kernel": "7.0.0-30-generic",
+    "cpu_model": "AMD EPYC-Rome Processor",
+    "vcpus": 2,
+    "started": 1793638977.136442353,
+    "finished": 1793638980.605898343,
+    "seconds": 3.5,
+    "status": "ok",
+    "exit_code": 0,
+    "version": "beszel-agent 0.21.1",
+    "units": [
+      "beszel-agent.service"
+    ],
+    "listening_ports": [
+      22,
+      53
+    ],
+    "disk_bytes": 10789175,
+    "tail": [
+      "Configuring the dedicated user for the Beszel Agent service...",
+      "Adding beszel to docker group",
+      "Adding beszel to disk group",
+      "Creating the directory for the Beszel Agent...",
+      "Downloading beszel-agent v0.21.1...",
+      "\r#=#=#                                                                          \r##O#-#                                                                         \r######################################################################## 100.0%",
+      "Creating the systemd service for the agent...",
+      "Granting the agent service read access to the systemd journal",
+      "Loading and starting the agent service...",
+      "\u001b[32mBeszel Agent has been installed successfully! It is now running on 45876.\u001b[0m",
+      "VERSION=beszel-agent 0.21.1",
+      "UNITS=beszel-agent.service"
+    ]
+  },
+  "schedule": {
+    "agent": "beszel",
+    "box": "box-6",
+    "slot": 2,
+    "run": 2,
+    "installFinished": 1793638980,
+    "loadStart": 1793725380,
+    "stop": 1793728980,
+    "cpuModel": "AMD EPYC-Rome Processor",
+    "vcpus": 2
+  },
+  "footprint": {
+    "disk_bytes": 10789175,
+    "journal_bytes": 11461,
+    "window": {
+      "start": 1793642580,
+      "end": 1793725380
+    },
+    "measured": 1793734875
+  }
+}

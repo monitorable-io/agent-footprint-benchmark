@@ -1,0 +1,80 @@
+{
+  "name": "beszel",
+  "kind": "polled",
+  "cgroupGlobs": [
+    "system.slice/beszel-agent.service"
+  ],
+  "ports": [],
+  "reportsTo": "Beszel hub on the sink (WebSocket, hub-driven every 60 s)",
+  "intervalSeconds": 60,
+  "licence": "MIT",
+  "diskPaths": [
+    "/opt/beszel-agent",
+    "/var/lib/beszel-agent"
+  ],
+  "user": "beszel",
+  "env": [
+    "BESZEL_KEY",
+    "BESZEL_TOKEN",
+    "BESZEL_HUB_URL"
+  ],
+  "footnotes": [
+    "Run 1 (box-0): the agent could not register with the hub for its first 31 minutes (the hub's universal token had expired; enabled permanently by hand) and retried every 5 s. Inside the excluded first hour, so only this run's first-hour peak carries it."
+  ],
+  "sourceUrl": "https://beszel.dev/guide/agent-installation",
+  "install": {
+    "agent": "beszel",
+    "kernel": "7.0.0-30-generic",
+    "cpu_model": "AMD EPYC-Rome Processor",
+    "vcpus": 2,
+    "started": 1793454438.825457,
+    "finished": 1793454442.3700268,
+    "seconds": 3.5,
+    "status": "ok",
+    "exit_code": 0,
+    "version": "beszel-agent 0.21.1",
+    "units": [
+      "beszel-agent.service"
+    ],
+    "listening_ports": [
+      22,
+      53,
+      45876
+    ],
+    "disk_bytes": 10789175,
+    "tail": [
+      "Configuring the dedicated user for the Beszel Agent service...",
+      "Adding beszel to docker group",
+      "Adding beszel to disk group",
+      "Creating the directory for the Beszel Agent...",
+      "Downloading beszel-agent v0.21.1...",
+      "\r#=#=#                                                                          \r                                                                           0.4%\r######################################################################## 100.0%",
+      "Creating the systemd service for the agent...",
+      "Granting the agent service read access to the systemd journal",
+      "Loading and starting the agent service...",
+      "\u001b[32mBeszel Agent has been installed successfully! It is now running on 45876.\u001b[0m",
+      "VERSION=beszel-agent 0.21.1",
+      "UNITS=beszel-agent.service"
+    ]
+  },
+  "schedule": {
+    "agent": "beszel",
+    "box": "box-0",
+    "slot": 0,
+    "run": 0,
+    "installFinished": 1793454442,
+    "loadStart": 1793540842,
+    "stop": 1793544442,
+    "cpuModel": "AMD EPYC-Rome Processor",
+    "vcpus": 2
+  },
+  "footprint": {
+    "disk_bytes": 10789175,
+    "journal_bytes": 11559,
+    "window": {
+      "start": 1793458042,
+      "end": 1793540842
+    },
+    "measured": 1793546027
+  }
+}

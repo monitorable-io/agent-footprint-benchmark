@@ -1,0 +1,34 @@
+ts,event,cgroup,detail
+1793639300,start,,system.slice/netdata.service system.slice/netdata-updater.service
+1793639300,cgroup_appeared,system.slice/netdata.service,9378
+1793687580,stop,,
+1793687580,start,,system.slice/netdata.service system.slice/netdata-updater.service
+1793687580,cgroup_appeared,system.slice/netdata.service,9378
+1793687590,restart,system.slice/netdata.service,22822
+1793687590,restart,system.slice/netdata.service,cpu counter reset
+1793687605,stop,,
+1793687606,start,,system.slice/netdata.service system.slice/netdata-updater.service
+1793687606,cgroup_appeared,system.slice/netdata.service,22822
+1793687620,restart,system.slice/netdata.service,24233
+1793687620,restart,system.slice/netdata.service,cpu counter reset
+1793687630,restart,system.slice/netdata.service,25427
+1793687630,restart,system.slice/netdata.service,cpu counter reset
+1793687639,stop,,
+1793687639,start,,system.slice/netdata.service system.slice/netdata-updater.service
+1793687639,cgroup_appeared,system.slice/netdata.service,25427
+1793687670,restart,system.slice/netdata.service,25949
+1793687670,restart,system.slice/netdata.service,cpu counter reset
+1793687680,stop,,
+1793687680,start,,system.slice/netdata.service system.slice/netdata-updater.service
+1793687680,cgroup_appeared,system.slice/netdata.service,25949
+1793687708,stop,,
+1793687708,start,,system.slice/netdata.service system.slice/netdata-updater.service
+1793687708,cgroup_appeared,system.slice/netdata.service,25949
+1793687710,restart,system.slice/netdata.service,28274
+1793687710,restart,system.slice/netdata.service,cpu counter reset
+1793687750,restart,system.slice/netdata.service,28622
+1793687750,restart,system.slice/netdata.service,cpu counter reset
+1793687801,stop,,
+1793687801,start,,system.slice/netdata.service system.slice/netdata-updater.service
+1793687801,cgroup_appeared,system.slice/netdata.service,28622
+1793729293,stop,,

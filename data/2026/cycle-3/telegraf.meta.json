@@ -1,0 +1,106 @@
+{
+  "name": "telegraf",
+  "kind": "push",
+  "cgroupGlobs": [
+    "system.slice/telegraf.service"
+  ],
+  "ports": [],
+  "reportsTo": "InfluxDB 1.x on the sink (the stock [[outputs.influxdb]] block, enabled with the sink's URL)",
+  "intervalSeconds": 10,
+  "licence": "MIT",
+  "diskPaths": [
+    "/etc/telegraf",
+    "/var/log/telegraf"
+  ],
+  "user": "telegraf",
+  "env": [
+    "SINK_IP"
+  ],
+  "package": "telegraf",
+  "footnotes": [
+    "Telegraf's stock config enables no output; its [[outputs.influxdb]] block is enabled with the sink's URL (two lines). Nothing else is changed."
+  ],
+  "sourceUrl": "https://docs.influxdata.com/telegraf/v1/install/",
+  "install": {
+    "agent": "telegraf",
+    "kernel": "7.0.0-15-generic",
+    "cpu_model": "AMD EPYC-Rome Processor",
+    "vcpus": 2,
+    "started": 1793735362.417611004,
+    "finished": 1793735370.606997896,
+    "seconds": 8.2,
+    "status": "ok",
+    "exit_code": 0,
+    "version": "Telegraf 1.40.3 (git: HEAD@41b45388)",
+    "units": [
+      "telegraf.service"
+    ],
+    "listening_ports": [
+      22,
+      53
+    ],
+    "disk_bytes": 330550556,
+    "tail": [
+      "Hit:1 https://download.docker.com/linux/ubuntu resolute InRelease",
+      "Hit:2 https://mirror.hetzner.com/ubuntu/packages resolute InRelease",
+      "Hit:3 https://mirror.hetzner.com/ubuntu/packages resolute-updates InRelease",
+      "Hit:4 https://mirror.hetzner.com/ubuntu/packages resolute-backports InRelease",
+      "Get:5 https://repos.influxdata.com/debian stable InRelease [6,922 B]",
+      "Hit:6 https://mirror.hetzner.com/ubuntu/security resolute-security InRelease",
+      "Get:7 https://repos.influxdata.com/debian stable/main amd64 Packages [33.0 kB]",
+      "Fetched 39.9 kB in 0s (125 kB/s)",
+      "Reading package lists...",
+      "Reading package lists...",
+      "Building dependency tree...",
+      "Reading state information...",
+      "Solving dependencies...",
+      "The following additional packages will be installed:",
+      "  influxdata-archive-keyring",
+      "The following NEW packages will be installed:",
+      "  influxdata-archive-keyring telegraf",
+      "0 upgraded, 2 newly installed, 0 to remove and 168 not upgraded.",
+      "Need to get 86.6 MB of archives.",
+      "After this operation, 329 MB of additional disk space will be used.",
+      "Get:1 https://repos.influxdata.com/debian stable/main amd64 influxdata-archive-keyring all 2026.01.09 [10.7 kB]",
+      "Get:2 https://repos.influxdata.com/debian stable/main amd64 telegraf amd64 1.40.3-1 [86.6 MB]",
+      "Fetched 86.6 MB in 2s (50.5 MB/s)",
+      "Selecting previously unselected package influxdata-archive-keyring.\r",
+      "(Reading database… \r(Reading database… 5%\r(Reading database… 10%\r(Reading database… 15%\r(Reading database… 20%\r(Reading database… 25%\r(Reading database… 30%\r(Reading database… 35%\r(Reading database… 40%\r(Reading database… 45%\r(Reading database… 50%\r(Reading database… 55%\r(Reading database… 60%\r(Reading database… 65%\r(Reading database… 70%\r(Reading database… 75%\r(Reading database… 80%\r(Reading database… 85%\r(Reading database… 90%\r(Reading database… 95%\r(Reading database… 100%\r(Reading database… 52821 files and directories currently installed.)\r",
+      "Preparing to unpack …/influxdata-archive-keyring_2026.01.09_all.deb…\r",
+      "Unpacking influxdata-archive-keyring (2026.01.09)…\r",
+      "Selecting previously unselected package telegraf.\r",
+      "Preparing to unpack …/telegraf_1.40.3-1_amd64.deb…\r",
+      "Unpacking telegraf (1.40.3-1)…\r",
+      "Setting up influxdata-archive-keyring (2026.01.09)…\r",
+      "Setting up telegraf (1.40.3-1)…\r",
+      "Created symlink '/etc/systemd/system/multi-user.target.wants/telegraf.service' → '/usr/lib/systemd/system/telegraf.service'.\r",
+      "Running kernel seems to be up-to-date.",
+      "No services need to be restarted.",
+      "No containers need to be restarted.",
+      "No user sessions are running outdated binaries.",
+      "No VM guests are running outdated hypervisor (qemu) binaries on this host.",
+      "VERSION=Telegraf 1.40.3 (git: HEAD@41b45388)",
+      "UNITS=telegraf.service"
+    ]
+  },
+  "schedule": {
+    "agent": "telegraf",
+    "box": "box-2",
+    "slot": 3,
+    "run": 2,
+    "installFinished": 1793735370,
+    "loadStart": 1793821770,
+    "stop": 1793825370,
+    "cpuModel": "AMD EPYC-Rome Processor",
+    "vcpus": 2
+  },
+  "footprint": {
+    "disk_bytes": 330550556,
+    "journal_bytes": 0,
+    "window": {
+      "start": 1793738970,
+      "end": 1793821770
+    },
+    "measured": 1793826627
+  }
+}

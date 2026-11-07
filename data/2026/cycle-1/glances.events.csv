@@ -1,0 +1,31 @@
+ts,event,cgroup,detail
+1793454899,start,,system.slice/glances.service
+1793454899,cgroup_appeared,system.slice/glances.service,8994
+1793513990,restart,system.slice/glances.service,21867
+1793513990,restart,system.slice/glances.service,cpu counter reset
+1793514029,stop,,
+1793514030,start,,system.slice/glances.service
+1793514030,cgroup_appeared,system.slice/glances.service,21867
+1793514033,stop,,
+1793514033,start,,system.slice/glances.service
+1793514033,cgroup_appeared,system.slice/glances.service,24148
+1793514040,restart,system.slice/glances.service,25385
+1793514040,restart,system.slice/glances.service,cpu counter reset
+1793514050,restart,system.slice/glances.service,26274
+1793514050,restart,system.slice/glances.service,cpu counter reset
+1793514060,stop,,
+1793514060,start,,system.slice/glances.service
+1793514060,cgroup_appeared,system.slice/glances.service,26274
+1793514070,restart,system.slice/glances.service,26883
+1793514070,restart,system.slice/glances.service,cpu counter reset
+1793514090,stop,,
+1793514090,start,,system.slice/glances.service
+1793514090,cgroup_appeared,system.slice/glances.service,26883
+1793514100,restart,system.slice/glances.service,27144
+1793514100,restart,system.slice/glances.service,cpu counter reset
+1793514109,stop,,
+1793514109,start,,system.slice/glances.service
+1793514109,cgroup_appeared,system.slice/glances.service,27144
+1793514110,restart,system.slice/glances.service,27405
+1793514110,restart,system.slice/glances.service,cpu counter reset
+1793544892,stop,,

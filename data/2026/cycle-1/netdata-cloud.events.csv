@@ -1,0 +1,39 @@
+ts,event,cgroup,detail
+1793454749,start,,system.slice/netdata.service system.slice/netdata-updater.service
+1793454749,cgroup_appeared,system.slice/netdata.service,9421
+1793514127,stop,,
+1793514127,start,,system.slice/netdata.service system.slice/netdata-updater.service
+1793514127,cgroup_appeared,system.slice/netdata.service,9421
+1793514150,restart,system.slice/netdata.service,22860
+1793514150,restart,system.slice/netdata.service,cpu counter reset
+1793514180,restart,system.slice/netdata.service,24576
+1793514180,restart,system.slice/netdata.service,cpu counter reset
+1793514200,restart,system.slice/netdata.service,25857
+1793514200,restart,system.slice/netdata.service,cpu counter reset
+1793514210,restart,system.slice/netdata.service,26118
+1793514215,stop,,
+1793514216,start,,system.slice/netdata.service system.slice/netdata-updater.service
+1793514216,cgroup_appeared,system.slice/netdata.service,26118
+1793514220,restart,system.slice/netdata.service,27921
+1793514220,restart,system.slice/netdata.service,cpu counter reset
+1793514280,restart,system.slice/netdata.service,28617
+1793514280,restart,system.slice/netdata.service,cpu counter reset
+1793514300,restart,system.slice/netdata.service,28965
+1793514300,restart,system.slice/netdata.service,cpu counter reset
+1793514301,stop,,
+1793514301,start,,system.slice/netdata.service system.slice/netdata-updater.service
+1793514301,cgroup_appeared,system.slice/netdata.service,28965
+1793514324,stop,,
+1793514324,start,,system.slice/netdata.service system.slice/netdata-updater.service
+1793514324,cgroup_appeared,system.slice/netdata.service,28965
+1793514360,restart,system.slice/netdata.service,30009
+1793514360,restart,system.slice/netdata.service,cpu counter reset
+1793514384,stop,,
+1793514384,start,,system.slice/netdata.service system.slice/netdata-updater.service
+1793514384,cgroup_appeared,system.slice/netdata.service,30009
+1793514390,restart,system.slice/netdata.service,31290
+1793514390,restart,system.slice/netdata.service,cpu counter reset
+1793514415,stop,,
+1793514415,start,,system.slice/netdata.service system.slice/netdata-updater.service
+1793514415,cgroup_appeared,system.slice/netdata.service,31290
+1793544742,stop,,

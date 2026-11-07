@@ -1,0 +1,70 @@
+{
+  "name": "node-exporter",
+  "kind": "polled",
+  "cgroupGlobs": [
+    "system.slice/node_exporter.service"
+  ],
+  "ports": [
+    9100
+  ],
+  "reportsTo": "passive: Prometheus on the sink scrapes /metrics at its default 1 m",
+  "intervalSeconds": 60,
+  "licence": "Apache-2.0",
+  "diskPaths": [
+    "/usr/sbin/node_exporter"
+  ],
+  "user": "node_exporter",
+  "env": [],
+  "footnotes": [
+    "Network bytes are counted by TCP port (the listening socket is not in the service's cgroup under socket activation, and polled traffic is what this row sends)."
+  ],
+  "sourceUrl": "https://prometheus.io/docs/guides/node-exporter/",
+  "install": {
+    "agent": "node-exporter",
+    "kernel": "7.0.0-30-generic",
+    "cpu_model": "AMD EPYC-Rome Processor",
+    "vcpus": 2,
+    "started": 1793455025.603581721,
+    "finished": 1793455027.250192726,
+    "seconds": 1.6,
+    "status": "ok",
+    "exit_code": 0,
+    "version": "v1.12.1",
+    "units": [
+      "node_exporter.service",
+      "node_exporter.socket"
+    ],
+    "listening_ports": [
+      22,
+      53,
+      9100
+    ],
+    "disk_bytes": 23900840,
+    "tail": [
+      "Created symlink '/etc/systemd/system/sockets.target.wants/node_exporter.socket' → '/etc/systemd/system/node_exporter.socket'.",
+      "Created symlink '/etc/systemd/system/multi-user.target.wants/node_exporter.service' → '/etc/systemd/system/node_exporter.service'.",
+      "VERSION=v1.12.1",
+      "UNITS=node_exporter.service,node_exporter.socket"
+    ]
+  },
+  "schedule": {
+    "agent": "node-exporter",
+    "box": "box-4",
+    "slot": 0,
+    "run": 0,
+    "installFinished": 1793455027,
+    "loadStart": 1793541427,
+    "stop": 1793545027,
+    "cpuModel": "AMD EPYC-Rome Processor",
+    "vcpus": 2
+  },
+  "footprint": {
+    "disk_bytes": 23900840,
+    "journal_bytes": 0,
+    "window": {
+      "start": 1793458627,
+      "end": 1793541427
+    },
+    "measured": 1793546073
+  }
+}
