@@ -377,6 +377,28 @@ class MetadataWritebackTest(unittest.TestCase):
         self._add_column(1500)   # the tracer counts whole pages: it can exceed the charge by a little
         self.assertEqual(self._alpha()["values"]["disk_written_mb_24h"]["cycles"][0], 0.0)
 
+    def test_an_overcount_in_one_hour_does_not_eat_writes_of_another(self):
+        # The tracer counts whole pages per pass and read 11 % above the kernel's charge on the bed.
+        # Subtracting totals would let the excess of the hours in which the unit was charged the
+        # stream cancel writes the agent really made in other hours; the subtraction is per window.
+        from unittest import mock
+        gz = self.root / "cycle-1" / "alpha.csv.gz"
+        lines = gzip.decompress(gz.read_bytes()).decode().splitlines()
+        out = [lines[0] + ",io_wbytes_blockdev,box_wbytes_blockdev"]
+        for ln in lines[1:]:
+            ts, cgroup = ln.split(",")[:2]
+            i = int(ts) - T0
+            meta = 1500 * (min(i, 4200) - 3600) if i > 3600 else 0   # 1500 B/s in the first 600 s of the idle hour only
+            out.append(ln + (f",,{meta}" if cgroup == "box" else f",{meta},"))
+        gz.write_bytes(gzip.compress("\n".join(out).encode() + b"\n"))
+        with mock.patch.object(sm, "META_WINDOW_SECONDS", 600):
+            v = self._alpha()["values"]
+        self.assertAlmostEqual(v["disk_charged_mb_24h"]["cycles"][0], 86.4, places=1)
+        self.assertAlmostEqual(v["disk_written_mb_24h"]["cycles"][0], 72.2, delta=1.0)             # 5 of 6 windows kept whole
+        self.assertAlmostEqual(v["disk_metadata_charged_mb_24h"]["cycles"][0], 14.2, delta=1.0)    # never more than was charged
+        self.assertAlmostEqual(v["disk_written_mb_24h"]["cycles"][0] + v["disk_metadata_charged_mb_24h"]["cycles"][0],
+                               v["disk_charged_mb_24h"]["cycles"][0], places=6)
+
     def test_samples_without_the_column_publish_the_charge(self):
         row = self._alpha()   # the 2026 runs before the tracer existed
         self.assertAlmostEqual(row["values"]["disk_written_mb_24h"]["cycles"][0], 86.4, places=1)

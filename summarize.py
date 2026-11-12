@@ -44,6 +44,7 @@ METRICS = [
 ]
 COUNTERS = ("cpu_usage_usec", "io_rbytes", "io_wbytes", "net_out", "net_in")
 META_COLUMN = "io_wbytes_blockdev"
+META_WINDOW_SECONDS = 3600   # the metadata charge is taken out window by window, never across windows
 GAUGES = ("memory_current", "memory_peak", "anon", "file", "pss", "rss", "pids", "threads")
 DISPLAY = {
     "beszel": "Beszel agent", "netdata": "Netdata (self-hosted)", "netdata-cloud": "Netdata (claimed to Netdata Cloud)",
@@ -100,6 +101,32 @@ def counter_total(rows, column):
     return total
 
 
+def counter_by_window(rows, column, start, width):
+    """{window index: sum of deltas} of a monotonic counter; same reset rule as counter_total. A delta
+    belongs to the window of the later sample."""
+    out = defaultdict(int)
+    last = {}
+    for r in rows:
+        v, cg = r[column], r["cgroup"]
+        if cg in last:
+            out[(r["ts"] - start) // width] += v - last[cg] if v >= last[cg] else v
+        last[cg] = v
+    return out
+
+
+def metadata_excluded(rows, start):
+    """Bytes of filesystem-metadata writeback to take out of the rows' charge, or None where the
+    collector did not record it. Per window it is never more than was charged there: the tracer counts
+    whole pages per pass and reads above the kernel's charge (11 % on the 2026 bed), and that excess
+    must not cancel writes the unit made in other hours."""
+    traced = [r for r in rows if r.get(META_COLUMN) is not None]
+    if not traced:
+        return None
+    charged = counter_by_window(rows, "io_wbytes", start, META_WINDOW_SECONDS)
+    meta = counter_by_window(traced, META_COLUMN, start, META_WINDOW_SECONDS)
+    return sum(min(nbytes, charged.get(w, 0)) for w, nbytes in meta.items())
+
+
 def _by_ts(rows):
     """Gauge values summed across cgroups at each timestamp."""
     acc = defaultdict(lambda: defaultdict(int))
@@ -153,8 +180,8 @@ def cycle_metrics(rows, meta, box_rows=()):
     # That stream belongs to the box (ext4 writes metadata through the block device's inode, and the
     # kernel charges one inode's writeback to one cgroup, whichever owns it at the time).
     charged_mb = counter_total(idle, "io_wbytes") * per_day / MB
-    traced = [r for r in idle if r.get(META_COLUMN) is not None]
-    metadata_mb = counter_total(traced, META_COLUMN) * per_day / MB if traced else None
+    excluded = metadata_excluded(idle, idle_start)
+    metadata_mb = None if excluded is None else excluded * per_day / MB
     if metadata_mb is not None and metadata_mb >= 0.05:
         meta.setdefault("footnotes", []).append(
             f"Run {sched.get('run', 0) + 1} ({sched.get('box', '?')}): {metadata_mb:.1f} MB per 24 h of filesystem-metadata writeback "

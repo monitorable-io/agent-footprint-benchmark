@@ -62,15 +62,21 @@ row (`collector/blockdev_trace.py`: the tracepoint
 instance of its own; columns `io_wbytes_blockdev` and `box_wbytes_blockdev`;
 `<agent>.blockdev.csv` names the charged cgroup at every sample that saw
 such writeback). `summarize.py` publishes an agent's disk writes without it
-(`disk_written_mb_24h`, never below zero), the whole charge
+(`disk_written_mb_24h`; taken out hour by hour, never more than was charged
+in that hour), the whole charge
 (`disk_charged_mb_24h`) and the excluded part
 (`disk_metadata_charged_mb_24h`). Samples taken before the tracer existed
 have no such column, and their charge is published as it is. Two limits:
 the tracepoint fires for the flusher's per-inode pass only, so metadata
 written by a sync of the block device or by a journal checkpoint in a
 process's own context stays in the unit's figure; and it counts whole pages
-per pass, so it can read a little above the kernel's charge. The side file
-is written by the collector, whose own cost is the control row.
+per pass, so it reads above the kernel's charge: 1,552,384 bytes against
+1,392,640 (11 %) over 40 minutes on a box where the charged cgroup has no
+process of its own, which is the one case where the two can be compared
+exactly. A unit that is charged the stream therefore has its own writes of
+those hours understated by up to that excess (about 0.3 MB per hour), which
+is why the charge is published next to the net figure. The side file is
+written by the collector, whose own cost is the control row.
 
 `summarize.py` turns the CSVs into `results.json`: idle window = hours 1–24
 after the install finished (the first hour is reported separately as a
