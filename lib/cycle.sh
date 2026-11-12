@@ -91,11 +91,12 @@ cycle_start_guard() {
   local f last now
   [[ -z "${BENCH_ONLY_BOXES:-}" ]] || return 0
   now=$(date +%s)
-  for f in "$(slots_dir)"/slot-*.json; do
+  # Every data root: the boxes are the same ones whichever run bench.env points at.
+  for f in "$BENCH_ROOT"/data/*/slots/slot-*.json; do
     [[ -f "$f" ]] || continue
     last=$(jq -r '[.boxes[].stop] | max // 0' "$f" 2>/dev/null || echo 0)
     [[ "$last" =~ ^[0-9]+$ ]] || last=0
-    ((last > now)) && die "refused: $(basename "$f") runs until $(date -u -d @"$last" +%FT%TZ); a start now would rebuild its boxes (BENCH_ONLY_BOXES=\"box-N\" redoes one box)"
+    ((last > now)) && die "refused: ${f#"$BENCH_ROOT"/} runs until $(date -u -d @"$last" +%FT%TZ); a start now would rebuild its boxes (BENCH_ONLY_BOXES=\"box-N\" redoes one box)"
   done
   return 0
 }
@@ -114,15 +115,20 @@ cmd_cycle() {
   local sub=${1:-} s=${2:-}
   case "$sub" in
     plan)
+      load_env_if_present
       if [[ -z "$s" ]]; then
         for s in $(seq 0 $((SLOT_COUNT - 1))); do slot_plan "$s"; done
       else
         [[ "$s" =~ ^[0-3]$ ]] || die "usage: bench cycle plan [<0|1|2|3>]"
+        ((s < SLOT_COUNT)) || die "slot $s is outside this run (BENCH_SLOT_COUNT=$SLOT_COUNT)"
+        plan_check "$s"
         slot_plan "$s"
       fi;;
     start)
       load_env
       [[ "$s" =~ ^[0-3]$ ]] || die "usage: bench cycle start <0|1|2|3>"
+      ((s < SLOT_COUNT)) || die "slot $s is outside this run (BENCH_SLOT_COUNT=$SLOT_COUNT)"
+      plan_check "$s"
       cycle_start_guard "$s"
       local sd; sd=$(slots_dir); mkdir -p "$sd"
       local failures="$sd/slot-$s.failures.log" started line box role run cyc outname outdir touched=()
@@ -164,10 +170,11 @@ cmd_cycle() {
       load_env
       s=${s:-${SLOT:-0}}
       [[ "$s" =~ ^[0-3]$ ]] || die "usage: bench cycle status [<0|1|2|3>]"
+      ((s < SLOT_COUNT)) || die "slot $s is outside this run (BENCH_SLOT_COUNT=$SLOT_COUNT)"
       local box role run cyc outname
       while read -r _ box role run cyc outname; do
         printf '%-14s %-8s %-8s ' "$outname" "$box" "$cyc"
-        ssh_box "$box" "printf '%s rows=%s next=%s\n' \"\$(systemctl is-active bench-collector)\" \"\$(wc -l < /var/lib/bench/samples.csv 2>/dev/null)\" \"\$(systemctl list-timers bench-load.timer --no-legend | awk '{print \$1, \$2}')\"" 2>/dev/null || echo unreachable
+        ssh_box "$box" "printf '%s rows=%s meta=%s next=%s\n' \"\$(systemctl is-active bench-collector)\" \"\$(wc -l < /var/lib/bench/samples.csv 2>/dev/null)\" \"\$(tail -n 1 /var/lib/bench/samples.csv 2>/dev/null | awk -F, '{print \$21}')\" \"\$(systemctl list-timers bench-load.timer --no-legend | awk '{print \$1, \$2}')\"" 2>/dev/null || echo unreachable
       done < <(slot_plan "$s")
       [[ -n "${BOX_SINK_IP:-}" ]] && sink_status
       return 0;;
@@ -188,6 +195,8 @@ collect_box() {
   fetch_box "$box" /var/lib/bench/events.csv "$outdir/$outname.events.csv"
   fetch_box "$box" /var/lib/bench/install.json "$outdir/$outname.install.json"
   fetch_box "$box" /var/lib/bench/footprint.json "$outdir/$outname.footprint.json" 2>/dev/null || true
+  # Who was charged the filesystem's metadata writeback, tick by tick (collector/blockdev_trace.py).
+  fetch_box "$box" /var/lib/bench/blockdev.csv "$outdir/$outname.blockdev.csv" 2>/dev/null || true
   merge_meta "$BENCH_ROOT/agents/$agent/meta.json" "$outdir/$outname.install.json" "$sched" "$outdir/$outname.footprint.json" \
     > "$outdir/$outname.meta.json"
   rm -f "${outdir:?}/${outname:?}.install.json" "${outdir:?}/${outname:?}.footprint.json"
@@ -199,6 +208,8 @@ cmd_collect() {
   load_env
   local s=${1:-}
   [[ "$s" =~ ^[0-3]$ ]] || die "usage: bench collect <0|1|2|3>"
+  ((s < SLOT_COUNT)) || die "slot $s is outside this run (BENCH_SLOT_COUNT=$SLOT_COUNT)"
+  plan_check "$s"
   local lines line box role run cyc outname outdir
   mkdir -p "$(slots_dir)"; reset_log_unless_filtered "$(slots_dir)/slot-$s.collect-failures.log"
   mapfile -t lines < <(slot_plan "$s")
@@ -214,6 +225,7 @@ cmd_collect() {
 }
 
 cmd_summarize() {
+  load_env_if_present   # bench.env's YEAR names the run
   local year=${1:-$YEAR}
   python3 "$BENCH_ROOT/summarize.py" "$BENCH_ROOT/data/$year"
 }
