@@ -1,0 +1,97 @@
+{
+  "name": "pulse",
+  "kind": "push",
+  "cgroupGlobs": [
+    "system.slice/pulse-agent.service"
+  ],
+  "ports": [],
+  "reportsTo": "Pulse server on the sink (HTTP push every 30 s)",
+  "intervalSeconds": 30,
+  "licence": "MIT",
+  "diskPaths": [
+    "/var/lib/pulse-agent",
+    "/usr/local/bin/pulse-agent"
+  ],
+  "user": "root",
+  "env": [
+    "PULSE_TOKEN",
+    "PULSE_URL",
+    "PULSE_INSTALLER_SHA256"
+  ],
+  "footnotes": [
+    "Auto-update stays at its default (on).",
+    "The agent talks to the Pulse server over the bed's private network (10.0.0.0/24) in plain HTTP: the agent refuses an http:// server URL unless the host is loopback or a private address, and the sink has no TLS hostname. The installer it fetches from the server is checksum-pinned."
+  ],
+  "sourceUrl": "https://github.com/rcourtman/Pulse/blob/main/docs/UNIFIED_AGENT.md",
+  "install": {
+    "agent": "pulse",
+    "kernel": "7.0.0-30-generic",
+    "cpu_model": "AMD EPYC-Rome Processor",
+    "vcpus": 2,
+    "started": 1794087853.388786426,
+    "finished": 1794087884.774256064,
+    "seconds": 31.4,
+    "status": "ok",
+    "exit_code": 0,
+    "version": "v6.6.0",
+    "units": [
+      "pulse-agent.service"
+    ],
+    "listening_ports": [
+      22,
+      53,
+      9191
+    ],
+    "disk_bytes": 42081323,
+    "counted_interfaces": [
+      "enp7s0",
+      "eth0"
+    ],
+    "tail": [
+      "[INFO] Detecting available platforms...",
+      "[INFO] Docker/Podman detected - enabling container monitoring",
+      "[INFO]   (use --disable-docker to skip)",
+      "[INFO] Monitoring configuration:",
+      "[INFO]   Agent metrics: true",
+      "[INFO]   Docker/Podman: true",
+      "[INFO]   Kubernetes: false",
+      "[INFO]   Proxmox: false",
+      "[INFO]   Pulse command execution: false",
+      "[INFO]     Command execution is off; enable only when Patrol actions or Proxmox LXC Docker inventory are needed.",
+      "[INFO] Plain HTTP Pulse URL detected; enabling insecure mode for installer downloads and persisted agent update checks.",
+      "[INFO] Pulse server version: 6.6.0",
+      "[INFO] Downloading agent from ***/download/pulse-agent?arch=linux-amd64&serverVersion=6.6.0...",
+      "[INFO] Binary checksum verified",
+      "[INFO] Installing binary to /usr/local/bin/pulse-agent...",
+      "[INFO] Configuring Systemd service at /etc/systemd/system/pulse-agent.service...",
+      "[INFO] Token stored securely at /var/lib/pulse-agent/token (mode 600)",
+      "[INFO] Verifying agent started successfully...",
+      "[WARN] Agent local health is ready, but server registration was not confirmed yet.",
+      "[INFO] Installation complete! Agent is running.",
+      "[INFO] To uninstall later: sudo bash /var/lib/pulse-agent/install.sh --uninstall",
+      "[INFO] Token file: /var/lib/pulse-agent/token (mode 600, root only)",
+      "VERSION=v6.6.0",
+      "UNITS=pulse-agent.service"
+    ]
+  },
+  "schedule": {
+    "agent": "pulse",
+    "box": "box-6",
+    "slot": 0,
+    "run": 0,
+    "installFinished": 1794087884,
+    "loadStart": 1794174284,
+    "stop": 1794177884,
+    "cpuModel": "AMD EPYC-Rome Processor",
+    "vcpus": 2
+  },
+  "footprint": {
+    "disk_bytes": 42081323,
+    "journal_bytes": 0,
+    "window": {
+      "start": 1794091484,
+      "end": 1794174284
+    },
+    "measured": 1794178573
+  }
+}

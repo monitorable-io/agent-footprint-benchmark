@@ -1,0 +1,4 @@
+ts,event,cgroup,detail
+1794088177,start,,system.slice/fivenines-agent.service
+1794088177,cgroup_appeared,system.slice/fivenines-agent.service,8733
+1794178170,stop,,

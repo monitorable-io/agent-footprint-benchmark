@@ -1,0 +1,83 @@
+{
+  "name": "beszel",
+  "kind": "polled",
+  "cgroupGlobs": [
+    "system.slice/beszel-agent.service"
+  ],
+  "ports": [],
+  "reportsTo": "Beszel hub on the sink (WebSocket, hub-driven every 60 s)",
+  "intervalSeconds": 60,
+  "licence": "MIT",
+  "diskPaths": [
+    "/opt/beszel-agent",
+    "/var/lib/beszel-agent"
+  ],
+  "user": "beszel",
+  "env": [
+    "BESZEL_KEY",
+    "BESZEL_TOKEN",
+    "BESZEL_HUB_URL"
+  ],
+  "footnotes": [
+    "Run 3 (box-6): this run's 15.1 MB of disk writes all fall in the first 7.0 hours after the install and then stop; in that span the agent logged nothing, its on-disk footprint did not grow, and its CPU, memory and network figures are the same as in the hours after. The same writes (the same hourly rate and block sizes, about 16 MB in all) appear in one run of another agent on another box and day (Monitorable, run 1) and in neither agent's other two runs, so they are most likely the box's filesystem writeback charged to this unit's cgroup, not the agent's own writes. The cause is not established; the figure is published as measured."
+  ],
+  "sourceUrl": "https://beszel.dev/guide/agent-installation",
+  "install": {
+    "agent": "beszel",
+    "kernel": "7.0.0-30-generic",
+    "cpu_model": "AMD EPYC-Rome Processor",
+    "vcpus": 2,
+    "started": 1794271387.9487128,
+    "finished": 1794271391.5900342,
+    "seconds": 3.6,
+    "status": "ok",
+    "exit_code": 0,
+    "version": "beszel-agent 0.21.1",
+    "units": [
+      "beszel-agent.service"
+    ],
+    "listening_ports": [
+      22,
+      53
+    ],
+    "disk_bytes": 10789175,
+    "counted_interfaces": [
+      "enp7s0",
+      "eth0"
+    ],
+    "tail": [
+      "Configuring the dedicated user for the Beszel Agent service...",
+      "Adding beszel to docker group",
+      "Adding beszel to disk group",
+      "Creating the directory for the Beszel Agent...",
+      "Downloading beszel-agent v0.21.1...",
+      "\r#=#=#                                                                          \r######################################################################## 100.0%",
+      "Creating the systemd service for the agent...",
+      "Granting the agent service read access to the systemd journal",
+      "Loading and starting the agent service...",
+      "\u001b[32mBeszel Agent has been installed successfully! It is now running on 45876.\u001b[0m",
+      "VERSION=beszel-agent 0.21.1",
+      "UNITS=beszel-agent.service"
+    ]
+  },
+  "schedule": {
+    "agent": "beszel",
+    "box": "box-6",
+    "slot": 2,
+    "run": 2,
+    "installFinished": 1794271391,
+    "loadStart": 1794357791,
+    "stop": 1794361391,
+    "cpuModel": "AMD EPYC-Rome Processor",
+    "vcpus": 2
+  },
+  "footprint": {
+    "disk_bytes": 10789175,
+    "journal_bytes": 0,
+    "window": {
+      "start": 1794274991,
+      "end": 1794357791
+    },
+    "measured": 1794362177
+  }
+}

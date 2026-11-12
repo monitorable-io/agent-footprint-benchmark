@@ -5,14 +5,21 @@ disk writes, network bytes, install time and on-disk size, measured on
 identical cheap VPSes over 24 hours idle plus one loaded hour, three times,
 with every 10-second sample published here.
 
-**Status: the clean re-run is being prepared (2026-11).** The first run
-(2026-10-31 → 2026-11-04, 11 agents + control, 3 runs each) is the **pilot**:
-it found four harness defects (the collector missed processes in child
-cgroups and could write a timestamp twice, network bytes counted Docker
-bridge traffic, Ubuntu's unattended-upgrades restarted agents mid-cycle), so
-every row is measured again with the fixed harness and the current release
-of every agent. The re-run lands in `data/2026/` (`run.json` lists what the
-method changed in its `notes`); `docs/RUN-2026.md` is its run log.
+**Status: the run is complete (2026-11-07 → 2026-11-12).** 11 agents and a
+control, three runs each on three different boxes, 36 role-runs, all
+collected. `data/2026/results.md` is the headline table and
+`data/2026/results.json` the same with every per-run value and footnote;
+`docs/RUN-2026.md` is the run log with every deviation.
+`python3 summarize.py data/2026 --harness-commit d879a73` reproduces
+`results.json`. The files in `data/2026/` are laid out like the pilot's,
+described below.
+
+The first run (2026-10-31 → 2026-11-04) is the **pilot**: it found four
+harness defects (the collector missed processes in child cgroups and could
+write a timestamp twice, network bytes counted Docker bridge traffic,
+Ubuntu's unattended-upgrades restarted agents mid-cycle), so every row was
+measured again with the fixed harness and the current release of every
+agent (`data/2026/run.json` lists what the method changed in its `notes`).
 
 The pilot stays published in `data/2026-pilot/`: `results.json` and `results.md` (the headline table),
 `cycle-1…3/<agent>.csv.gz` (every 10-second sample), `<agent>.meta.json` (install

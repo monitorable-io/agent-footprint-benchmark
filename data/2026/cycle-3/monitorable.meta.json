@@ -1,0 +1,112 @@
+{
+  "name": "monitorable",
+  "kind": "push",
+  "cgroupGlobs": [
+    "system.slice/monitorable-agent.service"
+  ],
+  "ports": [],
+  "reportsTo": "Monitorable ingest (OTLP/HTTP every 60 s)",
+  "intervalSeconds": 60,
+  "licence": "Apache-2.0",
+  "diskPaths": [
+    "/opt/monitorable",
+    "/var/lib/monitorable",
+    "/etc/monitorable"
+  ],
+  "user": "monitorable",
+  "env": [
+    "MONITORABLE_API_KEY",
+    "MONITORABLE_ENDPOINT",
+    "MONITORABLE_INSTALLER_URL"
+  ],
+  "footnotes": [
+    "Run 3 (box-7): the 0.3 MB are the agent's export queue. A batch that is not delivered within 15 s is written to disk; that happened between 16:24 and 21:16 UTC on 2026-11-11, hours in which exports timed out or were answered \"unavailable\" and were retried. A run in which every batch is delivered in time writes nothing (run 2)."
+  ],
+  "sourceUrl": "https://monitorable.io/docs/agent/install/",
+  "install": {
+    "agent": "monitorable",
+    "kernel": "7.0.0-43-generic",
+    "cpu_model": "AMD EPYC-Rome Processor",
+    "vcpus": 2,
+    "started": 1794363412.3286238,
+    "finished": 1794363418.693467,
+    "seconds": 6.4,
+    "status": "ok",
+    "exit_code": 0,
+    "version": "monitorable-agent version v1.7.0",
+    "units": [
+      "monitorable-agent.service"
+    ],
+    "listening_ports": [
+      22,
+      53
+    ],
+    "disk_bytes": 57251083,
+    "counted_interfaces": [
+      "enp7s0",
+      "eth0"
+    ],
+    "tail": [
+      "\u2705 Service started successfully!",
+      "\ud83c\udf89 Installation complete!",
+      "Service status:",
+      "\u25cf monitorable-agent.service - Monitorable agent",
+      "     Loaded: loaded (/etc/systemd/system/monitorable-agent.service; enabled; preset: enabled)",
+      "     Active: active (running) since Wed 2026-11-11 02:16:54 UTC; 4s ago",
+      " Invocation: 6b9095039be241b6b269358b78012776",
+      "       Docs: https://monitorable.io/docs/agent/install/",
+      "   Main PID: 4245 (monitorable-age)",
+      "      Tasks: 8 (limit: 3644)",
+      "     Memory: 10.5M (peak: 11.7M)",
+      "        CPU: 222ms",
+      "     CGroup: /system.slice/monitorable-agent.service",
+      "             \u2514\u25004245 /opt/monitorable/monitorable-agent --config=/etc/monitorable/collector-config.yaml",
+      "Nov 11 02:16:54 box-7 monitorable-agent[4245]: 2026-11-11T02:16:54.731Z        info        extensions/extensions.go:65        Extension started.        {\"resource\": {\"service.instance.id\": \"31a00e51-0403-4483-b8df-265817e16b8c\", \"service.name\": \"monitorable-agent\", \"service.version\": \"v1.7.0\"}, \"otelcol.component.id\": \"write_behind_storage\", \"otelcol.component.kind\": \"extension\"}",
+      "Nov 11 02:16:54 box-7 monitorable-agent[4245]: 2026-11-11T02:16:54.739Z        info        filestorage@v0.162.0/client.go:310        finished compaction        {\"resource\": {\"service.instance.id\": \"31a00e51-0403-4483-b8df-265817e16b8c\", \"service.name\": \"monitorable-agent\", \"service.version\": \"v1.7.0\"}, \"otelcol.component.id\": \"file_storage\", \"otelcol.component.kind\": \"extension\", \"directory\": \"/var/lib/monitorable/queue/exporter_otlp_http__metrics\", \"elapsed\": 0.001934581}",
+      "Nov 11 02:16:54 box-7 monitorable-agent[4245]: 2026-11-11T02:16:54.740Z        info        queue/persistent_queue.go:166        New queue metadata key not found, attempting to load legacy format.        {\"resource\": {\"service.instance.id\": \"31a00e51-0403-4483-b8df-265817e16b8c\", \"service.name\": \"monitorable-agent\", \"service.version\": \"v1.7.0\"}, \"otelcol.component.id\": \"otlp_http\", \"otelcol.component.kind\": \"exporter\", \"otelcol.signal\": \"metrics\"}",
+      "Nov 11 02:16:54 box-7 monitorable-agent[4245]: 2026-11-11T02:16:54.740Z        info        queue/persistent_queue.go:213        Initializing new persistent queue        {\"resource\": {\"service.instance.id\": \"31a00e51-0403-4483-b8df-265817e16b8c\", \"service.name\": \"monitorable-agent\", \"service.version\": \"v1.7.0\"}, \"otelcol.component.id\": \"otlp_http\", \"otelcol.component.kind\": \"exporter\", \"otelcol.signal\": \"metrics\"}",
+      "Nov 11 02:16:54 box-7 monitorable-agent[4245]: 2026-11-11T02:16:54.740Z        info        queue/persistent_queue.go:241        Successfully migrated to consolidated metadata format        {\"resource\": {\"service.instance.id\": \"31a00e51-0403-4483-b8df-265817e16b8c\", \"service.name\": \"monitorable-agent\", \"service.version\": \"v1.7.0\"}, \"otelcol.component.id\": \"otlp_http\", \"otelcol.component.kind\": \"exporter\", \"otelcol.signal\": \"metrics\"}",
+      "Nov 11 02:16:54 box-7 monitorable-agent[4245]: 2026-11-11T02:16:54.740Z        info        monitorable/receiver.go:178        Starting Monitorable receiver        {\"resource\": {\"service.instance.id\": \"31a00e51-0403-4483-b8df-265817e16b8c\", \"service.name\": \"monitorable-agent\", \"service.version\": \"v1.7.0\"}, \"otelcol.component.id\": \"monitorable\", \"otelcol.component.kind\": \"receiver\", \"otelcol.signal\": \"metrics\", \"collection_interval\": 60, \"capabilities\": {\"temperatures\":false,\"detected_at\":\"2026-11-11T02:16:54.728766451Z\"}}",
+      "Nov 11 02:16:54 box-7 monitorable-agent[4245]: 2026-11-11T02:16:54.740Z        info        service@v0.162.0/service.go:256        Everything is ready. Begin running and processing data.        {\"resource\": {\"service.instance.id\": \"31a00e51-0403-4483-b8df-265817e16b8c\", \"service.name\": \"monitorable-agent\", \"service.version\": \"v1.7.0\"}}",
+      "Nov 11 02:16:55 box-7 monitorable-agent[4245]: 2026-11-11T02:16:55.005Z        info        monitorable/receiver.go:698        Systemd detected, collecting service snapshot        {\"resource\": {\"service.instance.id\": \"31a00e51-0403-4483-b8df-265817e16b8c\", \"service.name\": \"monitorable-agent\", \"service.version\": \"v1.7.0\"}, \"otelcol.component.id\": \"monitorable\", \"otelcol.component.kind\": \"receiver\", \"otelcol.signal\": \"metrics\"}",
+      "Nov 11 02:16:55 box-7 monitorable-agent[4245]: 2026-11-11T02:16:55.058Z        info        monitorable/receiver.go:724        Docker detected, collecting container snapshot        {\"resource\": {\"service.instance.id\": \"31a00e51-0403-4483-b8df-265817e16b8c\", \"service.name\": \"monitorable-agent\", \"service.version\": \"v1.7.0\"}, \"otelcol.component.id\": \"monitorable\", \"otelcol.component.kind\": \"receiver\", \"otelcol.signal\": \"metrics\"}",
+      "Nov 11 02:16:55 box-7 monitorable-agent[4245]: 2026-11-11T02:16:55.058Z        info        monitorable/ports_emit.go:110        Collecting listening-port snapshot        {\"resource\": {\"service.instance.id\": \"31a00e51-0403-4483-b8df-265817e16b8c\", \"service.name\": \"monitorable-agent\", \"service.version\": \"v1.7.0\"}, \"otelcol.component.id\": \"monitorable\", \"otelcol.component.kind\": \"receiver\", \"otelcol.signal\": \"metrics\"}",
+      "\ud83d\udce1 The agent is now sending metrics to:",
+      "   https://ingest.monitorable.net/v1/metrics",
+      "\ud83d\udccb To view logs:",
+      "   journalctl -u monitorable-agent -f",
+      "\u23f9\ufe0f  To stop the service:",
+      "   systemctl stop monitorable-agent",
+      "\ud83d\udd04 To restart the service:",
+      "   systemctl restart monitorable-agent",
+      "\ud83d\udd10 Security: the agent runs as the dedicated, unprivileged 'monitorable' user under a",
+      "   sandboxed systemd unit (read-only device policy, syscall filter, no capabilities",
+      "   beyond the SMART ioctls your hardware needs).",
+      "\ud83d\udcda For more information and troubleshooting:",
+      "   https://monitorable.io/docs/agent/install/",
+      "\ud83c\udfaf Welcome to OpenTelemetry-native monitoring with Monitorable!",
+      "VERSION=monitorable-agent version v1.7.0",
+      "UNITS=monitorable-agent.service"
+    ]
+  },
+  "schedule": {
+    "agent": "monitorable",
+    "box": "box-7",
+    "slot": 3,
+    "run": 2,
+    "installFinished": 1794363418,
+    "loadStart": 1794449818,
+    "stop": 1794453418,
+    "cpuModel": "AMD EPYC-Rome Processor",
+    "vcpus": 2
+  },
+  "footprint": {
+    "disk_bytes": 57349387,
+    "journal_bytes": 8783,
+    "window": {
+      "start": 1794367018,
+      "end": 1794449818
+    },
+    "measured": 1794453988
+  }
+}

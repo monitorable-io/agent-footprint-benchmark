@@ -1,0 +1,135 @@
+{
+  "name": "datadog",
+  "kind": "push",
+  "cgroupGlobs": [
+    "system.slice/datadog-agent*.service"
+  ],
+  "ports": [],
+  "reportsTo": "Datadog intake (HTTPS)",
+  "intervalSeconds": 15,
+  "licence": "Apache-2.0",
+  "diskPaths": [
+    "/opt/datadog-agent",
+    "/etc/datadog-agent",
+    "/var/log/datadog"
+  ],
+  "user": "dd-agent",
+  "env": [
+    "DD_API_KEY",
+    "DD_SITE"
+  ],
+  "package": "datadog-agent",
+  "footnotes": [
+    "Every datadog-agent* unit is summed (7.84+ runs a process manager).",
+    "The memory peak is the sum of each datadog-agent* unit's own high-water mark over the cycle; those peaks did not happen at the same moment, so the figure overstates the coincident peak.",
+    "Run 3 (box-4) installed Agent 7.85.3; runs 1 and 2 installed 7.85.2. The vendor's documented install takes the release that is current at install time."
+  ],
+  "sourceUrl": "https://docs.datadoghq.com/agent/basic_agent_usage/ubuntu/",
+  "install": {
+    "agent": "datadog",
+    "kernel": "7.0.0-30-generic",
+    "cpu_model": "AMD EPYC-Rome Processor",
+    "vcpus": 2,
+    "started": 1794362969.997189,
+    "finished": 1794362986.9924238,
+    "seconds": 17.0,
+    "status": "ok",
+    "exit_code": 0,
+    "version": "Agent 7.85.3",
+    "units": [
+      "datadog-agent-action-exp.service",
+      "datadog-agent-action.service",
+      "datadog-agent-data-plane-exp.service",
+      "datadog-agent-data-plane.service",
+      "datadog-agent-exp.service",
+      "datadog-agent-installer-exp.service",
+      "datadog-agent-installer.service",
+      "datadog-agent-process-exp.service",
+      "datadog-agent-process.service",
+      "datadog-agent-procmgr-exp.service",
+      "datadog-agent-procmgr.service",
+      "datadog-agent-security-exp.service",
+      "datadog-agent-security.service",
+      "datadog-agent-sysprobe-exp.service",
+      "datadog-agent-sysprobe.service",
+      "datadog-agent-trace-exp.service",
+      "datadog-agent-trace.service",
+      "datadog-agent.service"
+    ],
+    "listening_ports": [
+      22,
+      53,
+      5000,
+      5001,
+      8126,
+      40007,
+      40987
+    ],
+    "disk_bytes": 1611617616,
+    "counted_interfaces": [
+      "enp7s0",
+      "eth0"
+    ],
+    "tail": [
+      "Get:2 https://apt.datadoghq.com stable/7 amd64 datadog-signing-keys all 1:1.4.0-1 [23.7 kB]",
+      "Fetched 169 MB in 1s (155 MB/s)",
+      "Selecting previously unselected package datadog-agent.\r",
+      "(Reading database\u2026 \r(Reading database\u2026 5%\r(Reading database\u2026 10%\r(Reading database\u2026 15%\r(Reading database\u2026 20%\r(Reading database\u2026 25%\r(Reading database\u2026 30%\r(Reading database\u2026 35%\r(Reading database\u2026 40%\r(Reading database\u2026 45%\r(Reading database\u2026 50%\r(Reading database\u2026 55%\r(Reading database\u2026 60%\r(Reading database\u2026 65%\r(Reading database\u2026 70%\r(Reading database\u2026 75%\r(Reading database\u2026 80%\r(Reading database\u2026 85%\r(Reading database\u2026 90%\r(Reading database\u2026 95%\r(Reading database\u2026 100%\r(Reading database\u2026 52823 files and directories currently installed.)\r",
+      "Preparing to unpack \u2026/datadog-agent_1%3a7.85.3-1_amd64.deb\u2026\r",
+      "Unpacking datadog-agent (1:7.85.3-1)\u2026\r",
+      "Selecting previously unselected package datadog-signing-keys.\r",
+      "Preparing to unpack \u2026/datadog-signing-keys_1%3a1.4.0-1_all.deb\u2026\r",
+      "Unpacking datadog-signing-keys (1:1.4.0-1)\u2026\r",
+      "Setting up datadog-agent (1:7.85.3-1)\u2026\r",
+      "post: install_directory='/opt/datadog-agent', storage_location='/opt/datadog-agent'\r",
+      "Creating file: '/opt/datadog-agent/.post_python_installed_packages.txt'\r",
+      "File '/opt/datadog-agent/.diff_python_installed_packages.txt' not found.\r",
+      "Setting up datadog-signing-keys (1:1.4.0-1)\u2026\r",
+      "Running kernel seems to be up-to-date.",
+      "No services need to be restarted.",
+      "No containers need to be restarted.",
+      "No user sessions are running outdated binaries.",
+      "No VM guests are running outdated hypervisor (qemu) binaries on this host.",
+      "W: --force-yes is deprecated, use one of the options starting with --allow instead.",
+      "\u001b[34m",
+      "* Adding your API key to the Datadog Agent configuration: /etc/datadog-agent/datadog.yaml",
+      "\u001b[0m",
+      "\u001b[34m",
+      "* Setting SITE in the Datadog Agent configuration: /etc/datadog-agent/datadog.yaml",
+      "\u001b[0m",
+      "/usr/bin/systemctl",
+      "\u001b[34m* Starting the Datadog Agent...",
+      "\u001b[0m",
+      "\u001b[32m  Your Datadog Agent is running and functioning properly.",
+      "\u001b[0m\u001b[32m  It will continue to run in the background and submit metrics to Datadog.",
+      "\u001b[0m\u001b[32m  If you ever want to stop the Datadog Agent, run:",
+      "       systemctl stop datadog-agent",
+      "  And to run it again run:",
+      "       systemctl start datadog-agent\u001b[0m",
+      "\u001b[32m  Consider adding dd-agent to the docker group to enable the docker support, run:",
+      "      sudo usermod -a -G docker dd-agent\u001b[0m",
+      "VERSION=Agent 7.85.3",
+      "UNITS=datadog-agent-action-exp.service,datadog-agent-action.service,datadog-agent-data-plane-exp.service,datadog-agent-data-plane.service,datadog-agent-exp.service,datadog-agent-installer-exp.service,datadog-agent-installer.service,datadog-agent-process-exp.service,datadog-agent-process.service,datadog-agent-procmgr-exp.service,datadog-agent-procmgr.service,datadog-agent-security-exp.service,datadog-agent-security.service,datadog-agent-sysprobe-exp.service,datadog-agent-sysprobe.service,datadog-agent-trace-exp.service,datadog-agent-trace.service,datadog-agent.service"
+    ]
+  },
+  "schedule": {
+    "agent": "datadog",
+    "box": "box-4",
+    "slot": 3,
+    "run": 2,
+    "installFinished": 1794362986,
+    "loadStart": 1794449386,
+    "stop": 1794452986,
+    "cpuModel": "AMD EPYC-Rome Processor",
+    "vcpus": 2
+  },
+  "footprint": {
+    "disk_bytes": 1619344397,
+    "journal_bytes": 28074722,
+    "window": {
+      "start": 1794366586,
+      "end": 1794449386
+    },
+    "measured": 1794453950
+  }
+}

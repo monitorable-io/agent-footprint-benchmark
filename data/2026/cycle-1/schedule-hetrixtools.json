@@ -1,0 +1,11 @@
+{
+  "agent": "hetrixtools",
+  "box": "box-0",
+  "slot": 1,
+  "run": 0,
+  "installFinished": 1794178759,
+  "loadStart": 1794265159,
+  "stop": 1794268759,
+  "cpuModel": "AMD EPYC-Rome Processor",
+  "vcpus": 2
+}

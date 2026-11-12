@@ -1,0 +1,4 @@
+ts,event,cgroup,detail
+1794179946,start,,system.slice/telegraf.service
+1794179946,cgroup_appeared,system.slice/telegraf.service,8994
+1794269939,stop,,

@@ -1,0 +1,4 @@
+ts,event,cgroup,detail
+1794270589,start,,system.slice/pulse-agent.service
+1794270589,cgroup_appeared,system.slice/pulse-agent.service,8729
+1794360581,stop,,

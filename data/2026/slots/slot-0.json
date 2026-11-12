@@ -1,0 +1,105 @@
+{
+  "slot": 0,
+  "startedAt": 1794086829,
+  "boxes": [
+    {
+      "agent": "beszel",
+      "box": "box-0",
+      "slot": 0,
+      "run": 0,
+      "installFinished": 1794086972,
+      "loadStart": 1794173372,
+      "stop": 1794176972,
+      "cpuModel": "AMD EPYC-Rome Processor",
+      "vcpus": 2
+    },
+    {
+      "agent": "netdata",
+      "box": "box-1",
+      "slot": 0,
+      "run": 0,
+      "installFinished": 1794087119,
+      "loadStart": 1794173519,
+      "stop": 1794177119,
+      "cpuModel": "AMD EPYC-Rome Processor",
+      "vcpus": 2
+    },
+    {
+      "agent": "netdata-cloud",
+      "box": "box-2",
+      "slot": 0,
+      "run": 0,
+      "installFinished": 1794087268,
+      "loadStart": 1794173668,
+      "stop": 1794177268,
+      "cpuModel": "AMD EPYC-Rome Processor",
+      "vcpus": 2
+    },
+    {
+      "agent": "glances",
+      "box": "box-3",
+      "slot": 0,
+      "run": 0,
+      "installFinished": 1794087418,
+      "loadStart": 1794173818,
+      "stop": 1794177418,
+      "cpuModel": "AMD EPYC-Rome Processor",
+      "vcpus": 2
+    },
+    {
+      "agent": "node-exporter",
+      "box": "box-4",
+      "slot": 0,
+      "run": 0,
+      "installFinished": 1794087563,
+      "loadStart": 1794173963,
+      "stop": 1794177563,
+      "cpuModel": "AMD EPYC-Rome Processor",
+      "vcpus": 2
+    },
+    {
+      "agent": "telegraf",
+      "box": "box-5",
+      "slot": 0,
+      "run": 0,
+      "installFinished": 1794087710,
+      "loadStart": 1794174110,
+      "stop": 1794177710,
+      "cpuModel": "AMD EPYC-Rome Processor",
+      "vcpus": 2
+    },
+    {
+      "agent": "pulse",
+      "box": "box-6",
+      "slot": 0,
+      "run": 0,
+      "installFinished": 1794087884,
+      "loadStart": 1794174284,
+      "stop": 1794177884,
+      "cpuModel": "AMD EPYC-Rome Processor",
+      "vcpus": 2
+    },
+    {
+      "agent": "datadog",
+      "box": "box-7",
+      "slot": 0,
+      "run": 0,
+      "installFinished": 1794088044,
+      "loadStart": 1794174444,
+      "stop": 1794178044,
+      "cpuModel": "AMD EPYC-Rome Processor",
+      "vcpus": 2
+    },
+    {
+      "agent": "fivenines",
+      "box": "box-8",
+      "slot": 0,
+      "run": 0,
+      "installFinished": 1794088170,
+      "loadStart": 1794174570,
+      "stop": 1794178170,
+      "cpuModel": "AMD EPYC-Rome Processor",
+      "vcpus": 2
+    }
+  ]
+}

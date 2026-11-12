@@ -1,0 +1,4 @@
+ts,event,cgroup,detail
+1794362544,start,,system.slice/node_exporter.service
+1794362544,cgroup_appeared,system.slice/node_exporter.service,8860
+1794452537,stop,,

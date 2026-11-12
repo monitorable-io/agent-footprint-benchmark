@@ -1,0 +1,11 @@
+{
+  "agent": "fivenines",
+  "box": "box-5",
+  "slot": 3,
+  "run": 2,
+  "installFinished": 1794363122,
+  "loadStart": 1794449522,
+  "stop": 1794453122,
+  "cpuModel": "AMD EPYC-Rome Processor",
+  "vcpus": 2
+}

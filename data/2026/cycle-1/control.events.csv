@@ -1,0 +1,4 @@
+ts,event,cgroup,detail
+1794179031,start,,system.slice/bench-collector.service
+1794179031,cgroup_appeared,system.slice/bench-collector.service,8740
+1794269024,stop,,

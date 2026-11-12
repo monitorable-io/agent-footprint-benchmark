@@ -1,0 +1,2082 @@
+{
+  "slug": "agent-footprint-2026",
+  "title": "Linux monitoring agent footprint benchmark (2026): 11 agents, one VPS type, 24 hours",
+  "checked": "2026-11-12",
+  "run": {
+    "provider": "Hetzner Cloud",
+    "location": "Helsinki (HEL1)",
+    "plan": "CX23: 2 vCPU AMD EPYC (shared), 4 GB RAM, 40 GB NVMe",
+    "image": "Ubuntu 26.04 LTS",
+    "kernel": "7.0.0-15/-30/-42/-43-generic (differs by box, see kernels)",
+    "harnessCommit": "d879a73",
+    "cycles": [
+      {
+        "start": 1794086972,
+        "end": 1794269024
+      },
+      {
+        "start": 1794179152,
+        "end": 1794361243
+      },
+      {
+        "start": 1794271391,
+        "end": 1794453552
+      }
+    ],
+    "notes": [
+      "Ubuntu's apt-daily and apt-daily-upgrade timers were masked on every box at provisioning (the pilot's unattended-upgrades restarted dynamically linked agents mid-cycle).",
+      "Network bytes count only the box's physical interfaces; Docker bridge traffic is excluded.",
+      "Processes are counted in the agent's cgroup and its child cgroups."
+    ]
+  },
+  "metrics": [
+    {
+      "key": "pss_idle_median_mb",
+      "label": "Memory (PSS), idle median",
+      "unit": "MB",
+      "lowerIsBetter": true
+    },
+    {
+      "key": "pss_idle_p95_mb",
+      "label": "Memory (PSS), idle p95",
+      "unit": "MB",
+      "lowerIsBetter": true
+    },
+    {
+      "key": "rss_idle_median_mb",
+      "label": "Memory (RSS), idle median",
+      "unit": "MB",
+      "lowerIsBetter": true
+    },
+    {
+      "key": "memory_current_idle_median_mb",
+      "label": "Memory (cgroup memory.current), idle median",
+      "unit": "MB",
+      "lowerIsBetter": true
+    },
+    {
+      "key": "memory_peak_mb",
+      "label": "Memory peak (cgroup), whole cycle",
+      "unit": "MB",
+      "lowerIsBetter": true
+    },
+    {
+      "key": "first_hour_peak_mb",
+      "label": "Memory (PSS) peak, first hour after install",
+      "unit": "MB",
+      "lowerIsBetter": true
+    },
+    {
+      "key": "cpu_idle_pct",
+      "label": "CPU, idle (% of one vCPU)",
+      "unit": "%",
+      "lowerIsBetter": true
+    },
+    {
+      "key": "cpu_loaded_pct",
+      "label": "CPU, under load (% of one vCPU)",
+      "unit": "%",
+      "lowerIsBetter": true
+    },
+    {
+      "key": "disk_written_mb_24h",
+      "label": "Disk written per 24 h",
+      "unit": "MB",
+      "lowerIsBetter": true
+    },
+    {
+      "key": "journal_mb_24h",
+      "label": "Log volume handed to journald per 24 h",
+      "unit": "MB",
+      "lowerIsBetter": true
+    },
+    {
+      "key": "net_out_mb_24h",
+      "label": "Network out per 24 h",
+      "unit": "MB",
+      "lowerIsBetter": true
+    },
+    {
+      "key": "net_in_mb_24h",
+      "label": "Network in per 24 h",
+      "unit": "MB",
+      "lowerIsBetter": true
+    },
+    {
+      "key": "net_headline_mb_24h",
+      "label": "Network per 24 h (out for push agents, in+out for polled)",
+      "unit": "MB",
+      "lowerIsBetter": true
+    },
+    {
+      "key": "install_seconds",
+      "label": "Install wall time",
+      "unit": "s",
+      "lowerIsBetter": true
+    },
+    {
+      "key": "disk_footprint_mb",
+      "label": "On-disk footprint after the cycle",
+      "unit": "MB",
+      "lowerIsBetter": true
+    },
+    {
+      "key": "pids_median",
+      "label": "Processes, idle median",
+      "unit": "",
+      "lowerIsBetter": true
+    },
+    {
+      "key": "threads_median",
+      "label": "Threads, idle median",
+      "unit": "",
+      "lowerIsBetter": true
+    }
+  ],
+  "rows": [
+    {
+      "key": "hetrixtools",
+      "name": "HetrixTools agent",
+      "version": "2.4.2",
+      "versions": [
+        "2.4.2",
+        "2.4.2",
+        "2.4.2"
+      ],
+      "licence": "open source, no LICENSE file",
+      "sourceUrl": "https://github.com/hetrixtools/agent",
+      "installUrl": "https://github.com/hetrixtools/agent",
+      "unitNames": [
+        "hetrixtools_agent.service",
+        "hetrixtools_agent_1794363271-9241.service",
+        "hetrixtools_agent.timer"
+      ],
+      "reportsTo": "sm.hetrixtools.net (wget POST once a minute)",
+      "intervalSeconds": 60,
+      "us": false,
+      "footnotes": [
+        "This box has no cron, so the vendor installer's own systemd path runs: a minutely timer starting a transient unit per run. Those runs are placed in a persistent slice (one word added to the vendor launcher) so the kernel's accounting for them survives each run; the timer's launcher unit is counted too.",
+        "The CPU figure (13 to 17 % of one vCPU) is the same in all three runs and agrees with the box's load average: its idle median is 0.22 to 0.30 on this row's boxes against 0.05 to 0.12 on every other box."
+      ],
+      "values": {
+        "pss_idle_median_mb": {
+          "median": 8.979456,
+          "cycles": [
+            8.979456,
+            8.845312,
+            8.987648
+          ]
+        },
+        "pss_idle_p95_mb": {
+          "median": 9.156608,
+          "cycles": [
+            9.156608,
+            9.146368,
+            9.161728
+          ]
+        },
+        "rss_idle_median_mb": {
+          "median": 19.202048,
+          "cycles": [
+            19.202048,
+            19.058688,
+            19.206144
+          ]
+        },
+        "memory_current_idle_median_mb": {
+          "median": 3.710976,
+          "cycles": [
+            3.72736,
+            3.637248,
+            3.710976
+          ]
+        },
+        "memory_peak_mb": {
+          "median": 12.45184,
+          "cycles": [
+            14.852096,
+            12.45184,
+            12.382208
+          ]
+        },
+        "first_hour_peak_mb": {
+          "median": 9.225216,
+          "cycles": [
+            9.186304,
+            9.261056,
+            9.225216
+          ]
+        },
+        "cpu_idle_pct": {
+          "median": 17.049758499818818,
+          "cycles": [
+            17.363850413093367,
+            12.625013562024398,
+            17.049758499818818
+          ]
+        },
+        "cpu_loaded_pct": {
+          "median": 12.856514902506962,
+          "cycles": [
+            13.039505710306406,
+            10.899097966573816,
+            12.856514902506962
+          ]
+        },
+        "disk_written_mb_24h": {
+          "median": 5.898952433868825,
+          "cycles": [
+            5.898952433868825,
+            5.898952433868825,
+            5.898952433868825
+          ]
+        },
+        "journal_mb_24h": {
+          "median": 4.514347826086956,
+          "cycles": [
+            4.514284173913044,
+            4.514347826086956,
+            4.514349913043478
+          ]
+        },
+        "net_out_mb_24h": {
+          "median": 3.750102302210412,
+          "cycles": [
+            3.732158569875589,
+            3.770809498731731,
+            3.750102302210412
+          ]
+        },
+        "net_in_mb_24h": {
+          "median": 6.413441004952289,
+          "cycles": [
+            6.407612474936586,
+            6.416029143616379,
+            6.413441004952289
+          ]
+        },
+        "net_headline_mb_24h": {
+          "median": 3.750102302210412,
+          "cycles": [
+            3.732158569875589,
+            3.770809498731731,
+            3.750102302210412
+          ]
+        },
+        "install_seconds": {
+          "median": 2.1,
+          "cycles": [
+            2.1,
+            1.8,
+            2.1
+          ]
+        },
+        "disk_footprint_mb": {
+          "median": 0.080777,
+          "cycles": [
+            0.080743,
+            0.080777,
+            0.085745
+          ]
+        },
+        "pids_median": {
+          "median": 4.0,
+          "cycles": [
+            4.0,
+            4.0,
+            4.0
+          ]
+        },
+        "threads_median": {
+          "median": 4.0,
+          "cycles": [
+            4.0,
+            4.0,
+            4.0
+          ]
+        }
+      }
+    },
+    {
+      "key": "beszel",
+      "name": "Beszel agent",
+      "version": "beszel-agent 0.21.1",
+      "versions": [
+        "beszel-agent 0.21.1",
+        "beszel-agent 0.21.1",
+        "beszel-agent 0.21.1"
+      ],
+      "licence": "MIT",
+      "sourceUrl": "https://beszel.dev/guide/agent-installation",
+      "installUrl": "https://beszel.dev/guide/agent-installation",
+      "unitNames": [
+        "beszel-agent.service"
+      ],
+      "reportsTo": "Beszel hub on the sink (WebSocket, hub-driven every 60 s)",
+      "intervalSeconds": 60,
+      "us": false,
+      "footnotes": [
+        "Run 3 (box-6): this run's 15.1 MB of disk writes all fall in the first 7.0 hours after the install and then stop; in that span the agent logged nothing, its on-disk footprint did not grow, and its CPU, memory and network figures are the same as in the hours after. The same writes (the same hourly rate and block sizes, about 16 MB in all) appear in one run of another agent on another box and day (Monitorable, run 1) and in neither agent's other two runs, so they are most likely the box's filesystem writeback charged to this unit's cgroup, not the agent's own writes. The cause is not established; the figure is published as measured."
+      ],
+      "values": {
+        "pss_idle_median_mb": {
+          "median": 17.903104,
+          "cycles": [
+            17.854464,
+            17.903104,
+            18.210816
+          ]
+        },
+        "pss_idle_p95_mb": {
+          "median": 18.690048,
+          "cycles": [
+            18.706432,
+            18.567168,
+            18.690048
+          ]
+        },
+        "rss_idle_median_mb": {
+          "median": 19.392512,
+          "cycles": [
+            19.341312,
+            19.392512,
+            19.697664
+          ]
+        },
+        "memory_current_idle_median_mb": {
+          "median": 8.245248,
+          "cycles": [
+            8.204288,
+            8.245248,
+            8.35584
+          ]
+        },
+        "memory_peak_mb": {
+          "median": 118.120448,
+          "cycles": [
+            118.120448,
+            117.997568,
+            118.300672
+          ]
+        },
+        "first_hour_peak_mb": {
+          "median": 18.56,
+          "cycles": [
+            18.870272,
+            18.419712,
+            18.56
+          ]
+        },
+        "cpu_idle_pct": {
+          "median": 0.16824370696944074,
+          "cycles": [
+            0.16824370696944074,
+            0.12402881628215968,
+            0.18109347505737408
+          ]
+        },
+        "cpu_loaded_pct": {
+          "median": 0.1587149860724234,
+          "cycles": [
+            0.16098409470752087,
+            0.10622250696378831,
+            0.1587149860724234
+          ]
+        },
+        "disk_written_mb_24h": {
+          "median": 0.0,
+          "cycles": [
+            0.0,
+            0.0,
+            15.089349341707935
+          ]
+        },
+        "journal_mb_24h": {
+          "median": 0.0,
+          "cycles": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "net_out_mb_24h": {
+          "median": 2.3761231453074045,
+          "cycles": [
+            2.3761231453074045,
+            2.3207975069452833,
+            2.4070430535088776
+          ]
+        },
+        "net_in_mb_24h": {
+          "median": 1.4246419712525666,
+          "cycles": [
+            1.4246419712525666,
+            1.4059395385916174,
+            1.4366455079115836
+          ]
+        },
+        "net_headline_mb_24h": {
+          "median": 3.800765116559971,
+          "cycles": [
+            3.800765116559971,
+            3.7267370455369004,
+            3.843688561420461
+          ]
+        },
+        "install_seconds": {
+          "median": 3.6,
+          "cycles": [
+            5.2,
+            3.0,
+            3.6
+          ]
+        },
+        "disk_footprint_mb": {
+          "median": 10.789175,
+          "cycles": [
+            10.789175,
+            10.789175,
+            10.789175
+          ]
+        },
+        "pids_median": {
+          "median": 1.0,
+          "cycles": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "threads_median": {
+          "median": 9.0,
+          "cycles": [
+            9.0,
+            9.0,
+            9.0
+          ]
+        }
+      }
+    },
+    {
+      "key": "node-exporter",
+      "name": "node_exporter",
+      "version": "v1.12.1",
+      "versions": [
+        "v1.12.1",
+        "v1.12.1",
+        "v1.12.1"
+      ],
+      "licence": "Apache-2.0",
+      "sourceUrl": "https://prometheus.io/docs/guides/node-exporter/",
+      "installUrl": "https://prometheus.io/docs/guides/node-exporter/",
+      "unitNames": [
+        "node_exporter.service",
+        "node_exporter.socket"
+      ],
+      "reportsTo": "passive: Prometheus on the sink scrapes /metrics at its default 1 m",
+      "intervalSeconds": 60,
+      "us": false,
+      "footnotes": [
+        "Network bytes are counted by TCP port (the listening socket is not in the service's cgroup under socket activation, and polled traffic is what this row sends)."
+      ],
+      "values": {
+        "pss_idle_median_mb": {
+          "median": 24.465408,
+          "cycles": [
+            24.465408,
+            25.137152,
+            24.440832
+          ]
+        },
+        "pss_idle_p95_mb": {
+          "median": 24.84224,
+          "cycles": [
+            24.84224,
+            25.489408,
+            24.82176
+          ]
+        },
+        "rss_idle_median_mb": {
+          "median": 24.4736,
+          "cycles": [
+            24.4736,
+            25.145344,
+            24.449024
+          ]
+        },
+        "memory_current_idle_median_mb": {
+          "median": 9.306112,
+          "cycles": [
+            9.306112,
+            9.408512,
+            9.285632
+          ]
+        },
+        "memory_peak_mb": {
+          "median": 10.56768,
+          "cycles": [
+            10.56768,
+            10.4448,
+            10.592256
+          ]
+        },
+        "first_hour_peak_mb": {
+          "median": 23.986176,
+          "cycles": [
+            23.719936,
+            24.334336,
+            23.986176
+          ]
+        },
+        "cpu_idle_pct": {
+          "median": 0.02396352699601401,
+          "cycles": [
+            0.02396352699601401,
+            0.0244227575794178,
+            0.023285144341104
+          ]
+        },
+        "cpu_loaded_pct": {
+          "median": 0.022584373259052923,
+          "cycles": [
+            0.020769498607242337,
+            0.023215264623955432,
+            0.022584373259052923
+          ]
+        },
+        "disk_written_mb_24h": {
+          "median": 0.0,
+          "cycles": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "journal_mb_24h": {
+          "median": 0.0,
+          "cycles": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "net_out_mb_24h": {
+          "median": 18.315465230100255,
+          "cycles": [
+            18.315465230100255,
+            18.341622128276363,
+            18.311732257519026
+          ]
+        },
+        "net_in_mb_24h": {
+          "median": 1.429658577122841,
+          "cycles": [
+            1.429658577122841,
+            1.4336159246285785,
+            1.4258932528083101
+          ]
+        },
+        "net_headline_mb_24h": {
+          "median": 19.745123807223095,
+          "cycles": [
+            19.745123807223095,
+            19.775238052904943,
+            19.737625510327334
+          ]
+        },
+        "install_seconds": {
+          "median": 1.8,
+          "cycles": [
+            1.8,
+            1.7,
+            1.8
+          ]
+        },
+        "disk_footprint_mb": {
+          "median": 23.90084,
+          "cycles": [
+            23.90084,
+            23.90084,
+            23.90084
+          ]
+        },
+        "pids_median": {
+          "median": 1.0,
+          "cycles": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "threads_median": {
+          "median": 5.0,
+          "cycles": [
+            5.0,
+            5.0,
+            5.0
+          ]
+        }
+      }
+    },
+    {
+      "key": "monitorable",
+      "name": "Monitorable agent",
+      "version": "monitorable-agent version v1.7.0",
+      "versions": [
+        "monitorable-agent version v1.7.0",
+        "monitorable-agent version v1.7.0",
+        "monitorable-agent version v1.7.0"
+      ],
+      "licence": "Apache-2.0",
+      "sourceUrl": "https://monitorable.io/docs/agent/install/",
+      "installUrl": "https://monitorable.io/docs/agent/install/",
+      "unitNames": [
+        "monitorable-agent.service"
+      ],
+      "reportsTo": "Monitorable ingest (OTLP/HTTP every 60 s)",
+      "intervalSeconds": 60,
+      "us": true,
+      "footnotes": [
+        "Run 1 (box-1): this run's 14.5 MB of disk writes all fall in the first 7.8 hours after the install and then stop; in that span the agent logged nothing, its on-disk footprint did not grow, and its CPU, memory and network figures are the same as in the hours after. The same writes (the same hourly rate and block sizes, about 16 MB in all) appear in one run of another agent on another box and day (Beszel, run 3) and in neither agent's other two runs, so they are most likely the box's filesystem writeback charged to this unit's cgroup, not the agent's own writes. The cause is not established; the figure is published as measured.",
+        "Run 3 (box-7): the 0.3 MB are the agent's export queue. A batch that is not delivered within 15 s is written to disk; that happened between 16:24 and 21:16 UTC on 2026-11-11, hours in which exports timed out or were answered \"unavailable\" and were retried. A run in which every batch is delivered in time writes nothing (run 2)."
+      ],
+      "values": {
+        "pss_idle_median_mb": {
+          "median": 45.477888,
+          "cycles": [
+            45.449216,
+            45.477888,
+            45.776896
+          ]
+        },
+        "pss_idle_p95_mb": {
+          "median": 47.0016,
+          "cycles": [
+            46.75584,
+            47.0016,
+            47.251456
+          ]
+        },
+        "rss_idle_median_mb": {
+          "median": 45.48608,
+          "cycles": [
+            45.457408,
+            45.48608,
+            45.785088
+          ]
+        },
+        "memory_current_idle_median_mb": {
+          "median": 14.4384,
+          "cycles": [
+            14.327808,
+            14.4384,
+            14.512128
+          ]
+        },
+        "memory_peak_mb": {
+          "median": 18.567168,
+          "cycles": [
+            18.567168,
+            17.944576,
+            18.710528
+          ]
+        },
+        "first_hour_peak_mb": {
+          "median": 46.637056,
+          "cycles": [
+            45.559808,
+            46.637056,
+            47.04256
+          ]
+        },
+        "cpu_idle_pct": {
+          "median": 0.08468996980311631,
+          "cycles": [
+            0.08468996980311631,
+            0.08289823650199299,
+            0.08645645005435439
+          ]
+        },
+        "cpu_loaded_pct": {
+          "median": 0.06351295264623955,
+          "cycles": [
+            0.06351295264623955,
+            0.058734512534818935,
+            0.06777688022284122
+          ]
+        },
+        "disk_written_mb_24h": {
+          "median": 0.31204603454523494,
+          "cycles": [
+            14.48235568546926,
+            0.0,
+            0.31204603454523494
+          ]
+        },
+        "journal_mb_24h": {
+          "median": 0.0,
+          "cycles": [
+            0.0,
+            0.0,
+            0.009164869565217391
+          ]
+        },
+        "net_out_mb_24h": {
+          "median": 8.114061002536538,
+          "cycles": [
+            8.114061002536538,
+            8.097008508273946,
+            8.334676864355599
+          ]
+        },
+        "net_in_mb_24h": {
+          "median": 1.103299509602609,
+          "cycles": [
+            1.094574977654306,
+            1.103299509602609,
+            1.1298154076579296
+          ]
+        },
+        "net_headline_mb_24h": {
+          "median": 8.114061002536538,
+          "cycles": [
+            8.114061002536538,
+            8.097008508273946,
+            8.334676864355599
+          ]
+        },
+        "install_seconds": {
+          "median": 6.4,
+          "cycles": [
+            6.4,
+            6.7,
+            6.4
+          ]
+        },
+        "disk_footprint_mb": {
+          "median": 57.251083,
+          "cycles": [
+            57.251083,
+            57.251083,
+            57.349387
+          ]
+        },
+        "pids_median": {
+          "median": 1.0,
+          "cycles": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "threads_median": {
+          "median": 8.0,
+          "cycles": [
+            8.0,
+            9.0,
+            8.0
+          ]
+        }
+      }
+    },
+    {
+      "key": "pulse",
+      "name": "Pulse agent",
+      "version": "v6.6.0",
+      "versions": [
+        "v6.6.0",
+        "v6.6.0",
+        "v6.6.0"
+      ],
+      "licence": "MIT",
+      "sourceUrl": "https://github.com/rcourtman/Pulse/blob/main/docs/UNIFIED_AGENT.md",
+      "installUrl": "https://github.com/rcourtman/Pulse/blob/main/docs/UNIFIED_AGENT.md",
+      "unitNames": [
+        "pulse-agent.service"
+      ],
+      "reportsTo": "Pulse server on the sink (HTTP push every 30 s)",
+      "intervalSeconds": 30,
+      "us": false,
+      "footnotes": [
+        "Auto-update stays at its default (on).",
+        "The agent talks to the Pulse server over the bed's private network (10.0.0.0/24) in plain HTTP: the agent refuses an http:// server URL unless the host is loopback or a private address, and the sink has no TLS hostname. The installer it fetches from the server is checksum-pinned."
+      ],
+      "values": {
+        "pss_idle_median_mb": {
+          "median": 49.491968,
+          "cycles": [
+            49.491968,
+            49.147904,
+            50.294784
+          ]
+        },
+        "pss_idle_p95_mb": {
+          "median": 51.0976,
+          "cycles": [
+            51.0976,
+            50.561024,
+            51.712
+          ]
+        },
+        "rss_idle_median_mb": {
+          "median": 49.50016,
+          "cycles": [
+            49.50016,
+            49.156096,
+            50.302976
+          ]
+        },
+        "memory_current_idle_median_mb": {
+          "median": 14.491648,
+          "cycles": [
+            14.360576,
+            14.491648,
+            14.78656
+          ]
+        },
+        "memory_peak_mb": {
+          "median": 17.252352,
+          "cycles": [
+            16.973824,
+            17.252352,
+            17.911808
+          ]
+        },
+        "first_hour_peak_mb": {
+          "median": 51.154944,
+          "cycles": [
+            51.154944,
+            50.491392,
+            52.011008
+          ]
+        },
+        "cpu_idle_pct": {
+          "median": 0.0715691665660104,
+          "cycles": [
+            0.07786460200507307,
+            0.0715691665660104,
+            0.05327382654910013
+          ]
+        },
+        "cpu_loaded_pct": {
+          "median": 0.043996267409470755,
+          "cycles": [
+            0.04465961002785515,
+            0.043996267409470755,
+            0.04090771587743732
+          ]
+        },
+        "disk_written_mb_24h": {
+          "median": 11.793630264524703,
+          "cycles": [
+            11.793630264524703,
+            11.793630264524703,
+            11.793630264524703
+          ]
+        },
+        "journal_mb_24h": {
+          "median": 0.0,
+          "cycles": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "net_out_mb_24h": {
+          "median": 16.19849825341225,
+          "cycles": [
+            16.220572571566617,
+            16.008854480009663,
+            16.19849825341225
+          ]
+        },
+        "net_in_mb_24h": {
+          "median": 10.303374803720256,
+          "cycles": [
+            10.303374803720256,
+            10.29256306317188,
+            10.383919139992752
+          ]
+        },
+        "net_headline_mb_24h": {
+          "median": 16.19849825341225,
+          "cycles": [
+            16.220572571566617,
+            16.008854480009663,
+            16.19849825341225
+          ]
+        },
+        "install_seconds": {
+          "median": 31.3,
+          "cycles": [
+            31.4,
+            31.3,
+            30.8
+          ]
+        },
+        "disk_footprint_mb": {
+          "median": 42.081323,
+          "cycles": [
+            42.081323,
+            42.081323,
+            42.081323
+          ]
+        },
+        "pids_median": {
+          "median": 1.0,
+          "cycles": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "threads_median": {
+          "median": 9.0,
+          "cycles": [
+            9.0,
+            9.0,
+            9.0
+          ]
+        }
+      }
+    },
+    {
+      "key": "fivenines",
+      "name": "Fivenines agent",
+      "version": "fivenines-agent 1.23.1",
+      "versions": [
+        "fivenines-agent 1.23.1",
+        "fivenines-agent 1.23.1",
+        "fivenines-agent 1.23.1"
+      ],
+      "licence": "WTFPL",
+      "sourceUrl": "https://github.com/Five-Nines-io/fivenines_agent#installation",
+      "installUrl": "https://github.com/Five-Nines-io/fivenines_agent#installation",
+      "unitNames": [
+        "fivenines-agent.service"
+      ],
+      "reportsTo": "Fivenines API (HTTPS push every 60 s)",
+      "intervalSeconds": 60,
+      "us": false,
+      "footnotes": [],
+      "values": {
+        "pss_idle_median_mb": {
+          "median": 49.882112,
+          "cycles": [
+            49.881088,
+            49.882112,
+            49.922048
+          ]
+        },
+        "pss_idle_p95_mb": {
+          "median": 50.110464,
+          "cycles": [
+            50.110464,
+            49.984512,
+            50.11456
+          ]
+        },
+        "rss_idle_median_mb": {
+          "median": 52.89984,
+          "cycles": [
+            52.89984,
+            52.854784,
+            52.985856
+          ]
+        },
+        "memory_current_idle_median_mb": {
+          "median": 35.47136,
+          "cycles": [
+            35.442688,
+            35.618816,
+            35.47136
+          ]
+        },
+        "memory_peak_mb": {
+          "median": 128.708608,
+          "cycles": [
+            128.598016,
+            128.708608,
+            128.802816
+          ]
+        },
+        "first_hour_peak_mb": {
+          "median": 49.726464,
+          "cycles": [
+            49.401856,
+            49.726464,
+            49.737728
+          ]
+        },
+        "cpu_idle_pct": {
+          "median": 0.21632305834037927,
+          "cycles": [
+            0.21632305834037927,
+            0.21434907235173328,
+            0.2243454535571929
+          ]
+        },
+        "cpu_loaded_pct": {
+          "median": 0.20891125348189415,
+          "cycles": [
+            0.20891125348189415,
+            0.1895406406685237,
+            0.22121364902506963
+          ]
+        },
+        "disk_written_mb_24h": {
+          "median": 0.4744809566372751,
+          "cycles": [
+            0.4744809566372751,
+            0.4744809566372751,
+            0.4744809566372751
+          ]
+        },
+        "journal_mb_24h": {
+          "median": 0.2871015652173913,
+          "cycles": [
+            0.287088,
+            0.2871046956521739,
+            0.2871015652173913
+          ]
+        },
+        "net_out_mb_24h": {
+          "median": 10.037784814591134,
+          "cycles": [
+            10.050299717357168,
+            10.037784814591134,
+            9.974065466843822
+          ]
+        },
+        "net_in_mb_24h": {
+          "median": 4.401272772073922,
+          "cycles": [
+            4.412211832346903,
+            4.388909191931393,
+            4.401272772073922
+          ]
+        },
+        "net_headline_mb_24h": {
+          "median": 10.037784814591134,
+          "cycles": [
+            10.050299717357168,
+            10.037784814591134,
+            9.974065466843822
+          ]
+        },
+        "install_seconds": {
+          "median": 4.1,
+          "cycles": [
+            4.5,
+            4.0,
+            4.1
+          ]
+        },
+        "disk_footprint_mb": {
+          "median": 52.088342,
+          "cycles": [
+            52.088342,
+            52.089538,
+            52.088342
+          ]
+        },
+        "pids_median": {
+          "median": 1.0,
+          "cycles": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "threads_median": {
+          "median": 4.0,
+          "cycles": [
+            4.0,
+            4.0,
+            4.0
+          ]
+        }
+      }
+    },
+    {
+      "key": "glances",
+      "name": "Glances",
+      "version": "4.5.9",
+      "versions": [
+        "4.5.9",
+        "4.5.9",
+        "4.5.9"
+      ],
+      "licence": "LGPL-3.0",
+      "sourceUrl": "https://github.com/nicolargo/glances#installation",
+      "installUrl": "https://github.com/nicolargo/glances#installation",
+      "unitNames": [
+        "glances.service"
+      ],
+      "reportsTo": "passive: the sink polls /api/4/all at Glances' refresh period",
+      "intervalSeconds": 3,
+      "us": false,
+      "footnotes": [
+        "Glances ships no systemd unit; the harness adds a two-line one that runs `glances -w`.",
+        "Runs as root (pipx install as root, the documented route); port 61208 is reachable from the sink only.",
+        "Network bytes are counted by TCP port (the listening socket is not in the service's cgroup under socket activation, and polled traffic is what this row sends).",
+        "The network figure is the harness's own poller fetching /api/4/all every 3 s (Glances' refresh period); each reply is about 137 KB, which is the 3.9 GB per 24 h. Scale it to your own polling interval."
+      ],
+      "values": {
+        "pss_idle_median_mb": {
+          "median": 77.712384,
+          "cycles": [
+            77.604864,
+            77.722624,
+            77.712384
+          ]
+        },
+        "pss_idle_p95_mb": {
+          "median": 78.214144,
+          "cycles": [
+            78.116864,
+            78.214144,
+            78.24896
+          ]
+        },
+        "rss_idle_median_mb": {
+          "median": 87.171072,
+          "cycles": [
+            87.138304,
+            87.293952,
+            87.171072
+          ]
+        },
+        "memory_current_idle_median_mb": {
+          "median": 67.063808,
+          "cycles": [
+            67.014656,
+            67.063808,
+            67.125248
+          ]
+        },
+        "memory_peak_mb": {
+          "median": 72.585216,
+          "cycles": [
+            72.585216,
+            72.798208,
+            71.917568
+          ]
+        },
+        "first_hour_peak_mb": {
+          "median": 76.788736,
+          "cycles": [
+            76.773376,
+            76.788736,
+            76.819456
+          ]
+        },
+        "cpu_idle_pct": {
+          "median": 2.3838728542094456,
+          "cycles": [
+            1.8254575637154244,
+            2.3838728542094456,
+            2.487292837299191
+          ]
+        },
+        "cpu_loaded_pct": {
+          "median": 1.7184529247910862,
+          "cycles": [
+            1.7048077158774373,
+            1.7184529247910862,
+            1.732654512534819
+          ]
+        },
+        "disk_written_mb_24h": {
+          "median": 0.0,
+          "cycles": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "journal_mb_24h": {
+          "median": 0.0,
+          "cycles": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "net_out_mb_24h": {
+          "median": 3903.520435144341,
+          "cycles": [
+            3926.3689657591494,
+            3903.520435144341,
+            3902.9311775431815
+          ]
+        },
+        "net_in_mb_24h": {
+          "median": 26.21566144703467,
+          "cycles": [
+            26.21566144703467,
+            26.196783688851312,
+            26.546161536417443
+          ]
+        },
+        "net_headline_mb_24h": {
+          "median": 3929.7172188331924,
+          "cycles": [
+            3952.5846272061845,
+            3929.7172188331924,
+            3929.477339079599
+          ]
+        },
+        "install_seconds": {
+          "median": 33.4,
+          "cycles": [
+            27.0,
+            34.2,
+            33.4
+          ]
+        },
+        "disk_footprint_mb": {
+          "median": 28.768359,
+          "cycles": [
+            28.768359,
+            28.768359,
+            28.768188
+          ]
+        },
+        "pids_median": {
+          "median": 1.0,
+          "cycles": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "threads_median": {
+          "median": 3.0,
+          "cycles": [
+            3.0,
+            3.0,
+            3.0
+          ]
+        }
+      }
+    },
+    {
+      "key": "telegraf",
+      "name": "Telegraf",
+      "version": "Telegraf 1.40.3 (git: HEAD@41b45388)",
+      "versions": [
+        "Telegraf 1.40.3 (git: HEAD@41b45388)",
+        "Telegraf 1.40.3 (git: HEAD@41b45388)",
+        "Telegraf 1.40.3 (git: HEAD@41b45388)"
+      ],
+      "licence": "MIT",
+      "sourceUrl": "https://docs.influxdata.com/telegraf/v1/install/",
+      "installUrl": "https://docs.influxdata.com/telegraf/v1/install/",
+      "unitNames": [
+        "telegraf.service"
+      ],
+      "reportsTo": "InfluxDB 1.x on the sink (the stock [[outputs.influxdb]] block, enabled with the sink's URL)",
+      "intervalSeconds": 10,
+      "us": false,
+      "footnotes": [
+        "Telegraf's stock config enables no output; its [[outputs.influxdb]] block is enabled with the sink's URL (two lines). Nothing else is changed."
+      ],
+      "values": {
+        "pss_idle_median_mb": {
+          "median": 180.178944,
+          "cycles": [
+            179.920896,
+            180.178944,
+            181.825536
+          ]
+        },
+        "pss_idle_p95_mb": {
+          "median": 181.948416,
+          "cycles": [
+            181.32992,
+            181.948416,
+            183.156736
+          ]
+        },
+        "rss_idle_median_mb": {
+          "median": 180.187136,
+          "cycles": [
+            179.929088,
+            180.187136,
+            181.833728
+          ]
+        },
+        "memory_current_idle_median_mb": {
+          "median": 56.762368,
+          "cycles": [
+            56.762368,
+            56.700928,
+            57.053184
+          ]
+        },
+        "memory_peak_mb": {
+          "median": 58.970112,
+          "cycles": [
+            58.650624,
+            58.970112,
+            59.113472
+          ]
+        },
+        "first_hour_peak_mb": {
+          "median": 179.93728,
+          "cycles": [
+            179.060736,
+            179.93728,
+            180.89984
+          ]
+        },
+        "cpu_idle_pct": {
+          "median": 0.21369707814953495,
+          "cycles": [
+            0.22116672061843218,
+            0.2096562507549221,
+            0.21369707814953495
+          ]
+        },
+        "cpu_loaded_pct": {
+          "median": 0.1599616155988858,
+          "cycles": [
+            0.1599616155988858,
+            0.15443295264623955,
+            0.1661558774373259
+          ]
+        },
+        "disk_written_mb_24h": {
+          "median": 0.0,
+          "cycles": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "journal_mb_24h": {
+          "median": 0.0,
+          "cycles": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "net_out_mb_24h": {
+          "median": 17.312096050247614,
+          "cycles": [
+            17.349892267182025,
+            17.28458037927286,
+            17.312096050247614
+          ]
+        },
+        "net_in_mb_24h": {
+          "median": 3.6241434376132386,
+          "cycles": [
+            3.636741828723276,
+            3.6241434376132386,
+            3.613682348109675
+          ]
+        },
+        "net_headline_mb_24h": {
+          "median": 17.312096050247614,
+          "cycles": [
+            17.349892267182025,
+            17.28458037927286,
+            17.312096050247614
+          ]
+        },
+        "install_seconds": {
+          "median": 7.9,
+          "cycles": [
+            9.1,
+            7.9,
+            7.7
+          ]
+        },
+        "disk_footprint_mb": {
+          "median": 330.550556,
+          "cycles": [
+            330.550556,
+            330.550556,
+            330.550556
+          ]
+        },
+        "pids_median": {
+          "median": 1.0,
+          "cycles": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "threads_median": {
+          "median": 10.0,
+          "cycles": [
+            10.0,
+            10.0,
+            10.0
+          ]
+        }
+      }
+    },
+    {
+      "key": "datadog",
+      "name": "Datadog Agent",
+      "version": "Agent 7.85.3",
+      "versions": [
+        "Agent 7.85.2",
+        "Agent 7.85.2",
+        "Agent 7.85.3"
+      ],
+      "licence": "Apache-2.0",
+      "sourceUrl": "https://docs.datadoghq.com/agent/basic_agent_usage/ubuntu/",
+      "installUrl": "https://docs.datadoghq.com/agent/basic_agent_usage/ubuntu/",
+      "unitNames": [
+        "datadog-agent-action-exp.service",
+        "datadog-agent-action.service",
+        "datadog-agent-data-plane-exp.service",
+        "datadog-agent-data-plane.service",
+        "datadog-agent-exp.service",
+        "datadog-agent-installer-exp.service",
+        "datadog-agent-installer.service",
+        "datadog-agent-process-exp.service",
+        "datadog-agent-process.service",
+        "datadog-agent-procmgr-exp.service",
+        "datadog-agent-procmgr.service",
+        "datadog-agent-security-exp.service",
+        "datadog-agent-security.service",
+        "datadog-agent-sysprobe-exp.service",
+        "datadog-agent-sysprobe.service",
+        "datadog-agent-trace-exp.service",
+        "datadog-agent-trace.service",
+        "datadog-agent.service"
+      ],
+      "reportsTo": "Datadog intake (HTTPS)",
+      "intervalSeconds": 15,
+      "us": false,
+      "footnotes": [
+        "Every datadog-agent* unit is summed (7.84+ runs a process manager).",
+        "The memory peak is the sum of each datadog-agent* unit's own high-water mark over the cycle; those peaks did not happen at the same moment, so the figure overstates the coincident peak.",
+        "Run 3 (box-4) installed Agent 7.85.3; runs 1 and 2 installed 7.85.2. The vendor's documented install takes the release that is current at install time."
+      ],
+      "values": {
+        "pss_idle_median_mb": {
+          "median": 195.680256,
+          "cycles": [
+            195.680256,
+            195.60448,
+            196.02432
+          ]
+        },
+        "pss_idle_p95_mb": {
+          "median": 199.68,
+          "cycles": [
+            199.657472,
+            199.68,
+            200.79616
+          ]
+        },
+        "rss_idle_median_mb": {
+          "median": 205.615104,
+          "cycles": [
+            205.615104,
+            205.275136,
+            205.889536
+          ]
+        },
+        "memory_current_idle_median_mb": {
+          "median": 114.118656,
+          "cycles": [
+            113.72544,
+            114.427904,
+            114.118656
+          ]
+        },
+        "memory_peak_mb": {
+          "median": 198.627328,
+          "cycles": [
+            198.508544,
+            198.627328,
+            202.24
+          ]
+        },
+        "first_hour_peak_mb": {
+          "median": 279.977984,
+          "cycles": [
+            279.977984,
+            275.319808,
+            281.796608
+          ]
+        },
+        "cpu_idle_pct": {
+          "median": 1.588238796956154,
+          "cycles": [
+            1.66755283488344,
+            1.588238796956154,
+            1.5064854873777025
+          ]
+        },
+        "cpu_loaded_pct": {
+          "median": 1.137333704735376,
+          "cycles": [
+            1.3429666016713093,
+            1.137333704735376,
+            1.0724106963788302
+          ]
+        },
+        "disk_written_mb_24h": {
+          "median": 103.22311838627854,
+          "cycles": [
+            103.22311838627854,
+            103.25304060876918,
+            103.20601997342675
+          ]
+        },
+        "journal_mb_24h": {
+          "median": 29.295362086956523,
+          "cycles": [
+            29.299902260869565,
+            29.293206260869567,
+            29.295362086956523
+          ]
+        },
+        "net_out_mb_24h": {
+          "median": 89.30747427467085,
+          "cycles": [
+            89.24474008938279,
+            89.31472836816042,
+            89.30747427467085
+          ]
+        },
+        "net_in_mb_24h": {
+          "median": 57.58930896968233,
+          "cycles": [
+            57.58930896968233,
+            57.64651205218021,
+            57.50647183476266
+          ]
+        },
+        "net_headline_mb_24h": {
+          "median": 89.30747427467085,
+          "cycles": [
+            89.24474008938279,
+            89.31472836816042,
+            89.30747427467085
+          ]
+        },
+        "install_seconds": {
+          "median": 17.9,
+          "cycles": [
+            18.6,
+            17.9,
+            17.0
+          ]
+        },
+        "disk_footprint_mb": {
+          "median": 1619.348305,
+          "cycles": [
+            1619.348305,
+            1619.418678,
+            1619.344397
+          ]
+        },
+        "pids_median": {
+          "median": 5.0,
+          "cycles": [
+            5.0,
+            5.0,
+            5.0
+          ]
+        },
+        "threads_median": {
+          "median": 29.0,
+          "cycles": [
+            30.0,
+            29.0,
+            28.0
+          ]
+        }
+      }
+    },
+    {
+      "key": "netdata",
+      "name": "Netdata (self-hosted)",
+      "version": "v2.12.3",
+      "versions": [
+        "v2.12.3",
+        "v2.12.3",
+        "v2.12.3"
+      ],
+      "licence": "GPL-3.0",
+      "sourceUrl": "https://learn.netdata.cloud/docs/netdata-agent/installation/linux",
+      "installUrl": "https://learn.netdata.cloud/docs/netdata-agent/installation/linux",
+      "unitNames": [
+        "netdata.service"
+      ],
+      "reportsTo": "nothing (standalone; local dashboard on :19999, not opened)",
+      "intervalSeconds": 1,
+      "us": false,
+      "footnotes": [
+        "ML anomaly detection stays at its default (on).",
+        "kickstart's default channel is nightly; installed with --stable-channel so the version is a release readers can reproduce.",
+        "Anonymous telemetry and the daily updater timer stay at their defaults; the updater's unit is counted with the agent."
+      ],
+      "values": {
+        "pss_idle_median_mb": {
+          "median": 354.701312,
+          "cycles": [
+            354.347008,
+            354.852864,
+            354.701312
+          ]
+        },
+        "pss_idle_p95_mb": {
+          "median": 363.767808,
+          "cycles": [
+            363.456512,
+            363.767808,
+            364.191744
+          ]
+        },
+        "rss_idle_median_mb": {
+          "median": 437.612544,
+          "cycles": [
+            437.608448,
+            437.612544,
+            438.038528
+          ]
+        },
+        "memory_current_idle_median_mb": {
+          "median": 245.772288,
+          "cycles": [
+            245.772288,
+            246.583296,
+            245.315584
+          ]
+        },
+        "memory_peak_mb": {
+          "median": 294.428672,
+          "cycles": [
+            287.809536,
+            294.428672,
+            296.853504
+          ]
+        },
+        "first_hour_peak_mb": {
+          "median": 308.021248,
+          "cycles": [
+            308.021248,
+            308.01408,
+            309.291008
+          ]
+        },
+        "cpu_idle_pct": {
+          "median": 3.796405780891412,
+          "cycles": [
+            3.796405780891412,
+            3.7807457990095426,
+            3.9653798441840804
+          ]
+        },
+        "cpu_loaded_pct": {
+          "median": 2.877105905292479,
+          "cycles": [
+            2.843460027855153,
+            2.877105905292479,
+            3.1722372144846798
+          ]
+        },
+        "disk_written_mb_24h": {
+          "median": 265.9358896871603,
+          "cycles": [
+            269.7231881338326,
+            254.0011975166083,
+            265.9358896871603
+          ]
+        },
+        "journal_mb_24h": {
+          "median": 0.0,
+          "cycles": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "net_out_mb_24h": {
+          "median": 0.0,
+          "cycles": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "net_in_mb_24h": {
+          "median": 0.00012523251600434835,
+          "cycles": [
+            0.00012523251600434835,
+            0.00010853484720376858,
+            0.0007764415992269597
+          ]
+        },
+        "net_headline_mb_24h": {
+          "median": 0.0,
+          "cycles": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "install_seconds": {
+          "median": 21.2,
+          "cycles": [
+            20.6,
+            21.2,
+            21.5
+          ]
+        },
+        "disk_footprint_mb": {
+          "median": 790.741804,
+          "cycles": [
+            790.741804,
+            786.818032,
+            790.8611
+          ]
+        },
+        "pids_median": {
+          "median": 17.0,
+          "cycles": [
+            17.0,
+            17.0,
+            18.0
+          ]
+        },
+        "threads_median": {
+          "median": 148.0,
+          "cycles": [
+            148.0,
+            148.0,
+            147.0
+          ]
+        }
+      }
+    },
+    {
+      "key": "netdata-cloud",
+      "name": "Netdata (claimed to Netdata Cloud)",
+      "version": "v2.12.3",
+      "versions": [
+        "v2.12.3",
+        "v2.12.3",
+        "v2.12.3"
+      ],
+      "licence": "GPL-3.0",
+      "sourceUrl": "https://learn.netdata.cloud/docs/netdata-agent/installation/linux",
+      "installUrl": "https://learn.netdata.cloud/docs/netdata-agent/installation/linux",
+      "unitNames": [
+        "netdata.service"
+      ],
+      "reportsTo": "Netdata Cloud (ACLK, outbound)",
+      "intervalSeconds": 1,
+      "us": false,
+      "footnotes": [
+        "Same binary as the self-hosted row, claimed to Netdata Cloud. ML anomaly detection stays at its default (on).",
+        "kickstart's default channel is nightly; installed with --stable-channel so the version is a release readers can reproduce.",
+        "Anonymous telemetry and the daily updater timer stay at their defaults; the updater's unit is counted with the agent."
+      ],
+      "values": {
+        "pss_idle_median_mb": {
+          "median": 356.4288,
+          "cycles": [
+            355.735552,
+            356.87424,
+            356.4288
+          ]
+        },
+        "pss_idle_p95_mb": {
+          "median": 365.910016,
+          "cycles": [
+            365.438976,
+            365.910016,
+            366.148608
+          ]
+        },
+        "rss_idle_median_mb": {
+          "median": 438.781952,
+          "cycles": [
+            438.781952,
+            439.228416,
+            438.380544
+          ]
+        },
+        "memory_current_idle_median_mb": {
+          "median": 252.327936,
+          "cycles": [
+            252.23168,
+            252.327936,
+            252.69248
+          ]
+        },
+        "memory_peak_mb": {
+          "median": 295.559168,
+          "cycles": [
+            295.559168,
+            292.528128,
+            308.166656
+          ]
+        },
+        "first_hour_peak_mb": {
+          "median": 311.877632,
+          "cycles": [
+            312.170496,
+            311.29088,
+            311.877632
+          ]
+        },
+        "cpu_idle_pct": {
+          "median": 3.720910763377219,
+          "cycles": [
+            3.720910763377219,
+            3.9605377134919677,
+            3.70125200144945
+          ]
+        },
+        "cpu_loaded_pct": {
+          "median": 2.8118288022284124,
+          "cycles": [
+            2.794794568245125,
+            3.1940830083565457,
+            2.8118288022284124
+          ]
+        },
+        "disk_written_mb_24h": {
+          "median": 259.6009277255707,
+          "cycles": [
+            230.9610861988163,
+            259.6009277255707,
+            276.11371993719047
+          ]
+        },
+        "journal_mb_24h": {
+          "median": 0.0,
+          "cycles": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "net_out_mb_24h": {
+          "median": 0.33734717719531343,
+          "cycles": [
+            0.33734717719531343,
+            0.3397005048918952,
+            0.3364757676047832
+          ]
+        },
+        "net_in_mb_24h": {
+          "median": 0.18967508153158594,
+          "cycles": [
+            0.18954984901558158,
+            0.18967508153158594,
+            0.1899119797076942
+          ]
+        },
+        "net_headline_mb_24h": {
+          "median": 0.33734717719531343,
+          "cycles": [
+            0.33734717719531343,
+            0.3397005048918952,
+            0.3364757676047832
+          ]
+        },
+        "install_seconds": {
+          "median": 25.4,
+          "cycles": [
+            25.2,
+            26.5,
+            25.4
+          ]
+        },
+        "disk_footprint_mb": {
+          "median": 794.705249,
+          "cycles": [
+            795.886713,
+            794.699968,
+            794.705249
+          ]
+        },
+        "pids_median": {
+          "median": 17.0,
+          "cycles": [
+            17.0,
+            17.0,
+            17.0
+          ]
+        },
+        "threads_median": {
+          "median": 148.0,
+          "cycles": [
+            147.0,
+            149.0,
+            148.0
+          ]
+        }
+      }
+    }
+  ],
+  "control": {
+    "key": "control",
+    "name": "No agent (harness only)",
+    "version": "none",
+    "versions": [
+      "none",
+      "none",
+      "none"
+    ],
+    "licence": "Apache-2.0",
+    "sourceUrl": "https://github.com/monitorable-io/agent-footprint-benchmark",
+    "installUrl": "https://github.com/monitorable-io/agent-footprint-benchmark",
+    "unitNames": [],
+    "reportsTo": "nothing: the control box measures the harness itself",
+    "intervalSeconds": 10,
+    "us": false,
+    "footnotes": [
+      "Control row: no agent; the collector measures its own cgroup."
+    ],
+    "values": {
+      "pss_idle_median_mb": {
+        "median": 12.640256,
+        "cycles": [
+          12.638208,
+          12.640256,
+          12.654592
+        ]
+      },
+      "pss_idle_p95_mb": {
+        "median": 12.640256,
+        "cycles": [
+          12.638208,
+          12.640256,
+          12.654592
+        ]
+      },
+      "rss_idle_median_mb": {
+        "median": 18.51392,
+        "cycles": [
+          18.296832,
+          18.51392,
+          18.51392
+        ]
+      },
+      "memory_current_idle_median_mb": {
+        "median": 11.173888,
+        "cycles": [
+          11.190272,
+          11.173888,
+          11.14112
+        ]
+      },
+      "memory_peak_mb": {
+        "median": 16.11776,
+        "cycles": [
+          16.146432,
+          16.109568,
+          16.11776
+        ]
+      },
+      "first_hour_peak_mb": {
+        "median": 12.640256,
+        "cycles": [
+          12.638208,
+          12.640256,
+          12.654592
+        ]
+      },
+      "cpu_idle_pct": {
+        "median": 0.06726969682328784,
+        "cycles": [
+          0.06726969682328784,
+          0.06995171397511778,
+          0.0671985686677135
+        ]
+      },
+      "cpu_loaded_pct": {
+        "median": 0.056501253481894144,
+        "cycles": [
+          0.05288370473537604,
+          0.056501253481894144,
+          0.0575825069637883
+        ]
+      },
+      "disk_written_mb_24h": {
+        "median": 10.51979850706607,
+        "cycles": [
+          10.51979850706607,
+          10.528347713491966,
+          10.51979850706607
+        ]
+      },
+      "journal_mb_24h": {
+        "median": 0.0,
+        "cycles": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "net_out_mb_24h": {
+        "median": 0.0,
+        "cycles": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "net_in_mb_24h": {
+        "median": 0.0,
+        "cycles": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "net_headline_mb_24h": {
+        "median": 0.0,
+        "cycles": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "install_seconds": {
+        "median": null,
+        "cycles": []
+      },
+      "disk_footprint_mb": {
+        "median": 0.065795,
+        "cycles": [
+          0.065795,
+          0.065795,
+          0.065795
+        ]
+      },
+      "pids_median": {
+        "median": 1.0,
+        "cycles": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "threads_median": {
+        "median": 1.0,
+        "cycles": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    }
+  }
+}

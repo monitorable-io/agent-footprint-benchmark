@@ -1,0 +1,4 @@
+ts,event,cgroup,detail
+1794270986,start,,system.slice/system-hetrixtools.slice system.slice/hetrixtools_agent.service
+1794271030,cgroup_appeared,system.slice/system-hetrixtools.slice,9234
+1794360979,stop,,

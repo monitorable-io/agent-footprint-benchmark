@@ -1,0 +1,4 @@
+ts,event,cgroup,detail
+1794362395,start,,system.slice/glances.service
+1794362395,cgroup_appeared,system.slice/glances.service,8954
+1794452388,stop,,
