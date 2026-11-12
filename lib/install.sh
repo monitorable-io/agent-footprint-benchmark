@@ -75,7 +75,7 @@ cmd_install() {
   log "$box: starting the collector"
   ssh_box "$box" "printf 'GLOBS=%s\nNET_PORTS=%s\n' '$(collector_globs "$agent")' '${net_ports:+--net-ports $net_ports}' > /etc/bench-collector.env \
     && cp /opt/bench/collector/bench-collector.service /etc/systemd/system/ \
-    && systemctl daemon-reload && systemctl stop bench-collector > /dev/null 2>&1; rm -f /var/lib/bench/samples.csv /var/lib/bench/events.csv /var/lib/bench/samples.inodes.json \
+    && systemctl daemon-reload && systemctl stop bench-collector > /dev/null 2>&1; rm -f /var/lib/bench/samples.csv /var/lib/bench/events.csv /var/lib/bench/samples.inodes.json /var/lib/bench/blockdev.csv \
     && systemctl enable bench-collector > /dev/null 2>&1 && systemctl restart bench-collector && systemctl is-active bench-collector"
   mkdir -p "$BENCH_ROOT/.runs"
   rm -f "${BENCH_ROOT:?}/.runs/$box-$agent-install.json"   # never let a stale record stand in for a failed fetch

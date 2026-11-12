@@ -27,6 +27,17 @@ load_env() {
   # shellcheck disable=SC1090
   . "$BENCH_ENV"
   set +a
+  # bench.env may name the run it is set up for: YEAR (the data root, read where it is used) and the
+  # number of slots, which lib/rotation.sh fixed when it was sourced.
+  # shellcheck disable=SC2034
+  [[ -z "${BENCH_SLOT_COUNT:-}" ]] || SLOT_COUNT=$BENCH_SLOT_COUNT
+}
+
+# load_env_if_present: for the read-only subcommands, which must show the run bench.env names but also
+# work on a checkout without one.
+load_env_if_present() {
+  [[ -f "$BENCH_ENV" ]] || return 0
+  load_env
 }
 
 # box_ip NAME: the BOX_<NAME>_IP value for a box name like "box-3" or "sink".

@@ -31,6 +31,8 @@ METRICS = [
     ("cpu_idle_pct", "CPU, idle (% of one vCPU)", "%", True),
     ("cpu_loaded_pct", "CPU, under load (% of one vCPU)", "%", True),
     ("disk_written_mb_24h", "Disk written per 24 h", "MB", True),
+    ("disk_charged_mb_24h", "Disk writes charged to the unit's cgroup per 24 h (with any filesystem metadata charged to it)", "MB", True),
+    ("disk_metadata_charged_mb_24h", "Filesystem-metadata writeback charged to the unit's cgroup per 24 h", "MB", True),
     ("journal_mb_24h", "Log volume handed to journald per 24 h", "MB", True),
     ("net_out_mb_24h", "Network out per 24 h", "MB", True),
     ("net_in_mb_24h", "Network in per 24 h", "MB", True),
@@ -41,6 +43,7 @@ METRICS = [
     ("threads_median", "Threads, idle median", "", True),
 ]
 COUNTERS = ("cpu_usage_usec", "io_rbytes", "io_wbytes", "net_out", "net_in")
+META_COLUMN = "io_wbytes_blockdev"
 GAUGES = ("memory_current", "memory_peak", "anon", "file", "pss", "rss", "pids", "threads")
 DISPLAY = {
     "beszel": "Beszel agent", "netdata": "Netdata (self-hosted)", "netdata-cloud": "Netdata (claimed to Netdata Cloud)",
@@ -77,6 +80,10 @@ def load_rows(path):
             row = {"ts": int(r["ts"]), "cgroup": r["cgroup"]}
             for k in COUNTERS + GAUGES:
                 row[k] = int(r[k] or 0)
+            # Filesystem-metadata writeback charged to this row (collector/blockdev_trace.py); absent from
+            # samples taken before the tracer existed, empty where it could not be armed.
+            meta = r.get(META_COLUMN)
+            row[META_COLUMN] = int(meta) if meta not in (None, "") else None
             rows.append(row)
     return rows, box
 
@@ -142,6 +149,16 @@ def cycle_metrics(rows, meta, box_rows=()):
     out_b, in_b = counter_total(idle, "net_out") * per_day, counter_total(idle, "net_in") * per_day
     kind = meta.get("kind", "push")
     headline = out_b + in_b if kind == "polled" else out_b
+    # Disk: what the kernel charged to the cgroup, less the filesystem-metadata writeback charged to it.
+    # That stream belongs to the box (ext4 writes metadata through the block device's inode, and the
+    # kernel charges one inode's writeback to one cgroup, whichever owns it at the time).
+    charged_mb = counter_total(idle, "io_wbytes") * per_day / MB
+    traced = [r for r in idle if r.get(META_COLUMN) is not None]
+    metadata_mb = counter_total(traced, META_COLUMN) * per_day / MB if traced else None
+    if metadata_mb is not None and metadata_mb >= 0.05:
+        meta.setdefault("footnotes", []).append(
+            f"Run {sched.get('run', 0) + 1} ({sched.get('box', '?')}): {metadata_mb:.1f} MB per 24 h of filesystem-metadata writeback "
+            f"were charged to this unit's cgroup and are not counted as its disk writes ({charged_mb:.1f} MB per 24 h charged in all).")
     install = meta.get("install", {})
     footprint = meta.get("footprint") or {}
     disk_bytes = footprint.get("disk_bytes", install.get("disk_bytes", 0))
@@ -157,7 +174,9 @@ def cycle_metrics(rows, meta, box_rows=()):
         "first_hour_peak_mb": None if no_process else max((v["pss"] for v in _by_ts(warm).values()), default=0) / MB,
         "cpu_idle_pct": counter_total(idle, "cpu_usage_usec") / (idle_wall * 1e6) * 100,
         "cpu_loaded_pct": counter_total(loaded, "cpu_usage_usec") / (load_wall * 1e6) * 100,
-        "disk_written_mb_24h": counter_total(idle, "io_wbytes") * per_day / MB,
+        "disk_written_mb_24h": charged_mb if metadata_mb is None else max(0.0, charged_mb - metadata_mb),
+        "disk_charged_mb_24h": charged_mb,
+        "disk_metadata_charged_mb_24h": metadata_mb,
         "journal_mb_24h": (journal * DAY / max(1, idle_end - idle_start) / MB) if journal is not None else None,
         "net_out_mb_24h": out_b / MB,
         "net_in_mb_24h": in_b / MB,
@@ -267,7 +286,14 @@ def summarize(root, harness_commit=None):
     }
 
 
+def _versions_cell(row):
+    """One version, or every cycle's when they differ (the documented install takes the current release)."""
+    distinct = list(dict.fromkeys(v for v in row.get("versions", []) if v))
+    return ", ".join(distinct) if len(distinct) > 1 else row["version"]
+
+
 def to_markdown(results):
+    """The headline table, read on its own: a row with footnotes is marked and the notes follow the table."""
     keys = ["pss_idle_median_mb", "memory_peak_mb", "cpu_idle_pct", "cpu_loaded_pct", "disk_written_mb_24h", "net_headline_mb_24h", "install_seconds", "disk_footprint_mb"]
     labels = {m["key"]: m["label"] for m in results["metrics"]}
     lines = [f"# {results['title']}", "", "| Agent | Version | " + " | ".join(labels[k] for k in keys) + " |", "|---|---|" + "---|" * len(keys)]
@@ -277,8 +303,18 @@ def to_markdown(results):
         for k in keys:
             m = r["values"][k]["median"]
             cells.append("n/a" if m is None else f"{m:.1f}")
-        lines.append(f"| {r['name']}{' (us)' if r['us'] else ''} | {r['version']} | " + " | ".join(cells) + " |")
+        mark = " †" if r.get("footnotes") else ""
+        lines.append(f"| {r['name']}{' (us)' if r['us'] else ''}{mark} | {_versions_cell(r)} | " + " | ".join(cells) + " |")
     lines += ["", f"Cycles: {len(results['run']['cycles'])}. {results['run']['provider']} {results['run']['location']} {results['run']['plan']}, {results['run']['image']}, kernel {results['run']['kernel']}, harness {results['run']['harnessCommit']}."]
+    lines += ["", "Each figure is the median of the per-run values; `results.json` has every run's value."]
+    notes = results["run"].get("notes") or []
+    if notes:
+        lines += ["", "## Method notes", ""] + [f"- {n}" for n in notes]
+    if any(r.get("footnotes") for r in rows):
+        lines += ["", "## Row notes (†)"]
+        for r in rows:
+            if r.get("footnotes"):
+                lines += ["", f"**{r['name']}**", ""] + [f"- {n}" for n in r["footnotes"]]
     return "\n".join(lines) + "\n"
 
 

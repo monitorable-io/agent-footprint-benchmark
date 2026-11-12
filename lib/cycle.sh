@@ -114,15 +114,19 @@ cmd_cycle() {
   local sub=${1:-} s=${2:-}
   case "$sub" in
     plan)
+      load_env_if_present
       if [[ -z "$s" ]]; then
         for s in $(seq 0 $((SLOT_COUNT - 1))); do slot_plan "$s"; done
       else
         [[ "$s" =~ ^[0-3]$ ]] || die "usage: bench cycle plan [<0|1|2|3>]"
+        plan_check "$s"
         slot_plan "$s"
       fi;;
     start)
       load_env
       [[ "$s" =~ ^[0-3]$ ]] || die "usage: bench cycle start <0|1|2|3>"
+      ((s < SLOT_COUNT)) || die "slot $s is outside this run (BENCH_SLOT_COUNT=$SLOT_COUNT)"
+      plan_check "$s"
       cycle_start_guard "$s"
       local sd; sd=$(slots_dir); mkdir -p "$sd"
       local failures="$sd/slot-$s.failures.log" started line box role run cyc outname outdir touched=()
@@ -188,6 +192,8 @@ collect_box() {
   fetch_box "$box" /var/lib/bench/events.csv "$outdir/$outname.events.csv"
   fetch_box "$box" /var/lib/bench/install.json "$outdir/$outname.install.json"
   fetch_box "$box" /var/lib/bench/footprint.json "$outdir/$outname.footprint.json" 2>/dev/null || true
+  # Who was charged the filesystem's metadata writeback, tick by tick (collector/blockdev_trace.py).
+  fetch_box "$box" /var/lib/bench/blockdev.csv "$outdir/$outname.blockdev.csv" 2>/dev/null || true
   merge_meta "$BENCH_ROOT/agents/$agent/meta.json" "$outdir/$outname.install.json" "$sched" "$outdir/$outname.footprint.json" \
     > "$outdir/$outname.meta.json"
   rm -f "${outdir:?}/${outname:?}.install.json" "${outdir:?}/${outname:?}.footprint.json"

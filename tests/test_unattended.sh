@@ -57,6 +57,22 @@ check "halted wins over everything" "$(AUTO_NOW=12000 auto_decide)" "halted"
 rm -f "$d/data/test/auto/halted"; : > "$d/data/test/auto/done"
 check "done marker -> done" "$(AUTO_NOW=100 auto_decide)" "done"
 
+# --- a one-slot run with a plan file (the instrumented retest slot): rows come from the plan, and a
+# collected slot 0 is the end of the run, never "start 1"
+YEAR=one; SLOT_COUNT=1; mkdir -p "$d/data/one/slots" "$d/data/one/auto"
+printf 'box-1 monitorable 0\nbox-6 beszel 2\n' > "$d/data/one/slots/slot-0.plan"
+jq -n '{slot: 0, startedAt: 1000, boxes: [{box: "box-1", stop: 94900}, {box: "box-6", stop: 95000}]}' > "$d/data/one/slots/slot-0.json"
+check "one-slot run: measuring" "$(AUTO_NOW=5000 auto_decide)" "status1h 0"
+check "one-slot run: collect when due" "$(AUTO_NOW=95120 auto_decide)" "collect 0"
+mkdir -p "$d/data/one/cycle-1" "$d/data/one/cycle-3"
+echo x | gzip > "$d/data/one/cycle-1/monitorable.csv.gz"
+check "one-slot run: a plan row still missing -> not adopted" "$(AUTO_NOW=95120 auto_decide)" "collect 0"
+echo x | gzip > "$d/data/one/cycle-3/beszel.csv.gz"
+check "one-slot run: every plan row present -> adopt" "$(AUTO_NOW=95120 auto_decide)" "adopt 0"
+: > "$d/data/one/auto/slot-0.collected"
+check "one-slot run: collected -> done, no next slot" "$(AUTO_NOW=95200 auto_decide)" "done"
+YEAR="test"; SLOT_COUNT=4
+
 # --- a fresh run (data/<year>/ holds only run.json, no slots/): the tick says so and does nothing
 YEAR=fresh; mkdir -p "$d/data/fresh/auto"; echo '{}' > "$d/data/fresh/run.json"
 check "fresh run: no slots dir -> none" "$(AUTO_NOW=1000 auto_decide)" "none"

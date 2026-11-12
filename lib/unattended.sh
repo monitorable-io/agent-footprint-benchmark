@@ -398,11 +398,11 @@ cmd_auto() {
   local sub=${1:-}
   case "$sub" in
     tick) load_env; mkdir -p "$(auto_dir)"; auto_tick >> "$(auto_dir)/auto.log" 2>&1; cat "$(auto_dir)/STATUS" 2>/dev/null || true;;
-    decide) auto_decide;;
-    status) auto_show_status;;
+    decide) load_env_if_present; auto_decide;;
+    status) load_env_if_present; auto_show_status;;
     init) load_env; auto_init;;
-    resume) rm -f "$(auto_dir)/halted"; log "auto: resumed; the next tick does: $(auto_decide)";;
-    cron-line) auto_cron_line;;
+    resume) load_env_if_present; rm -f "$(auto_dir)/halted"; log "auto: resumed; the next tick does: $(auto_decide)";;
+    cron-line) load_env_if_present; auto_cron_line;;
     *) die "usage: bench auto init|tick|decide|status|resume|cron-line";;
   esac
 }

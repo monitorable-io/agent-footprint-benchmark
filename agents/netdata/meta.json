@@ -23,7 +23,7 @@
   "footnotes": [
     "ML anomaly detection stays at its default (on).",
     "kickstart's default channel is nightly; installed with --stable-channel so the version is a release readers can reproduce.",
-    "Anonymous telemetry and the daily updater timer stay at their defaults; the updater's unit is counted with the agent."
+    "Anonymous telemetry and the daily updater timer stay at their defaults. The updater's unit is matched with the agent's; a unit that lives for less than the 10-second sampling interval is counted only if a sample catches it."
   ],
   "sourceUrl": "https://learn.netdata.cloud/docs/netdata-agent/installation/linux"
 }

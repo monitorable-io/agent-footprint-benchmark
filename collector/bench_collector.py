@@ -4,6 +4,8 @@
 Reads the kernel's own accounting for each matched cgroup (cpu.stat, memory.*, io.stat,
 pids.current), PSS/RSS from /proc/<pid>/smaps_rollup over the processes of the cgroup and
 of every cgroup below it, and bytes in/out from nftables counters (collector/netcounters.py).
+With --blockdev-trace it also records how much filesystem-metadata writeback the kernel charged to
+each row (io_wbytes_blockdev) and to the whole box (box_wbytes_blockdev): collector/blockdev_trace.py.
 Restarts are detected by the cgroup directory's inode changing; the inode map is persisted
 next to the CSV so a restart that happens while the sampler itself restarts is still logged.
 """
@@ -22,7 +24,8 @@ SAFE_PATH = re.compile(r"[A-Za-z0-9_.@:-]+(/[A-Za-z0-9_.@:-]+)*")  # used with f
 
 HEADER = (
     "ts,cgroup,cgroup_ino,cpu_usage_usec,memory_current,memory_peak,anon,file,pss,rss,"
-    "io_rbytes,io_wbytes,pids,threads,net_out,net_in,box_load1,box_memavail_kb,box_steal_ticks"
+    "io_rbytes,io_wbytes,pids,threads,net_out,net_in,box_load1,box_memavail_kb,box_steal_ticks,"
+    "io_wbytes_blockdev,box_wbytes_blockdev"
 )
 UNIT_COLUMNS = HEADER.split(",")[3:16]
 
@@ -208,8 +211,9 @@ def box_stats(proc):
     return {"box_load1": load1, "box_memavail_kb": memavail, "box_steal_ticks": steal}
 
 
-def sample_structured(cg_root, proc, cgroups, ts, net):
-    """One tick: ({path: counters}, [csv rows]) with one row per cgroup, then one 'box' row."""
+def sample_structured(cg_root, proc, cgroups, ts, net, ledger=None):
+    """One tick: ({path: counters}, [csv rows]) with one row per cgroup, then one 'box' row. The last two
+    columns are empty without a ledger (no --blockdev-trace, or the tracer could not be armed)."""
     box = box_stats(proc)
     box_cols = [str(box["box_load1"]), str(box["box_memavail_kb"]), str(box["box_steal_ticks"])]
     structured = {}
@@ -223,8 +227,10 @@ def sample_structured(cg_root, proc, cgroups, ts, net):
         rows.append(",".join(
             [str(ts), path, str(ino), str(s["cpu_usage_usec"]), str(s["memory_current"]), str(s["memory_peak"]),
              str(s["anon"]), str(s["file"]), str(s["pss"]), str(s["rss"]), str(s["io_rbytes"]),
-             str(s["io_wbytes"]), str(s["pids"]), str(threads), str(out_b), str(in_b)] + box_cols))
-    rows.append(",".join([str(ts), "box", ""] + [""] * len(UNIT_COLUMNS) + box_cols))
+             str(s["io_wbytes"]), str(s["pids"]), str(threads), str(out_b), str(in_b)] + box_cols
+            + ["" if ledger is None else str(ledger.row(path)), ""]))
+    rows.append(",".join([str(ts), "box", ""] + [""] * len(UNIT_COLUMNS) + box_cols
+                         + ["", "" if ledger is None else str(ledger.total)]))
     return structured, rows
 
 
@@ -244,6 +250,11 @@ def main(argv=None):
     ap.add_argument("--netcounters", action="store_true", help="read nft byte counters per cgroup (collector/netcounters.py)")
     ap.add_argument("--net-ports", default="", help="comma-separated TCP ports: count bytes by port instead of by cgroup "
                     "(socket-activated or polled rows); attributed to the row's first cgroup")
+    ap.add_argument("--blockdev-trace", action="store_true", help="record the filesystem-metadata writeback charged "
+                    "to each row and to the box (collector/blockdev_trace.py)")
+    ap.add_argument("--tracefs", default="/sys/kernel/tracing")
+    ap.add_argument("--blockdev-ino", type=int, default=0, help="the block-device inode to watch (default: the root filesystem's)")
+    ap.add_argument("--blockdev-out", default="/var/lib/bench/blockdev.csv", help="who was charged, per tick with writeback")
     ap.add_argument("--once", action="store_true", help="one tick, then exit (for tests)")
     ap.add_argument("--ticks", type=int, default=0, help="stop after this many ticks (for tests); 0 = run forever")
     args = ap.parse_args(argv)
@@ -279,6 +290,28 @@ def main(argv=None):
     ev = csv.writer(events)
     ev.writerow([int(time.time()), "start", "", " ".join(args.globs)])
 
+    # Filesystem-metadata writeback: which cgroup the kernel charged it to. A box where the tracepoint
+    # cannot be armed is recorded and sampled without the two columns.
+    tracer = ledger = side = None
+    names = {}
+    if args.blockdev_trace:
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import blockdev_trace  # noqa: WPS433
+
+        ino = args.blockdev_ino or blockdev_trace.blockdev_ino(os.stat("/").st_dev)
+        try:
+            tracer = blockdev_trace.Tracer(args.tracefs, ino=ino)
+            tracer.arm()
+            ledger = blockdev_trace.Ledger()
+            new_side = not os.path.exists(args.blockdev_out) or os.path.getsize(args.blockdev_out) == 0
+            side = open(args.blockdev_out, "a", buffering=1)
+            if new_side:
+                side.write("ts,cgroup_ino,cgroup,bytes\n")
+            ev.writerow([int(time.time()), "blockdev_trace", "", f"ino={ino}"])
+        except OSError as e:
+            tracer = ledger = None
+            ev.writerow([int(time.time()), "blockdev_trace_error", "", str(e)[:200]])
+
     state_path = inode_state_path(args.out)
     saved = load_inode_state(state_path)
     # The previous process may have written this window already (a unit restart overlaps the two
@@ -306,7 +339,14 @@ def main(argv=None):
             first_path["value"] = next(iter(known), None)
             if args.netcounters:
                 snapshot = netcounters.read_all()
-            structured, rows = sample_structured(args.root, args.proc, known, ts, net)
+            if tracer is not None:
+                charged = tracer.poll()
+                ledger.add(charged, {path: blockdev_trace.cgroup_inodes(Path(args.root) / path) for path in known})
+                if any(ino not in names for ino in charged):
+                    names = blockdev_trace.cgroup_names(args.root)   # a walk only when a new owner shows up
+                for ino, nbytes in sorted(charged.items()):
+                    side.write(f"{ts},{ino},{names.get(ino, '')},{nbytes}\n")
+            structured, rows = sample_structured(args.root, args.proc, known, ts, net, ledger)
             cpu_now = {path: s["cpu_usage_usec"] for path, s in structured.items()}
             for path in counter_resets(last_cpu, cpu_now):
                 ev.writerow([ts, "restart", path, "cpu counter reset"])
@@ -329,6 +369,10 @@ def main(argv=None):
         ev.writerow([int(time.time()), "stop", "", ""])
         out.close()
         events.close()
+        if side is not None:
+            side.close()
+        if tracer is not None:
+            tracer.close()   # the instance stays armed: its buffer bridges a sampler restart
 
 
 if __name__ == "__main__":

@@ -289,3 +289,97 @@ class ReviewFixesTest(unittest.TestCase):
         out = self.root / "r.json"
         sm.main([str(self.root), "--out", str(out), "--md", str(self.root / "r.md"), "--harness-commit", "903c57c..ea882d1"])
         self.assertEqual(json.loads(out.read_text())["run"]["harnessCommit"], "903c57c..ea882d1")
+
+
+class MarkdownTest(unittest.TestCase):
+    """results.md is read on its own (review of the re-run's data PR): it must carry what qualifies a figure."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name) / "2026"
+        for k in range(3):
+            write_cycle(self.root, k, {"alpha": AGENTS["alpha"], "monitorable": AGENTS["monitorable"]})
+        (self.root / "run.json").write_text(json.dumps({"provider": "P", "notes": ["Docker bridge traffic is excluded."]}))
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def _line(self, md, name):
+        return next(ln for ln in md.splitlines() if ln.startswith(f"| {name}"))
+
+    def test_versions_that_differ_between_cycles_are_all_shown(self):
+        md = sm.to_markdown(sm.summarize(self.root, harness_commit="x"))
+        self.assertIn("v1.0, v1.1, v1.2", self._line(md, "alpha"))
+
+    def test_one_version_is_shown_once(self):
+        res = sm.summarize(self.root, harness_commit="x")
+        for r in res["rows"]:
+            r["versions"] = ["v2.0", "v2.0", "v2.0"]
+            r["version"] = "v2.0"
+        line = self._line(sm.to_markdown(res), "alpha")
+        self.assertEqual(line.count("v2.0"), 1)
+
+    def test_footnotes_and_run_notes_are_printed_under_the_table(self):
+        md = sm.to_markdown(sm.summarize(self.root, harness_commit="x"))
+        table_end = max(i for i, ln in enumerate(md.splitlines()) if ln.startswith("|"))
+        tail = "\n".join(md.splitlines()[table_end + 1:])
+        self.assertIn("alpha note", tail)
+        self.assertIn("Docker bridge traffic is excluded.", tail)
+        self.assertIn("†", self._line(md, "alpha"))            # a row with notes is marked in the table
+        self.assertNotIn("†", self._line(md, "Monitorable agent"))   # a row without is not
+
+
+class MetadataWritebackTest(unittest.TestCase):
+    """Filesystem-metadata writeback charged to the unit's cgroup (collector/blockdev_trace.py) is not the
+    agent's disk writes: the kernel charges that box-wide stream to whichever cgroup owns the block
+    device's inode. Where the collector recorded it, it is taken out; the charge is published as well."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name) / "2026"
+        write_cycle(self.root, 0, {"alpha": AGENTS["alpha"]}, control=False)   # 1000 B/s charged to the unit
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def _add_column(self, per_second):
+        gz = self.root / "cycle-1" / "alpha.csv.gz"
+        lines = gzip.decompress(gz.read_bytes()).decode().splitlines()
+        out = [lines[0] + ",io_wbytes_blockdev,box_wbytes_blockdev"]
+        for ln in lines[1:]:
+            ts, cgroup = ln.split(",")[:2]
+            meta = (int(ts) - T0) * per_second
+            out.append(ln + (f",,{meta}" if cgroup == "box" else f",{meta},"))
+        gz.write_bytes(gzip.compress("\n".join(out).encode() + b"\n"))
+
+    def _alpha(self):
+        return sm.summarize(self.root, harness_commit="x")["rows"][0]
+
+    def test_metadata_charged_to_the_unit_is_taken_out_of_its_disk_writes(self):
+        self._add_column(400)
+        row = self._alpha()
+        v = {k: row["values"][k]["cycles"][0] for k in ("disk_written_mb_24h", "disk_charged_mb_24h", "disk_metadata_charged_mb_24h")}
+        self.assertAlmostEqual(v["disk_charged_mb_24h"], 86.4, places=1)
+        self.assertAlmostEqual(v["disk_metadata_charged_mb_24h"], 34.56, places=1)
+        self.assertAlmostEqual(v["disk_written_mb_24h"], 51.84, places=1)
+        note = next(n for n in row["footnotes"] if "filesystem-metadata" in n)
+        self.assertIn("Run 1 (box-0)", note)
+        self.assertIn("34.6 MB", note)
+
+    def test_no_note_when_the_unit_was_never_charged_any(self):
+        self._add_column(0)
+        row = self._alpha()
+        self.assertAlmostEqual(row["values"]["disk_written_mb_24h"]["cycles"][0], 86.4, places=1)
+        self.assertEqual(row["values"]["disk_metadata_charged_mb_24h"]["cycles"], [0.0])
+        self.assertFalse(any("filesystem-metadata" in n for n in row["footnotes"]))
+
+    def test_never_negative(self):
+        self._add_column(1500)   # the tracer counts whole pages: it can exceed the charge by a little
+        self.assertEqual(self._alpha()["values"]["disk_written_mb_24h"]["cycles"][0], 0.0)
+
+    def test_samples_without_the_column_publish_the_charge(self):
+        row = self._alpha()   # the 2026 runs before the tracer existed
+        self.assertAlmostEqual(row["values"]["disk_written_mb_24h"]["cycles"][0], 86.4, places=1)
+        self.assertAlmostEqual(row["values"]["disk_charged_mb_24h"]["cycles"][0], 86.4, places=1)
+        self.assertEqual(row["values"]["disk_metadata_charged_mb_24h"]["cycles"], [])
+        self.assertIsNone(row["values"]["disk_metadata_charged_mb_24h"]["median"])
