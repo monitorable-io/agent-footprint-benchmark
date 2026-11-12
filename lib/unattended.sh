@@ -229,6 +229,23 @@ auto_hubcheck() {
   printf 'hubs: %s' "$(printf '%s; ' "${res[@]}" | sed 's/; $//')"
 }
 
+# auto_tracer_summary STATUS_OUTPUT LABEL -> "metadata tracer: N/N boxes counting", or ATTENTION with the
+# boxes whose collector is not counting filesystem-metadata writeback: `meta=` empty means the tracer is
+# not armed; 0 means armed and nothing seen, which an hour in is wrong (every box writes megabytes of
+# it per hour) and right after a start is normal.
+auto_tracer_summary() {
+  local out=$1 label=$2 line box meta total=0 bad=()
+  while read -r line; do
+    [[ "$line" == *" rows="* ]] || continue
+    total=$((total + 1))
+    box=$(awk '{print $2}' <<<"$line")
+    meta=$(grep -oE ' meta=[0-9]*' <<<"$line" | cut -d= -f2 || true)
+    if [[ -z "$meta" ]] || { [[ "$meta" == 0 ]] && [[ "$label" == "+1 h" ]]; }; then bad+=("$box"); fi
+  done <<<"$out"
+  if ((${#bad[@]})); then printf 'ATTENTION metadata tracer: not counting on %s' "${bad[*]}"
+  else printf 'metadata tracer: %s/%s boxes counting' "$total" "$total"; fi
+}
+
 # auto_status SLOT LABEL -> a one-line summary on stdout; the full output goes to the log (stderr).
 # LABEL "+1 h" also writes the marker and the run-log line.
 auto_status() {
@@ -239,7 +256,7 @@ auto_status() {
   n=$(auto_rows "$s" | wc -l)
   active=$(grep -c ' active rows=' <<<"$out" || true)
   hub=$(auto_hubcheck "$s")
-  summary="$active/$n rows active; $(auto_sink_summary "$s" "$(grep '^sink:' <<<"$out" | head -1 || true)"); $hub"
+  summary="$active/$n rows active; $(auto_tracer_summary "$out" "$label"); $(auto_sink_summary "$s" "$(grep '^sink:' <<<"$out" | head -1 || true)"); $hub"
   if [[ "$label" == "+1 h" ]]; then
     date -u +%FT%TZ > "$(auto_dir)/slot-$s.status-1h"
     runlog_after "\`./bench cycle start $s\` at:" "- [x] \`./bench cycle status $s\` at $(auto_utc "$t") (+1 h, unattended runner): $summary"

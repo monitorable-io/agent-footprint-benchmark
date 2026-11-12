@@ -314,7 +314,7 @@ def to_markdown(results):
         lines += ["", "## Row notes (†)"]
         for r in rows:
             if r.get("footnotes"):
-                lines += ["", f"**{r['name']}**", ""] + [f"- {n}" for n in r["footnotes"]]
+                lines += ["", f"**{r['name']}**", ""] + [f"- {n}" for n in dict.fromkeys(r["footnotes"])]
     return "\n".join(lines) + "\n"
 
 

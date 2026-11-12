@@ -294,10 +294,6 @@ class SamplerRestartTest(unittest.TestCase):
             self.assertEqual(ts, ["1000", "1010", "1010"])
 
 
-if __name__ == "__main__":
-    unittest.main()
-
-
 class BlockdevColumnsTest(unittest.TestCase):
     """The two columns that say how much filesystem-metadata writeback was charged to the row and to
     the whole box (collector/blockdev_trace.py)."""
@@ -311,6 +307,7 @@ class BlockdevColumnsTest(unittest.TestCase):
         ev.mkdir(parents=True)
         (ev / "enable").write_text("0\n")
         (ev / "filter").write_text("none\n")
+        (ev / "format").write_text('print fmt: "bdi %s: ino=%lu state=%s wrote=%lu cgroup_ino=%lu"\n')
         pipe = Path(d) / "tracefs" / "instances" / "bench" / "trace_pipe"
         pipe.write_text("")
         return Path(d) / "tracefs", pipe
@@ -352,3 +349,47 @@ class BlockdevColumnsTest(unittest.TestCase):
                                     "--blockdev-out", str(Path(d) / "blockdev.csv")])
             self.assertIn(",blockdev_trace_error,", ev.read_text())
             self.assertEqual(out.read_text().splitlines()[1].split(",")[19:], ["", ""])
+
+    def test_a_tracer_that_breaks_later_is_recorded_and_sampling_goes_on(self):
+        # Review of PR #10: any error in the tracer's tick used to leave main() before the rows were
+        # written, and Restart=always turned that into a crash loop with a header-only CSV.
+        from unittest import mock
+        import blockdev_trace as bt
+        with tempfile.TemporaryDirectory() as d:
+            tracefs, pipe = self._tracefs(d)
+            with mock.patch.object(bt.Tracer, "poll", side_effect=OSError(19, "No such device")):
+                out, ev = self._run(d, ["--blockdev-trace", "--tracefs", str(tracefs), "--blockdev-ino", "8388609",
+                                        "--blockdev-out", str(Path(d) / "blockdev.csv")])
+            lines = out.read_text().splitlines()
+            self.assertEqual(len(lines), 3)                       # header + unit row + box row
+            self.assertEqual(lines[1].split(",")[19:], ["", ""])
+            self.assertIn(",blockdev_trace_error,", ev.read_text())
+
+    def test_lines_the_tracer_cannot_read_are_recorded(self):
+        with tempfile.TemporaryDirectory() as d:
+            tracefs, pipe = self._tracefs(d)
+            pipe.write_text("CPU:0 [LOST 3 EVENTS]\n")
+            out, ev = self._run(d, ["--blockdev-trace", "--tracefs", str(tracefs), "--blockdev-ino", "8388609",
+                                    "--blockdev-out", str(Path(d) / "blockdev.csv")])
+            self.assertIn(",blockdev_trace_unparsed,,1 line(s); last: CPU:0 [LOST 3 EVENTS]", ev.read_text())
+
+    def test_a_new_sampler_process_continues_the_counts(self):
+        # counter_total() reads a value that restarts from zero as a new delta only if it is lower than
+        # the last one: a restarted count that had already passed the old value would lose the old part.
+        with tempfile.TemporaryDirectory() as d:
+            tracefs, pipe = self._tracefs(d)
+            ino = os.stat(CG / self.NETDATA).st_ino
+            args = ["--blockdev-trace", "--tracefs", str(tracefs), "--blockdev-ino", "8388609", "--blockdev-out", str(Path(d) / "blockdev.csv")]
+            pipe.write_text(self.LINE.format(wrote=5, cg=ino) + self.LINE.format(wrote=1, cg=1))
+            self._run(d, args)
+            pipe.write_text(self.LINE.format(wrote=2, cg=ino))   # the real pipe hands each event out once
+            from unittest import mock
+            with mock.patch.object(bc.time, "time", lambda: 4102444800.0):   # a later 10-second window
+                out, _ev = self._run(d, args)
+            lines = out.read_text().splitlines()
+            self.assertEqual(lines[-2].split(",")[19:], [str(7 * 4096), ""])
+            self.assertEqual(lines[-1].split(",")[19:], ["", str(8 * 4096)])
+
+
+if __name__ == "__main__":
+    unittest.main()

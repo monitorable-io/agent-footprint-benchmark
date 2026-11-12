@@ -20,12 +20,17 @@ LINE = ("   kworker/u8:3-27804   [001] ..... 4431.350273: writeback_single_inode
         "state=I_SYNC|I_SYNC_QUEUED dirtied_when=4431350273 age=129 index=0 to_write=1024 wrote={wrote} cgroup_ino={cg}\n")
 
 
+FORMAT = ('name: writeback_single_inode\nprint fmt: "bdi %s: ino=%lu state=%s dirtied_when=%lu age=%lu index=%lu '
+          'to_write=%ld wrote=%lu cgroup_ino=%lu", REC->name\n')
+
+
 def fake_tracefs(d):
     """A tracefs with the bench instance already there (the real one creates the tree on mkdir)."""
     ev = Path(d) / "instances" / "bench" / "events" / "writeback" / "writeback_single_inode"
     ev.mkdir(parents=True)
     (ev / "enable").write_text("0\n")
     (ev / "filter").write_text("none\n")
+    (ev / "format").write_text(FORMAT)
     pipe = Path(d) / "instances" / "bench" / "trace_pipe"
     pipe.write_text("")
     return ev, pipe
@@ -86,6 +91,22 @@ class TracerTest(unittest.TestCase):
             f.write(LINE.format(wrote=9, cg=886).replace("ino=8388609", "ino=14465"))
         self.assertEqual(self.t.poll(), {})
 
+    def test_arm_refuses_a_kernel_whose_event_lacks_the_fields(self):
+        # A tracer that arms and then parses nothing would publish the full charge with no warning.
+        (self.ev / "format").write_text('print fmt: "bdi %s: ino=%lu wrote=%lu", REC->name\n')
+        with self.assertRaises(OSError) as cm:
+            self.t.arm()
+        self.assertIn("cgroup_ino=", str(cm.exception))
+        self.assertEqual((self.ev / "enable").read_text().strip(), "0")
+
+    def test_poll_counts_lines_it_cannot_read(self):
+        self.t.arm()
+        with open(self.pipe, "a") as f:
+            f.write("CPU:1 [LOST 12 EVENTS]\n" + LINE.format(wrote=1, cg=886) + "garbage\n")
+        self.assertEqual(self.t.poll(), {886: 4096})
+        self.assertEqual(self.t.unparsed, 2)
+        self.assertEqual(self.t.last_unparsed, "garbage")
+
     def test_arm_fails_loudly_without_the_event(self):
         with tempfile.TemporaryDirectory() as d:
             with self.assertRaises(OSError):
@@ -110,6 +131,12 @@ class LedgerTest(unittest.TestCase):
         led.add({}, {"system.slice/s.slice": {10, 11}})          # 11 = a transient child, seen once
         led.add({11: 4096}, {"system.slice/s.slice": {10}})       # gone by the time its event is read
         self.assertEqual(led.row("system.slice/s.slice"), 4096)
+
+    def test_seed_continues_the_previous_sampler_process(self):
+        led = bt.Ledger()
+        led.seed({"a": 8192}, 20480)
+        led.add({10: 4096}, {"a": {10}})
+        self.assertEqual((led.row("a"), led.total), (12288, 24576))
 
     def test_an_inode_seen_under_another_row_moves(self):
         led = bt.Ledger()

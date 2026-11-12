@@ -173,6 +173,32 @@ def last_written_ts(csv_path):
     return None
 
 
+def last_blockdev_values(csv_path):
+    """({cgroup: io_wbytes_blockdev}, box_wbytes_blockdev) of the last tick in the CSV; ({}, 0) if none.
+    A new sampler process continues these counts instead of restarting them at zero."""
+    try:
+        with open(csv_path, "rb") as f:
+            f.seek(0, os.SEEK_END)
+            f.seek(max(0, f.tell() - 65536))
+            lines = f.read().decode("utf-8", "replace").split("\n")[:-1]
+    except OSError:
+        return {}, 0
+    rows, total, last = {}, 0, None
+    for line in reversed(lines):
+        cells = line.split(",")
+        if len(cells) < 21 or not cells[0].isdigit():
+            continue
+        if last is None:
+            last = cells[0]
+        if cells[0] != last:
+            break
+        if cells[1] == "box":
+            total = int(cells[20]) if cells[20].isdigit() else 0
+        elif cells[19].isdigit():
+            rows[cells[1]] = int(cells[19])
+    return rows, total
+
+
 def read_pss_rss(proc, pids):
     """(pss_kb, rss_kb, threads) summed over pids; a pid that vanished mid-read is skipped."""
     pss = rss = threads = 0
@@ -303,6 +329,7 @@ def main(argv=None):
             tracer = blockdev_trace.Tracer(args.tracefs, ino=ino)
             tracer.arm()
             ledger = blockdev_trace.Ledger()
+            ledger.seed(*last_blockdev_values(args.out))
             new_side = not os.path.exists(args.blockdev_out) or os.path.getsize(args.blockdev_out) == 0
             side = open(args.blockdev_out, "a", buffering=1)
             if new_side:
@@ -312,6 +339,7 @@ def main(argv=None):
             tracer = ledger = None
             ev.writerow([int(time.time()), "blockdev_trace_error", "", str(e)[:200]])
 
+    unparsed_seen = 0
     state_path = inode_state_path(args.out)
     saved = load_inode_state(state_path)
     # The previous process may have written this window already (a unit restart overlaps the two
@@ -340,12 +368,22 @@ def main(argv=None):
             if args.netcounters:
                 snapshot = netcounters.read_all()
             if tracer is not None:
-                charged = tracer.poll()
-                ledger.add(charged, {path: blockdev_trace.cgroup_inodes(Path(args.root) / path) for path in known})
-                if any(ino not in names for ino in charged):
-                    names = blockdev_trace.cgroup_names(args.root)   # a walk only when a new owner shows up
-                for ino, nbytes in sorted(charged.items()):
-                    side.write(f"{ts},{ino},{names.get(ino, '')},{nbytes}\n")
+                # Whatever goes wrong here is recorded and ends the tracing, never the sampling: the
+                # rows of this tick and of every later one are written without the two columns.
+                try:
+                    charged = tracer.poll()
+                    ledger.add(charged, {path: blockdev_trace.cgroup_inodes(Path(args.root) / path) for path in known})
+                    if any(ino not in names for ino in charged):
+                        names = blockdev_trace.cgroup_names(args.root)   # a walk only when a new owner shows up
+                    for ino, nbytes in sorted(charged.items()):
+                        side.write(f"{ts},{ino},{names.get(ino, '')},{nbytes}\n")
+                    if tracer.unparsed > unparsed_seen:
+                        unparsed_seen = tracer.unparsed
+                        ev.writerow([ts, "blockdev_trace_unparsed", "", f"{unparsed_seen} line(s); last: {tracer.last_unparsed[:160]}"])
+                except Exception as e:  # noqa: BLE001
+                    ev.writerow([ts, "blockdev_trace_error", "", str(e)[:200]])
+                    tracer.close()
+                    tracer = ledger = None
             structured, rows = sample_structured(args.root, args.proc, known, ts, net, ledger)
             cpu_now = {path: s["cpu_usage_usec"] for path, s in structured.items()}
             for path in counter_resets(last_cpu, cpu_now):

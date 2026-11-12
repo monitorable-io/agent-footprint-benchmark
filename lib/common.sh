@@ -29,14 +29,21 @@ load_env() {
   set +a
   # bench.env may name the run it is set up for: YEAR (the data root, read where it is used) and the
   # number of slots, which lib/rotation.sh fixed when it was sourced.
-  # shellcheck disable=SC2034
-  [[ -z "${BENCH_SLOT_COUNT:-}" ]] || SLOT_COUNT=$BENCH_SLOT_COUNT
+  if [[ -n "${BENCH_SLOT_COUNT:-}" ]]; then
+    [[ "$BENCH_SLOT_COUNT" =~ ^[1-4]$ ]] || die "BENCH_SLOT_COUNT must be 1..4 (is '$BENCH_SLOT_COUNT')"
+    # shellcheck disable=SC2034
+    SLOT_COUNT=$BENCH_SLOT_COUNT
+  fi
 }
 
 # load_env_if_present: for the read-only subcommands, which must show the run bench.env names but also
-# work on a checkout without one.
+# work on a checkout without one. bench.env wins over a YEAR or BENCH_SLOT_COUNT in the environment.
 load_env_if_present() {
   [[ -f "$BENCH_ENV" ]] || return 0
+  if [[ "$(stat -c %a "$BENCH_ENV")" != "600" ]]; then
+    log "bench.env is not mode 0600: not read (YEAR and BENCH_SLOT_COUNT keep their defaults)"
+    return 0
+  fi
   load_env
 }
 

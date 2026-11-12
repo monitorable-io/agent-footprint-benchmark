@@ -20,6 +20,7 @@ from pathlib import Path
 
 EVENT = "events/writeback/writeback_single_inode"
 INSTANCE = "bench"
+FIELDS = ("ino=", "wrote=", "cgroup_ino=")   # what parse_line needs from the event's print format
 LINE = re.compile(r"writeback_single_inode: .*?\bino=(\d+) .*?\bwrote=(\d+) cgroup_ino=(\d+)")
 
 
@@ -38,7 +39,12 @@ class Tracer:
     """The tracepoint, armed in /sys/kernel/tracing/instances/bench and read through its trace_pipe.
 
     The instance is left enabled when the sampler stops: its ring buffer keeps the events of the gap
-    and the next sampler process reads them, so a sampler restart loses nothing.
+    and the next sampler process reads them and continues the previous counts (Ledger.seed).
+
+    What it does not see: writeback that does not go through the flusher's per-inode pass (a sync of
+    the block device, a journal checkpoint done in a process's own context). Those bytes stay in the
+    unit's figure, so the correction can be too small, never too large by that route; and since the
+    event counts whole pages per pass it can read a little above the kernel's charge.
     """
 
     def __init__(self, tracefs="/sys/kernel/tracing", ino=0, page_size=None):
@@ -47,11 +53,18 @@ class Tracer:
         self.page = page_size or os.sysconf("SC_PAGE_SIZE")
         self.fd = None
         self.partial = b""
+        self.unparsed = 0          # lines that were not an event of ours (lost-event notices, a changed format)
+        self.last_unparsed = ""
 
     def arm(self):
         os.makedirs(self.dir, exist_ok=True)   # tracefs builds the instance's tree on mkdir
         event = self.dir / EVENT
         (event / "enable").write_text("0\n")
+        # A kernel whose event prints other fields would arm, parse nothing and report zero for every
+        # row: the full charge would be published with no warning. Refuse instead.
+        missing = [f for f in FIELDS if f not in (event / "format").read_text()]
+        if missing:
+            raise OSError(f"{EVENT}: the event's format has no {' '.join(missing)}")
         try:
             (event / "filter").write_text(f"ino == {self.ino}\n")
         except OSError:
@@ -76,8 +89,13 @@ class Tracer:
         self.partial = lines.pop()             # empty, or a line the kernel has not finished
         out = {}
         for raw in lines:
-            parsed = parse_line(raw.decode("ascii", "replace"))
-            if parsed and parsed[0] == self.ino and parsed[1] > 0:
+            text = raw.decode("ascii", "replace").strip()
+            parsed = parse_line(text)
+            if parsed is None:
+                if text and not text.startswith("#"):
+                    self.unparsed += 1
+                    self.last_unparsed = text
+            elif parsed[0] == self.ino and parsed[1] > 0:
                 out[parsed[2]] = out.get(parsed[2], 0) + parsed[1] * self.page
         return out
 
@@ -94,6 +112,11 @@ class Ledger:
         self.rows = {}
         self.owner = {}    # cgroup inode -> row, remembered after a transient child cgroup is gone
         self.total = 0
+
+    def seed(self, rows, total):
+        """Continue from the last values the previous sampler process wrote."""
+        self.rows = dict(rows)
+        self.total = total
 
     def add(self, charged, row_inodes):
         """charged: Tracer.poll(); row_inodes: {row: inodes of its cgroup and of every cgroup below}."""
