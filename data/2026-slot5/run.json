@@ -33,6 +33,7 @@
       "7.0.0-30-generic"
     ]
   },
+  "notice": "One slot, measured to replace eight runs of the 2026 run: not a comparison table. Beszel, Monitorable and the control are single runs here, and the three runs of each Netdata row were simultaneous. The published table is data/2026/results.md.",
   "notes": [
     "Ubuntu's apt-daily and apt-daily-upgrade timers were masked on every box at provisioning (the pilot's unattended-upgrades restarted dynamically linked agents mid-cycle).",
     "Network bytes count only the box's physical interfaces; Docker bridge traffic is excluded.",

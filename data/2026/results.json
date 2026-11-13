@@ -27,10 +27,10 @@
       "Ubuntu's apt-daily and apt-daily-upgrade timers were masked on every box at provisioning (the pilot's unattended-upgrades restarted dynamically linked agents mid-cycle).",
       "Network bytes count only the box's physical interfaces; Docker bridge traffic is excluded.",
       "Processes are counted in the agent's cgroup and its child cgroups.",
-      "Disk written excludes the filesystem-metadata writeback the kernel charged to the unit's cgroup, in the eight runs whose collector recorded it: Monitorable run 1, Beszel run 3 and the three runs of each Netdata row, measured again on 2026-11-12/13 (docs/RUN-2026-slot5.md). ext4 writes metadata through the block device's inode and the kernel charges one inode's writeback to a single cgroup, whichever owns it. The charge as the kernel reported it is published next to it. The other 28 runs have no such record and publish the kernel's charge.",
-      "Those eight runs replace the runs first measured in their place, under a rule fixed before the retest: every run measured again replaces the run it stands for, whatever it shows. The replaced runs are in data/2026/superseded/.",
+      "Disk written counts data writes. Filesystem metadata is written through the block device's inode, and the kernel charges all writeback of one inode to a single cgroup, whichever owns it, so it is not counted for any row, including the metadata an agent's own file activity causes. In the eight runs whose collector recorded it (Monitorable run 1, Beszel run 3 and the three runs of each Netdata row, measured again on 2026-11-12/13; docs/RUN-2026-slot5.md) the metadata charged to the unit's cgroup is taken out and the charge as the kernel reported it is published as well (disk_charged_mb_24h). The other 28 runs have no such record and publish the kernel's charge; docs/RUN-2026-slot5.md says why they are taken not to contain that stream.",
+      "Those eight runs replace the runs first measured in their place, under a rule fixed before the retest: every run measured again replaces the run it stands for, whatever it shows. The replaced runs are in data/2026/superseded/. A cycle therefore holds runs of different days: each row's `runs` in results.json gives the box and the dates of every run and whether it has the metadata record.",
       "CPU under load is lower than idle CPU in every row, the control included, and no box recorded steal time; the cause is not established.",
-      "Box-0 and box-6 are on a different host type from the other seven boxes (their virtual CPUs report 2,495 MHz, the others 2,445 MHz). An agent measured there used 1.3 to 1.5 times the idle CPU time it used on box-3; under load the difference is smaller for three of the four agents measured on both. Beszel, HetrixTools, Pulse and Glances have two of their three runs on those two boxes, so their idle CPU median is one of those runs; every other row was measured on the other seven boxes, except Netdata's run 1."
+      "Idle CPU depends on the box. On box-0 and box-6 an agent used 1.3 to 1.5 times the idle CPU time it used on box-3; under load the difference is smaller for three of the four agents measured on all three. Beszel, HetrixTools, Pulse and Glances have two of their three runs on those two boxes, so their idle CPU median is one of those runs (each row's notes give its box-3 figure); every other row was measured on the other seven boxes, except Netdata's run 1. The two boxes' virtual CPUs report 2,495 MHz and the others' 2,445 MHz (read on 2026-11-13, docs/evidence/2026-slot5/), so they are probably on another host type; the cause is not established."
     ]
   },
   "metrics": [
@@ -172,7 +172,31 @@
       "us": false,
       "footnotes": [
         "This box has no cron, so the vendor installer's own systemd path runs: a minutely timer starting a transient unit per run. Those runs are placed in a persistent slice (one word added to the vendor launcher) so the kernel's accounting for them survives each run. The timer's launcher unit is matched too; a unit that lives for less than the 10-second sampling interval is counted only as far as the samples catch it.",
-        "The CPU figure is 12.6 to 17.4 % of one vCPU in the three runs, and the box's load average agrees: its idle median is 0.22 to 0.30 on this row's boxes against 0.05 to 0.12 on every other box."
+        "The CPU figure is 12.6 to 17.4 % of one vCPU in the three runs, and the box's load average agrees: its idle median is 0.22 to 0.30 on this row's boxes against 0.05 to 0.13 on every other box.",
+        "Idle CPU depends on the box. This row's runs on box-0 and box-6 show 17.36 and 17.05 % of one vCPU and its run on box-3 12.63 %; each of the four rows measured on these three boxes shows 1.3 to 1.5 times the idle CPU time on box-0 and box-6, and under load this row's runs on box-0, box-3 and box-6 are 13.04, 10.90 and 12.86 %. The published median (17.05 %) is therefore a box-0 or box-6 figure, while every other row was measured on boxes that idle like box-3 (Netdata's run 1 excepted). Why the two boxes differ is not established (`docs/RUN-2026-slot5.md`, \"Deviations\")."
+      ],
+      "runs": [
+        {
+          "cycle": 1,
+          "box": "box-0",
+          "start": 1794178759,
+          "end": 1794268759,
+          "metadataRecord": false
+        },
+        {
+          "cycle": 2,
+          "box": "box-3",
+          "start": 1794270979,
+          "end": 1794360979,
+          "metadataRecord": false
+        },
+        {
+          "cycle": 3,
+          "box": "box-6",
+          "start": 1794363271,
+          "end": 1794453271,
+          "metadataRecord": false
+        }
       ],
       "values": {
         "pss_idle_median_mb": {
@@ -344,8 +368,32 @@
       "intervalSeconds": 60,
       "us": false,
       "footnotes": [
-        "The memory peak (118 MB) is reached before the first sample, within seconds of the install: the cgroup's high-water mark is already 117 MB there while it holds 8 MB, and it holds about 8 MB for the rest of the run.",
+        "The memory peak (118 MB) is not only an install-time figure. The cgroup's high-water mark is already 117 MB at the first sample, seconds after the install, and its memory then returns to 101 to 118 MB for one 10-second sample every 61 minutes: 24 such samples in each of runs 1 and 3, with a PSS of 116 to 132 MB in them, and none caught in run 2, as can happen with a spike shorter than the sampling interval. Between them the cgroup holds about 8 MB, which is what the idle median shows.",
+        "Idle CPU depends on the box. This row's runs on box-0 and box-6 show 0.17 and 0.19 % of one vCPU and its run on box-3 0.12 %; each of the four rows measured on these three boxes shows 1.3 to 1.5 times the idle CPU time on box-0 and box-6, and under load this row's runs on box-0, box-3 and box-6 are 0.16, 0.11 and 0.17 %. The published median (0.17 %) is therefore a box-0 or box-6 figure, while every other row was measured on boxes that idle like box-3 (Netdata's run 1 excepted). Why the two boxes differ is not established (`docs/RUN-2026-slot5.md`, \"Deviations\").",
         "Run 3 (box-6) was measured again on 2026-11-12/13, on the same box, with a collector that records which cgroup the kernel charges for the box's filesystem-metadata writeback; it replaces the run of 2026-11-10 (`data/2026/superseded/cycle-3/`). That run was charged 16.6 MB of disk writes in its first seven hours; this one was charged 4 KB in 25 hours, while the box's metadata writeback (150 MB over the run) was charged to other cgroups throughout. `docs/RUN-2026-slot5.md` has the cause and the rule under which the run was replaced."
+      ],
+      "runs": [
+        {
+          "cycle": 1,
+          "box": "box-0",
+          "start": 1794086972,
+          "end": 1794176972,
+          "metadataRecord": false
+        },
+        {
+          "cycle": 2,
+          "box": "box-3",
+          "start": 1794179152,
+          "end": 1794269152,
+          "metadataRecord": false
+        },
+        {
+          "cycle": 3,
+          "box": "box-6",
+          "start": 1794506945,
+          "end": 1794596945,
+          "metadataRecord": true
+        }
       ],
       "values": {
         "pss_idle_median_mb": {
@@ -522,6 +570,29 @@
       "footnotes": [
         "Network bytes are counted by TCP port (the listening socket is not in the service's cgroup under socket activation, and polled traffic is what this row sends)."
       ],
+      "runs": [
+        {
+          "cycle": 1,
+          "box": "box-4",
+          "start": 1794087563,
+          "end": 1794177563,
+          "metadataRecord": false
+        },
+        {
+          "cycle": 2,
+          "box": "box-7",
+          "start": 1794179793,
+          "end": 1794269793,
+          "metadataRecord": false
+        },
+        {
+          "cycle": 3,
+          "box": "box-1",
+          "start": 1794362537,
+          "end": 1794452537,
+          "metadataRecord": false
+        }
+      ],
       "values": {
         "pss_idle_median_mb": {
           "median": 24.465408,
@@ -696,6 +767,29 @@
         "The pilot run measured v1.5.0, which wrote 115 MB per 24 h to its on-disk export queue. v1.7.0 keeps a batch in memory for up to 15 s and writes it to disk only if it is still undelivered; the re-run was scheduled after that release, so that this row, like every other, is the agent's current release.",
         "Run 3 (box-7): the 0.3 MB are the agent's export queue. A batch that is not delivered within 15 s is written to disk; that happened seven times between 16:24 and 21:16 UTC on 2026-11-11, while our own ingest endpoint was slow or failing. A run in which every batch is delivered in time writes nothing (runs 1 and 2)."
       ],
+      "runs": [
+        {
+          "cycle": 1,
+          "box": "box-1",
+          "start": 1794506165,
+          "end": 1794596165,
+          "metadataRecord": true
+        },
+        {
+          "cycle": 2,
+          "box": "box-4",
+          "start": 1794271116,
+          "end": 1794361116,
+          "metadataRecord": false
+        },
+        {
+          "cycle": 3,
+          "box": "box-7",
+          "start": 1794363418,
+          "end": 1794453418,
+          "metadataRecord": false
+        }
+      ],
       "values": {
         "pss_idle_median_mb": {
           "median": 45.776896,
@@ -869,7 +963,31 @@
       "us": false,
       "footnotes": [
         "Auto-update stays at its default (on).",
-        "The agent talks to the Pulse server over the bed's private network (10.0.0.0/24) in plain HTTP: the agent refuses an http:// server URL unless the host is loopback or a private address, and the sink has no TLS hostname. The installer it fetches from the server is checksum-pinned."
+        "The agent talks to the Pulse server over the bed's private network (10.0.0.0/24) in plain HTTP: the agent refuses an http:// server URL unless the host is loopback or a private address, and the sink has no TLS hostname. The installer it fetches from the server is checksum-pinned.",
+        "Idle CPU depends on the box. This row's runs on box-0 and box-6 show 0.072 and 0.078 % of one vCPU and its run on box-3 0.053 %; each of the four rows measured on these three boxes shows 1.3 to 1.5 times the idle CPU time on box-0 and box-6, and under load this row's runs on box-0, box-3 and box-6 are 0.044, 0.041 and 0.045 %. The published median (0.072 %) is therefore a box-0 or box-6 figure, while every other row was measured on boxes that idle like box-3 (Netdata's run 1 excepted). Why the two boxes differ is not established (`docs/RUN-2026-slot5.md`, \"Deviations\")."
+      ],
+      "runs": [
+        {
+          "cycle": 1,
+          "box": "box-6",
+          "start": 1794087884,
+          "end": 1794177884,
+          "metadataRecord": false
+        },
+        {
+          "cycle": 2,
+          "box": "box-0",
+          "start": 1794270581,
+          "end": 1794360581,
+          "metadataRecord": false
+        },
+        {
+          "cycle": 3,
+          "box": "box-3",
+          "start": 1794362837,
+          "end": 1794452837,
+          "metadataRecord": false
+        }
       ],
       "values": {
         "pss_idle_median_mb": {
@@ -1041,7 +1159,30 @@
       "intervalSeconds": 60,
       "us": false,
       "footnotes": [
-        "The memory peak (129 MB) is mostly reached before the first sample, within seconds of the install: the cgroup's high-water mark is already 125 MB there while it holds 34 MB, and it holds about 35 MB for the rest of the run."
+        "The memory peak (129 MB) is not only an install-time figure. The cgroup's high-water mark is already 125 MB at the first sample, seconds after the install, while it holds 34 MB; later its memory rose again, to as much as 128 MB, in single samples 16 minutes apart: 12 samples between 21.9 and 24.8 hours after the install in run 2 and 14 between 17.9 and 21.6 hours in run 3 (samples above 1.3 times the run's median), none in run 1. Otherwise it holds about 35 MB, which is what the idle median shows."
+      ],
+      "runs": [
+        {
+          "cycle": 1,
+          "box": "box-8",
+          "start": 1794088170,
+          "end": 1794178170,
+          "metadataRecord": false
+        },
+        {
+          "cycle": 2,
+          "box": "box-2",
+          "start": 1794270851,
+          "end": 1794360851,
+          "metadataRecord": false
+        },
+        {
+          "cycle": 3,
+          "box": "box-5",
+          "start": 1794363122,
+          "end": 1794453122,
+          "metadataRecord": false
+        }
       ],
       "values": {
         "pss_idle_median_mb": {
@@ -1216,7 +1357,31 @@
         "Glances ships no systemd unit; the harness adds a two-line one that runs `glances -w`.",
         "Runs as root (pipx install as root, the documented route); port 61208 is reachable from the sink only.",
         "Network bytes are counted by TCP port (61208); polled traffic is what this row sends.",
-        "The network figure is the harness's own poller fetching /api/4/all every 3 s (Glances' refresh period); each reply is about 137 KB, which is the 3.9 GB per 24 h. Scale it to your own polling interval."
+        "The network figure is the harness's own poller fetching /api/4/all every 3 s (Glances' refresh period); each reply is about 137 KB, which is the 3.9 GB per 24 h. Scale it to your own polling interval.",
+        "Idle CPU depends on the box. This row's runs on box-0 and box-6 show 2.49 and 2.38 % of one vCPU and its run on box-3 1.83 %; each of the four rows measured on these three boxes shows 1.3 to 1.5 times the idle CPU time on box-0 and box-6, and under load this row's runs on box-0, box-3 and box-6 are 1.73, 1.71 and 1.72 %. The published median (2.38 %) is therefore a box-0 or box-6 figure, while every other row was measured on boxes that idle like box-3 (Netdata's run 1 excepted). Why the two boxes differ is not established (`docs/RUN-2026-slot5.md`, \"Deviations\")."
+      ],
+      "runs": [
+        {
+          "cycle": 1,
+          "box": "box-3",
+          "start": 1794087418,
+          "end": 1794177418,
+          "metadataRecord": false
+        },
+        {
+          "cycle": 2,
+          "box": "box-6",
+          "start": 1794179635,
+          "end": 1794269635,
+          "metadataRecord": false
+        },
+        {
+          "cycle": 3,
+          "box": "box-0",
+          "start": 1794362388,
+          "end": 1794452388,
+          "metadataRecord": false
+        }
       ],
       "values": {
         "pss_idle_median_mb": {
@@ -1389,6 +1554,29 @@
       "us": false,
       "footnotes": [
         "Telegraf's stock config enables no output; its [[outputs.influxdb]] block is enabled with the sink's URL (two lines). Nothing else is changed."
+      ],
+      "runs": [
+        {
+          "cycle": 1,
+          "box": "box-5",
+          "start": 1794087710,
+          "end": 1794177710,
+          "metadataRecord": false
+        },
+        {
+          "cycle": 2,
+          "box": "box-8",
+          "start": 1794179939,
+          "end": 1794269939,
+          "metadataRecord": false
+        },
+        {
+          "cycle": 3,
+          "box": "box-2",
+          "start": 1794362680,
+          "end": 1794452680,
+          "metadataRecord": false
+        }
       ],
       "values": {
         "pss_idle_median_mb": {
@@ -1581,6 +1769,29 @@
         "The memory peak is the sum of each datadog-agent* unit's own high-water mark over the cycle; those peaks did not happen at the same moment, so the figure overstates the coincident peak.",
         "Run 3 (box-4) installed Agent 7.85.3; runs 1 and 2 installed 7.85.2. The vendor's documented install takes the release that is current at install time."
       ],
+      "runs": [
+        {
+          "cycle": 1,
+          "box": "box-7",
+          "start": 1794088044,
+          "end": 1794178044,
+          "metadataRecord": false
+        },
+        {
+          "cycle": 2,
+          "box": "box-1",
+          "start": 1794270727,
+          "end": 1794360727,
+          "metadataRecord": false
+        },
+        {
+          "cycle": 3,
+          "box": "box-4",
+          "start": 1794362986,
+          "end": 1794452986,
+          "metadataRecord": false
+        }
+      ],
       "values": {
         "pss_idle_median_mb": {
           "median": 195.680256,
@@ -1754,12 +1965,36 @@
         "ML anomaly detection stays at its default (on).",
         "kickstart's default channel is nightly; installed with --stable-channel so the version is a release readers can reproduce.",
         "Anonymous telemetry and the daily updater timer stay at their defaults. The updater's unit is matched with the agent's; a unit that lives for less than the 10-second sampling interval is counted only as far as the samples catch it.",
-        "The three runs of this row were measured at the same time, on 2026-11-12/13 on box-0, box-3 and box-5, with a collector that records how much of the box's filesystem-metadata writeback the kernel charged to the unit. They replace the runs of 2026-11-07 to 11-11 (`data/2026/superseded/`), which have no such record: their disk figures (254 to 270 MB per 24 h) include an unknown share of that stream. `docs/RUN-2026-slot5.md` has the cause and the rule under which the runs were replaced.",
-        "The disk figure is probably a little low. The record of the metadata writeback counts whole pages per pass and reads above what the kernel charges: by 11 % on a box where the two could be compared exactly, and by about 13 % (between 6 and 21 %) in the hours of the six Netdata runs. An hour's metadata is never taken out beyond that hour's charge, but this unit writes more than the stream in every hour, so the excess is not caught: about 10 to 14 MB per 24 h in each run.",
-        "Run 1 (box-0): idle CPU is 5.4 % of one vCPU against 3.8 % in runs 2 and 3; under load the three runs agree (2.9, 2.7 and 2.9 %). Box-0 and box-6 are on a different host type from the other seven boxes (their virtual CPUs report 2,495 MHz, the others 2,445 MHz, read on 2026-11-13), and the four agents measured on box-0 and on box-3 in the re-run used 1.34 to 1.38 times the idle CPU time on box-0 (HetrixTools 17.4 against 12.6 %, Glances 2.49 against 1.83, Beszel 0.17 against 0.12, Pulse 0.07 against 0.05). The median is not affected.",
+        "The three runs of this row were measured at the same time, on 2026-11-12/13 on box-0, box-3 and box-5, with a collector that records how much of the box's filesystem-metadata writeback the kernel charged to the unit. They replace the runs of 2026-11-07 to 11-11 (`data/2026/superseded/`), which have no such record: their disk figures (254 to 270 MB per 24 h) include an unknown share of that stream. All of this row's figures, not only the disk figure, therefore come from one slot and day. Against the replaced runs' medians, the install time is 26.4 s (was 21.2) and the memory peak 308 MB (294); the other figures moved by less than 2 %. `docs/RUN-2026-slot5.md` has the cause and the rule under which the runs were replaced.",
+        "Disk written counts data writes. Filesystem metadata is written through the block device's inode and is not counted for any row, whichever cgroup the kernel charges it to, and that includes the metadata an agent's own file activity causes. On the six boxes running Netdata the metadata stream was 5.6 to 6.4 MB per hour, on the three other boxes of the same slot 2.8 to 2.9: about 65 to 85 MB per 24 h more, which Netdata's activity appears to cause and which is in no row's figure.",
+        "The disk figure is probably about a tenth too low. The record of the metadata writeback counts whole pages per pass and reads above what the kernel charges: by 11 % on a box where the two could be compared exactly, and by about 13 % (between 6 and 21 %) in the hours of the six Netdata runs. An hour's metadata is never taken out beyond that hour's charge, but this unit writes more than the stream in every hour, so the excess is not caught: about 12 to 15 MB per 24 h in each run at 13 %, 6 to 22 MB over that range.",
+        "Run 1 (box-0): idle CPU is 5.4 % of one vCPU against 3.8 % in runs 2 and 3; under load the three runs agree (2.9, 2.7 and 2.9 %). Idle CPU depends on the box: each of the four rows measured on box-0, box-3 and box-6 shows 1.3 to 1.5 times the idle CPU time on box-0 and box-6 (on box-0 against box-3: HetrixTools 17.4 against 12.6 %, Glances 2.49 against 1.83, Beszel 0.17 against 0.12, Pulse 0.07 against 0.05), and this run's ratio to runs 2 and 3 is 1.42. Why the two boxes differ is not established (`docs/RUN-2026-slot5.md`, \"Deviations\"). The median is not affected.",
         "Run 1 (box-0): 109.2 MB per 24 h of filesystem-metadata writeback were charged to this unit's cgroup and are not counted as its disk writes (247.9 MB per 24 h charged in all).",
         "Run 2 (box-3): 124.0 MB per 24 h of filesystem-metadata writeback were charged to this unit's cgroup and are not counted as its disk writes (260.2 MB per 24 h charged in all).",
         "Run 3 (box-5): 102.2 MB per 24 h of filesystem-metadata writeback were charged to this unit's cgroup and are not counted as its disk writes (242.0 MB per 24 h charged in all)."
+      ],
+      "runs": [
+        {
+          "cycle": 1,
+          "box": "box-0",
+          "start": 1794506024,
+          "end": 1794596024,
+          "metadataRecord": true
+        },
+        {
+          "cycle": 2,
+          "box": "box-3",
+          "start": 1794506480,
+          "end": 1794596480,
+          "metadataRecord": true
+        },
+        {
+          "cycle": 3,
+          "box": "box-5",
+          "start": 1794506796,
+          "end": 1794596796,
+          "metadataRecord": true
+        }
       ],
       "values": {
         "pss_idle_median_mb": {
@@ -1938,12 +2173,36 @@
         "Same binary as the self-hosted row, claimed to Netdata Cloud. ML anomaly detection stays at its default (on).",
         "kickstart's default channel is nightly; installed with --stable-channel so the version is a release readers can reproduce.",
         "Anonymous telemetry and the daily updater timer stay at their defaults. The updater's unit is matched with the agent's; a unit that lives for less than the 10-second sampling interval is counted only as far as the samples catch it.",
-        "The three runs of this row were measured at the same time, on 2026-11-12/13 on box-2, box-4 and box-7, with a collector that records how much of the box's filesystem-metadata writeback the kernel charged to the unit. They replace the runs of 2026-11-07 to 11-11 (`data/2026/superseded/`), which have no such record: their disk figures (231 to 276 MB per 24 h) include an unknown share of that stream. `docs/RUN-2026-slot5.md` has the cause and the rule under which the runs were replaced.",
-        "The disk figure is probably a little low. The record of the metadata writeback counts whole pages per pass and reads above what the kernel charges: by 11 % on a box where the two could be compared exactly, and by about 13 % (between 6 and 21 %) in the hours of the six Netdata runs. An hour's metadata is never taken out beyond that hour's charge, but this unit writes more than the stream in every hour, so the excess is not caught: about 4 to 12 MB per 24 h in each run.",
-        "All three nodes sent more than usual at the same two moments of the idle window, 20:06:50Z and 20:53:50 to 20:54:50Z on 2026-11-12: 0.2 MB from the nodes of runs 1 and 3 and 1.0 MB from the node of run 2. The cause is not established; it is what a visit to the Space in Netdata Cloud's interface would look like, and none is on record. Outside those two minutes every run sent 0.33 MB per 24 h, as the replaced runs did; with them 0.55, 1.38 and 0.51.",
+        "The three runs of this row were measured at the same time, on 2026-11-12/13 on box-2, box-4 and box-7, with a collector that records how much of the box's filesystem-metadata writeback the kernel charged to the unit. They replace the runs of 2026-11-07 to 11-11 (`data/2026/superseded/`), which have no such record: their disk figures (231 to 276 MB per 24 h) include an unknown share of that stream. All of this row's figures, not only the disk figure, therefore come from one slot and day. Against the replaced runs' medians, the install time is 30.2 s (was 25.4), idle CPU 3.9 % (3.7), CPU under load 3.2 % (2.8) and network 0.55 MB out and 0.25 in per 24 h (0.34 and 0.19; see the bursts below); the other figures moved by less than 2 %. `docs/RUN-2026-slot5.md` has the cause and the rule under which the runs were replaced.",
+        "Disk written counts data writes. Filesystem metadata is written through the block device's inode and is not counted for any row, whichever cgroup the kernel charges it to, and that includes the metadata an agent's own file activity causes. On the six boxes running Netdata the metadata stream was 5.6 to 6.4 MB per hour, on the three other boxes of the same slot 2.8 to 2.9: about 65 to 85 MB per 24 h more, which Netdata's activity appears to cause and which is in no row's figure.",
+        "The disk figure is probably a few percent too low. The record of the metadata writeback counts whole pages per pass and reads above what the kernel charges: by 11 % on a box where the two could be compared exactly, and by about 13 % (between 6 and 21 %) in the hours of the six Netdata runs. An hour's metadata is never taken out beyond that hour's charge, but this unit writes more than the stream in every hour, so the excess is not caught: about 5 to 12 MB per 24 h in each run at 13 %, 2 to 18 MB over that range.",
+        "All three nodes sent more than usual at the same two moments of the idle window, 20:06:50Z and 20:53:50 to 20:54:50Z on 2026-11-12: 0.2 MB from the nodes of runs 1 and 3 and 1.0 MB from the node of run 2, eight samples in all. The cause is not established. The Netdata Cloud Space the nodes were claimed to belongs to the benchmark's operator, and the pattern is what a visit to it in Netdata Cloud's interface would look like, so a visit by the operator cannot be ruled out. Without those samples every run sent 0.34 MB per 24 h, as the replaced runs did, and the row's figure would be 0.3; with them the runs are 0.55, 1.38 and 0.51 and the published median is 0.6.",
         "Run 1 (box-2): 100.3 MB per 24 h of filesystem-metadata writeback were charged to this unit's cgroup and are not counted as its disk writes (247.7 MB per 24 h charged in all).",
         "Run 2 (box-4): 38.8 MB per 24 h of filesystem-metadata writeback were charged to this unit's cgroup and are not counted as its disk writes (188.0 MB per 24 h charged in all).",
         "Run 3 (box-7): 75.2 MB per 24 h of filesystem-metadata writeback were charged to this unit's cgroup and are not counted as its disk writes (223.7 MB per 24 h charged in all)."
+      ],
+      "runs": [
+        {
+          "cycle": 1,
+          "box": "box-2",
+          "start": 1794506325,
+          "end": 1794596325,
+          "metadataRecord": true
+        },
+        {
+          "cycle": 2,
+          "box": "box-4",
+          "start": 1794506641,
+          "end": 1794596641,
+          "metadataRecord": true
+        },
+        {
+          "cycle": 3,
+          "box": "box-7",
+          "start": 1794507098,
+          "end": 1794597098,
+          "metadataRecord": true
+        }
       ],
       "values": {
         "pss_idle_median_mb": {
@@ -2119,6 +2378,29 @@
     "us": false,
     "footnotes": [
       "Control row: no agent; the collector measures its own cgroup."
+    ],
+    "runs": [
+      {
+        "cycle": 1,
+        "box": "box-2",
+        "start": 1794179024,
+        "end": 1794269024,
+        "metadataRecord": false
+      },
+      {
+        "cycle": 2,
+        "box": "box-5",
+        "start": 1794271243,
+        "end": 1794361243,
+        "metadataRecord": false
+      },
+      {
+        "cycle": 3,
+        "box": "box-8",
+        "start": 1794363552,
+        "end": 1794453552,
+        "metadataRecord": false
+      }
     ],
     "values": {
       "pss_idle_median_mb": {

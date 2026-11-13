@@ -20,7 +20,8 @@
   ],
   "footnotes": [
     "Auto-update stays at its default (on).",
-    "The agent talks to the Pulse server over the bed's private network (10.0.0.0/24) in plain HTTP: the agent refuses an http:// server URL unless the host is loopback or a private address, and the sink has no TLS hostname. The installer it fetches from the server is checksum-pinned."
+    "The agent talks to the Pulse server over the bed's private network (10.0.0.0/24) in plain HTTP: the agent refuses an http:// server URL unless the host is loopback or a private address, and the sink has no TLS hostname. The installer it fetches from the server is checksum-pinned.",
+    "Idle CPU depends on the box. This row's runs on box-0 and box-6 show 0.072 and 0.078 % of one vCPU and its run on box-3 0.053 %; each of the four rows measured on these three boxes shows 1.3 to 1.5 times the idle CPU time on box-0 and box-6, and under load this row's runs on box-0, box-3 and box-6 are 0.044, 0.041 and 0.045 %. The published median (0.072 %) is therefore a box-0 or box-6 figure, while every other row was measured on boxes that idle like box-3 (Netdata's run 1 excepted). Why the two boxes differ is not established (`docs/RUN-2026-slot5.md`, \"Deviations\")."
   ],
   "sourceUrl": "https://github.com/rcourtman/Pulse/blob/main/docs/UNIFIED_AGENT.md",
   "install": {

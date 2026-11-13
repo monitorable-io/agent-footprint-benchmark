@@ -1,0 +1,6 @@
+root dev 8:1 -> block-device inode 8388609
+TRACE block-device inode: cgroup_ino 1 events 7 bytes 307200
+io.stat deltas over the same 240 s (bytes cgroup_ino path):
+167936 9386 /sys/fs/cgroup/system.slice/datadog-agent-installer.service
+135168 4556 /sys/fs/cgroup/system.slice/rsyslog.service
+110592 9125 /sys/fs/cgroup/system.slice/datadog-agent.service

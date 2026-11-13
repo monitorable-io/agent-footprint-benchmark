@@ -1,0 +1,12 @@
+# Read on 2026-11-13 ~21:05Z on the nine boxes, a day after the retest slot's installs (boxes not rebuilt since).
+# Per box: the first CPU's "cpu MHz", "bogomips" and "microcode" from /proc/cpuinfo, and the best of three runs of
+#   a python3 loop adding i*i for i in range(3000000) (single thread, wall time)
+box-0: MHz 2495.312 bogomips 4990.62 microcode 0x1000065 loop 0.321s
+box-1: MHz 2445.404 bogomips 4890.80 microcode 0x1000065 loop 0.334s
+box-2: MHz 2445.404 bogomips 4890.80 microcode 0x1000065 loop 0.347s
+box-3: MHz 2445.406 bogomips 4890.81 microcode 0x1000065 loop 0.308s
+box-4: MHz 2445.406 bogomips 4890.81 microcode 0x1000065 loop 0.301s
+box-5: MHz 2445.402 bogomips 4890.80 microcode 0x1000065 loop 0.297s
+box-6: MHz 2495.312 bogomips 4990.62 microcode 0x1000065 loop 0.335s
+box-7: MHz 2445.406 bogomips 4890.81 microcode 0x1000065 loop 0.303s
+box-8: MHz 2445.406 bogomips 4890.81 microcode 0x1000065 loop 0.342s

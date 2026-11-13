@@ -1,5 +1,7 @@
 # Linux monitoring agent footprint benchmark (2026): 4 agents, one VPS type, 24 hours
 
+One slot, measured to replace eight runs of the 2026 run: not a comparison table. Beszel, Monitorable and the control are single runs here, and the three runs of each Netdata row were simultaneous. The published table is data/2026/results.md.
+
 | Agent | Version | Memory (PSS), idle median | Memory peak (cgroup), whole cycle | CPU, idle (% of one vCPU) | CPU, under load (% of one vCPU) | Disk written per 24 h | Network per 24 h (out for push agents, in+out for polled) | Install wall time | On-disk footprint after the cycle |
 |---|---|---|---|---|---|---|---|---|---|
 | Beszel agent | beszel-agent 0.21.1 | 17.9 | 118.2 | 0.2 | 0.2 | 0.0 | 3.8 | 3.4 | 10.8 |

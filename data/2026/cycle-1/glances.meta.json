@@ -20,7 +20,8 @@
     "Glances ships no systemd unit; the harness adds a two-line one that runs `glances -w`.",
     "Runs as root (pipx install as root, the documented route); port 61208 is reachable from the sink only.",
     "Network bytes are counted by TCP port (61208); polled traffic is what this row sends.",
-    "The network figure is the harness's own poller fetching /api/4/all every 3 s (Glances' refresh period); each reply is about 137 KB, which is the 3.9 GB per 24 h. Scale it to your own polling interval."
+    "The network figure is the harness's own poller fetching /api/4/all every 3 s (Glances' refresh period); each reply is about 137 KB, which is the 3.9 GB per 24 h. Scale it to your own polling interval.",
+    "Idle CPU depends on the box. This row's runs on box-0 and box-6 show 2.49 and 2.38 % of one vCPU and its run on box-3 1.83 %; each of the four rows measured on these three boxes shows 1.3 to 1.5 times the idle CPU time on box-0 and box-6, and under load this row's runs on box-0, box-3 and box-6 are 1.73, 1.71 and 1.72 %. The published median (2.38 %) is therefore a box-0 or box-6 figure, while every other row was measured on boxes that idle like box-3 (Netdata's run 1 excepted). Why the two boxes differ is not established (`docs/RUN-2026-slot5.md`, \"Deviations\")."
   ],
   "sourceUrl": "https://github.com/nicolargo/glances#installation",
   "install": {

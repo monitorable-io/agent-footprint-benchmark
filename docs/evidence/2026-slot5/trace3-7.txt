@@ -1,0 +1,4 @@
+root dev 8:1 -> block-device inode 8388609
+TRACE block-device inode: cgroup_ino 4760 events 5 bytes 172032
+io.stat deltas over the same 240 s (bytes cgroup_ino path):
+274432 4760 /sys/fs/cgroup/system.slice/rsyslog.service
