@@ -1,0 +1,7 @@
+system.slice/rsyslog.service: io_wbytes +2768896  io_wbytes_blockdev +2039808
+system.slice/sysroot.mount: io_wbytes +0  io_wbytes_blockdev +0
+system.slice/ssh.service: io_wbytes +0  io_wbytes_blockdev +0
+system.slice/containerd.service: io_wbytes +0  io_wbytes_blockdev +0
+box blockdev total: 2039808 samples 241
+owners: {'/system.slice/rsyslog.service': 2039808} {'/system.slice/rsyslog.service': 61}
+instance removed

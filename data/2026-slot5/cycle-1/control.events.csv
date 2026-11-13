@@ -1,0 +1,5 @@
+ts,event,cgroup,detail
+1794507237,start,,system.slice/bench-collector.service
+1794507237,blockdev_trace,,ino=8388609
+1794507237,cgroup_appeared,system.slice/bench-collector.service,8784
+1794597230,stop,,

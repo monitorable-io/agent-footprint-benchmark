@@ -5,14 +5,39 @@ disk writes, network bytes, install time and on-disk size, measured on
 identical cheap VPSes over 24 hours idle plus one loaded hour, three times,
 with every 10-second sample published here.
 
-**Status: the clean re-run is being prepared (2026-11).** The first run
-(2026-10-31 → 2026-11-04, 11 agents + control, 3 runs each) is the **pilot**:
-it found four harness defects (the collector missed processes in child
-cgroups and could write a timestamp twice, network bytes counted Docker
-bridge traffic, Ubuntu's unattended-upgrades restarted agents mid-cycle), so
-every row is measured again with the fixed harness and the current release
-of every agent. The re-run lands in `data/2026/` (`run.json` lists what the
-method changed in its `notes`); `docs/RUN-2026.md` is its run log.
+**Status: the run is complete (2026-11-07 → 2026-11-13).** 11 agents and a
+control, three runs each on three different boxes, 36 role-runs, all
+collected. `data/2026/results.md` is the headline table and
+`data/2026/results.json` the same with every per-run value and footnote;
+`docs/RUN-2026.md` is the run log with every deviation.
+`python3 summarize.py data/2026 --harness-commit d879a73..e73e37f` reproduces
+`results.json` (apart from its `checked` date). The files in `data/2026/` are laid out like the pilot's,
+described below.
+
+Eight of the 36 role-runs were measured twice. Checking the data showed
+that the kernel can charge the box's own filesystem-metadata writeback to
+the measured agent's cgroup, where it reads as the agent's disk writes
+(`docs/RUN-2026-slot5.md` has the mechanism and the evidence). The collector
+now records how much of it each row was charged, and the runs it had
+affected or could have affected were measured again in one more slot on
+2026-11-12/13 under a rule fixed beforehand: every run measured again
+replaces the run it stands for, whatever it shows. They are Monitorable
+run 1, Beszel run 3 and the three runs of each Netdata row; their samples
+come with `<agent>.blockdev.csv`, the record of which cgroup was charged.
+The replaced runs stay published in `data/2026/superseded/`, and the slot as
+collected, with its own control run, in `data/2026-slot5/`.
+
+The first run (2026-10-31 → 2026-11-04) is the **pilot**: it found four
+harness defects (the collector missed processes in child cgroups and could
+write a timestamp twice, network bytes counted Docker bridge traffic,
+Ubuntu's unattended-upgrades restarted agents mid-cycle), so every row was
+measured again with the fixed harness and the current release of every
+agent (`data/2026/run.json` lists what the method changed in its `notes`).
+One of the pilot's findings was about our own row: the Monitorable agent
+(v1.5.0) wrote 115 MB per 24 h to its on-disk export queue. We shipped
+v1.7.0, which writes a batch only if it is still undelivered after 15 s,
+as a normal release and started the re-run after it, so the re-run measures
+the release a reader installs today, for our agent as for every other.
 
 The pilot stays published in `data/2026-pilot/`: `results.json` and `results.md` (the headline table),
 `cycle-1…3/<agent>.csv.gz` (every 10-second sample), `<agent>.meta.json` (install
@@ -53,9 +78,15 @@ Disk writes need one correction. ext4 writes its metadata (inode tables,
 bitmaps, directories) through the block device's own inode, and the kernel
 charges all writeback of one inode to a single cgroup: whichever owns that
 inode at the time, not whoever caused the writes. On the 2026 boxes that
-stream is 2 to 2.7 MB per hour of 4 KB writes, and it was charged to a mount
-unit with no process, to rsyslog, to the root cgroup and, for seven to eight
-hours in two runs, to the measured agent (`docs/RUN-2026.md`, "Deviations").
+stream is about 2.8 MB per hour of 4 KB writes where the agent writes little
+and 5.6 to 6.4 MB per hour on a box running Netdata, whose own file activity
+adds to it. It was seen charged to a mount unit with no process, to rsyslog,
+to the root cgroup and to Netdata's unit (for 8 to 21 of the 23 idle hours
+in each of its six instrumented runs); that it was charged to the measured
+agent for seven to eight hours in two earlier runs is inferred from the rate
+and the write sizes (`docs/RUN-2026.md`, "Deviations"). No row's disk figure
+is meant to contain it: disk written counts data writes, and the metadata an
+agent's own file activity causes is left out for every agent alike.
 The collector therefore records how much of it the kernel charged to each
 row (`collector/blockdev_trace.py`: the tracepoint
 `writeback:writeback_single_inode`, filtered to that inode, in a tracefs
@@ -74,8 +105,11 @@ per pass, so it reads above the kernel's charge: 1,552,384 bytes against
 1,392,640 (11 %) over 40 minutes on a box where the charged cgroup has no
 process of its own, which is the one case where the two can be compared
 exactly. A unit that is charged the stream therefore has its own writes of
-those hours understated by up to that excess (about 0.3 MB per hour), which
-is why the charge is published next to the net figure. The side file is
+those hours understated by up to that excess: about 0.3 MB per hour on a
+quiet box and 0.6 to 0.75 MB per hour for Netdata's unit, about a tenth of
+its published figure (`docs/RUN-2026-slot5.md`, "Deviations"). That is why
+the charge is published as well, as `disk_charged_mb_24h` in `results.json`
+and in the row notes of `results.md`. The side file is
 written by the collector, whose own cost is the control row.
 
 `summarize.py` turns the CSVs into `results.json`: idle window = hours 1–24
@@ -84,7 +118,10 @@ warm-up peak), loaded window = the stress hour after it. CPU % is CPU-time
 delta over wall time, as a share of one vCPU (the boxes have two; a value of
 100 % means one core busy). Per-24 h figures are the idle window
 scaled to 24 h. The headline is the median of the three per-cycle values;
-samples are never pooled across cycles. Rows are sorted by idle PSS.
+samples are never pooled across cycles. Rows are sorted by idle PSS. A
+metric's `cycles` lists the values of the runs that have one, in cycle
+order; each row's `runs` gives the box and the dates behind each cycle and
+says whether that run has the metadata record.
 
 Rules that keep rows comparable, and the deviations, are listed in each
 `meta.json`'s `footnotes` and repeated on the results page.

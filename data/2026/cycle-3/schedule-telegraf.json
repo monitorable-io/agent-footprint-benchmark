@@ -1,0 +1,11 @@
+{
+  "agent": "telegraf",
+  "box": "box-2",
+  "slot": 3,
+  "run": 2,
+  "installFinished": 1794362680,
+  "loadStart": 1794449080,
+  "stop": 1794452680,
+  "cpuModel": "AMD EPYC-Rome Processor",
+  "vcpus": 2
+}

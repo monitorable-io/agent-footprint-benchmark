@@ -1,0 +1,8 @@
+ts,event,cgroup,detail
+1794362994,start,,system.slice/datadog-agent*.service
+1794362994,cgroup_appeared,system.slice/datadog-agent-installer.service,9386
+1794362994,cgroup_appeared,system.slice/datadog-agent-procmgr.service,9560
+1794362994,cgroup_appeared,system.slice/datadog-agent-sysprobe.service,9038
+1794362994,cgroup_appeared,system.slice/datadog-agent-trace.service,9647
+1794362994,cgroup_appeared,system.slice/datadog-agent.service,9125
+1794452986,stop,,

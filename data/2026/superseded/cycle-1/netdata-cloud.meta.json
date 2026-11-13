@@ -1,0 +1,117 @@
+{
+  "name": "netdata-cloud",
+  "kind": "push",
+  "cgroupGlobs": [
+    "system.slice/netdata.service",
+    "system.slice/netdata-updater.service"
+  ],
+  "ports": [],
+  "reportsTo": "Netdata Cloud (ACLK, outbound)",
+  "intervalSeconds": 1,
+  "licence": "GPL-3.0",
+  "diskPaths": [
+    "/etc/netdata",
+    "/usr/libexec/netdata",
+    "/usr/share/netdata",
+    "/var/cache/netdata",
+    "/var/lib/netdata",
+    "/var/log/netdata"
+  ],
+  "user": "netdata",
+  "env": [
+    "NETDATA_CLAIM_TOKEN",
+    "NETDATA_CLAIM_ROOMS"
+  ],
+  "package": "netdata",
+  "footnotes": [
+    "Superseded: this run is not in the published table; the run measured on 2026-11-12/13 (`data/2026/cycle-1/netdata-cloud.*`) replaces it. That run's collector records how much of the box's filesystem-metadata writeback the kernel charged to the unit; this run has no such record, so its disk figure (231.0 MB per 24 h) includes an unknown share of that stream. `docs/RUN-2026-slot5.md` has the cause and the rule under which the run was replaced.",
+    "Same binary as the self-hosted row, claimed to Netdata Cloud. ML anomaly detection stays at its default (on).",
+    "kickstart's default channel is nightly; installed with --stable-channel so the version is a release readers can reproduce.",
+    "Anonymous telemetry and the daily updater timer stay at their defaults. The updater's unit is matched with the agent's; a unit that lives for less than the 10-second sampling interval is counted only as far as the samples catch it."
+  ],
+  "sourceUrl": "https://learn.netdata.cloud/docs/netdata-agent/installation/linux",
+  "install": {
+    "agent": "netdata-cloud",
+    "kernel": "7.0.0-15-generic",
+    "cpu_model": "AMD EPYC-Rome Processor",
+    "vcpus": 2,
+    "started": 1794087243.185926357,
+    "finished": 1794087268.400452217,
+    "seconds": 25.2,
+    "status": "ok",
+    "exit_code": 0,
+    "version": "v2.12.3",
+    "units": [
+      "netdata.service"
+    ],
+    "listening_ports": [
+      22,
+      53,
+      4317,
+      8125,
+      19999
+    ],
+    "disk_bytes": 640429958,
+    "counted_interfaces": [
+      "enp7s0",
+      "eth0"
+    ],
+    "tail": [
+      " --- Attempting to claim agent to https://app.netdata.cloud --- ",
+      "9807",
+      " --- Writing claiming configuration to /etc/netdata/claim.conf --- ",
+      "[/tmp/netdata-kickstart-LsNwV4dIpy]# chown root:netdata /tmp/netdata-kickstart-LsNwV4dIpy/claim.conf.ZZf5Oz ",
+      " OK ",
+      "[/tmp/netdata-kickstart-LsNwV4dIpy]# chmod 0640 /tmp/netdata-kickstart-LsNwV4dIpy/claim.conf.ZZf5Oz ",
+      " OK ",
+      "[/tmp/netdata-kickstart-LsNwV4dIpy]# mv -f /tmp/netdata-kickstart-LsNwV4dIpy/claim.conf.ZZf5Oz /etc/netdata/claim.conf ",
+      " OK ",
+      "[/tmp/netdata-kickstart-LsNwV4dIpy]# /usr/sbin/netdatacli reload-claiming-state ",
+      "Netdata Agent is claimed to Netdata Cloud and is currently online.",
+      " OK ",
+      "[/tmp/netdata-kickstart-LsNwV4dIpy]# test -x //usr/libexec/netdata/netdata-updater.sh ",
+      " OK ",
+      "[/tmp/netdata-kickstart-LsNwV4dIpy]# grep -q \\--enable-auto-updates //usr/libexec/netdata/netdata-updater.sh ",
+      " OK ",
+      "[/tmp/netdata-kickstart-LsNwV4dIpy]# //usr/libexec/netdata/netdata-updater.sh --enable-auto-updates  ",
+      "Sat Nov  7 09:34:27 PM UTC 2026 : INFO: netdata-updater.sh:  Auto-updating has been ENABLED through cron, updater script linked to /etc/cron.daily/netdata-updater",
+      "Sat Nov  7 09:34:27 PM UTC 2026 : INFO: netdata-updater.sh:  If the update process fails and you have email notifications set up correctly for cron on this system, you should receive an email notification of the failure.",
+      "Sat Nov  7 09:34:27 PM UTC 2026 : INFO: netdata-updater.sh:  Successful updates will not send an email.",
+      " OK ",
+      "Successfully installed the Netdata Agent.",
+      "The following non-fatal warnings or errors were encountered:",
+      "/tmp/netdata-kickstart.sh: 513: printf: %{: invalid directive",
+      "  - Command \"/usr/bin/curl --write-out ",
+      "To view the dashboard, open your web browser and enter http://NODE:19999.",
+      "Replace NODE with the IP address or hostname of your Netdata server.",
+      "Official documentation can be found online at https://learn.netdata.cloud/docs/.",
+      "Looking to monitor all of your infrastructure with Netdata? Check out Netdata Cloud at https://app.netdata.cloud.",
+      "Join our community and connect with us on:",
+      "  - GitHub: https://github.com/netdata/netdata/discussions",
+      "  - Discord: https://discord.gg/5ygS846fR6",
+      "  - Our community forums: https://community.netdata.cloud/",
+      "VERSION=v2.12.3",
+      "UNITS=netdata.service"
+    ]
+  },
+  "schedule": {
+    "agent": "netdata-cloud",
+    "box": "box-2",
+    "slot": 0,
+    "run": 0,
+    "installFinished": 1794087268,
+    "loadStart": 1794173668,
+    "stop": 1794177268,
+    "cpuModel": "AMD EPYC-Rome Processor",
+    "vcpus": 2
+  },
+  "footprint": {
+    "disk_bytes": 795886713,
+    "journal_bytes": 0,
+    "window": {
+      "start": 1794090868,
+      "end": 1794173668
+    },
+    "measured": 1794178526
+  }
+}

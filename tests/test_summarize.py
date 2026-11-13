@@ -125,13 +125,23 @@ class SummarizeTest(unittest.TestCase):
         self.assertEqual(set(r["metrics"][0]), {"key", "label", "unit", "lowerIsBetter"})
         row = r["rows"][0]
         self.assertEqual(set(row), {"key", "name", "version", "versions", "licence", "sourceUrl", "installUrl", "unitNames", "reportsTo",
-                                    "intervalSeconds", "us", "footnotes", "values"})
+                                    "intervalSeconds", "us", "footnotes", "runs", "values"})
         self.assertEqual(self.row("alpha")["versions"], ["v1.0", "v1.1", "v1.2"])
         self.assertIsNone(r["control"]["values"]["install_seconds"]["median"])
         self.assertEqual(set(row["values"]), {m["key"] for m in r["metrics"]})
         self.assertEqual(set(row["values"]["pss_idle_median_mb"]), {"median", "cycles"})
         self.assertEqual(r["run"]["kernel"], "7.0.0-27-generic")
         self.assertEqual(r["run"]["harnessCommit"], "abc1234")
+
+    def test_rows_name_the_run_behind_each_cycle(self):
+        # a consumer must be able to tell which box and which days a per-cycle value comes from: runs of
+        # one cycle directory need not be from the same slot (a run measured again replaces the first one)
+        end = IDLE + LOAD
+        self.assertEqual(self.row("alpha")["runs"], [
+            {"cycle": 1, "box": "box-0", "start": T0, "end": T0 + end, "metadataRecord": False},
+            {"cycle": 2, "box": "box-1", "start": T0 + 100_000, "end": T0 + 100_000 + end, "metadataRecord": False},
+            {"cycle": 3, "box": "box-2", "start": T0 + 200_000, "end": T0 + 200_000 + end, "metadataRecord": False}])
+        self.assertEqual([r["cycle"] for r in self.results["control"]["runs"]], [1, 2, 3])
 
     def test_footnotes_carried_from_meta(self):
         self.assertEqual(self.row("alpha")["footnotes"], ["alpha note"])
@@ -328,6 +338,17 @@ class MarkdownTest(unittest.TestCase):
         self.assertIn("†", self._line(md, "alpha"))            # a row with notes is marked in the table
         self.assertNotIn("†", self._line(md, "Monitorable agent"))   # a row without is not
 
+    def test_a_notice_in_run_json_is_printed_above_the_table(self):
+        # a directory that is not a comparable table (one slot, single runs) must say so before the figures
+        res = sm.summarize(self.root, harness_commit="x")
+        self.assertNotIn("notice", res["run"])
+        (self.root / "run.json").write_text(json.dumps({"provider": "P", "notice": "One slot; not a comparison."}))
+        res = sm.summarize(self.root, harness_commit="x")
+        self.assertEqual(res["run"]["notice"], "One slot; not a comparison.")
+        lines = sm.to_markdown(res).splitlines()
+        first_table_line = min(i for i, ln in enumerate(lines) if ln.startswith("|"))
+        self.assertIn("One slot; not a comparison.", lines[:first_table_line])
+
 
 class MetadataWritebackTest(unittest.TestCase):
     """Filesystem-metadata writeback charged to the unit's cgroup (collector/blockdev_trace.py) is not the
@@ -365,6 +386,11 @@ class MetadataWritebackTest(unittest.TestCase):
         note = next(n for n in row["footnotes"] if "filesystem-metadata" in n)
         self.assertIn("Run 1 (box-0)", note)
         self.assertIn("34.6 MB", note)
+
+    def test_a_run_says_whether_it_has_the_record(self):
+        self.assertFalse(self._alpha()["runs"][0]["metadataRecord"])
+        self._add_column(400)
+        self.assertTrue(self._alpha()["runs"][0]["metadataRecord"])
 
     def test_no_note_when_the_unit_was_never_charged_any(self):
         self._add_column(0)

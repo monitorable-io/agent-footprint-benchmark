@@ -3,9 +3,45 @@
   "location": "Helsinki (HEL1)",
   "plan": "CX23: 2 vCPU AMD EPYC (shared), 4 GB RAM, 40 GB NVMe",
   "image": "Ubuntu 26.04 LTS",
+  "kernel": "7.0.0-15/-30/-42/-43-generic (differs by box, see kernels)",
+  "kernels": {
+    "box-0": [
+      "7.0.0-30-generic"
+    ],
+    "box-1": [
+      "7.0.0-30-generic"
+    ],
+    "box-2": [
+      "7.0.0-15-generic"
+    ],
+    "box-3": [
+      "7.0.0-30-generic"
+    ],
+    "box-4": [
+      "7.0.0-30-generic"
+    ],
+    "box-5": [
+      "7.0.0-30-generic"
+    ],
+    "box-6": [
+      "7.0.0-30-generic"
+    ],
+    "box-7": [
+      "7.0.0-30-generic",
+      "7.0.0-42-generic",
+      "7.0.0-43-generic"
+    ],
+    "box-8": [
+      "7.0.0-30-generic"
+    ]
+  },
   "notes": [
     "Ubuntu's apt-daily and apt-daily-upgrade timers were masked on every box at provisioning (the pilot's unattended-upgrades restarted dynamically linked agents mid-cycle).",
     "Network bytes count only the box's physical interfaces; Docker bridge traffic is excluded.",
-    "Processes are counted in the agent's cgroup and its child cgroups."
+    "Processes are counted in the agent's cgroup and its child cgroups.",
+    "Disk written counts data writes. Filesystem metadata is written through the block device's inode, and the kernel charges all writeback of one inode to a single cgroup, whichever owns it, so it is not counted for any row, including the metadata an agent's own file activity causes. In the eight runs whose collector recorded it (Monitorable run 1, Beszel run 3 and the three runs of each Netdata row, measured again on 2026-11-12/13; docs/RUN-2026-slot5.md) the metadata charged to the unit's cgroup is taken out and the charge as the kernel reported it is published as well (disk_charged_mb_24h). The other 28 runs have no such record and publish the kernel's charge; docs/RUN-2026-slot5.md says why they are taken not to contain that stream.",
+    "Those eight runs replace the runs first measured in their place, under a rule fixed before the retest: every run measured again replaces the run it stands for, whatever it shows. The replaced runs are in data/2026/superseded/. A cycle therefore holds runs of different days: each row's `runs` in results.json gives the box and the dates of every run and whether it has the metadata record.",
+    "CPU under load is lower than idle CPU in every row, the control included, and no box recorded steal time; the cause is not established.",
+    "Idle CPU depends on the box. On box-0 and box-6 an agent used 1.3 to 1.5 times the idle CPU time it used on box-3; under load the difference is smaller for three of the four agents measured on all three. Beszel, HetrixTools, Pulse and Glances have two of their three runs on those two boxes, so their idle CPU median is one of those runs (each row's notes give its box-3 figure); every other row was measured on the other seven boxes, except Netdata's run 1. The two boxes' virtual CPUs report 2,495 MHz and the others' 2,445 MHz (read on 2026-11-13, docs/evidence/2026-slot5/), so they are probably on another host type; the cause is not established."
   ]
 }

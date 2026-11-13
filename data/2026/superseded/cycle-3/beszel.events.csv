@@ -1,0 +1,4 @@
+ts,event,cgroup,detail
+1794271398,start,,system.slice/beszel-agent.service
+1794271398,cgroup_appeared,system.slice/beszel-agent.service,8729
+1794361391,stop,,

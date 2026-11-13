@@ -1,0 +1,74 @@
+{
+  "name": "node-exporter",
+  "kind": "polled",
+  "cgroupGlobs": [
+    "system.slice/node_exporter.service"
+  ],
+  "ports": [
+    9100
+  ],
+  "reportsTo": "passive: Prometheus on the sink scrapes /metrics at its default 1 m",
+  "intervalSeconds": 60,
+  "licence": "Apache-2.0",
+  "diskPaths": [
+    "/usr/sbin/node_exporter"
+  ],
+  "user": "node_exporter",
+  "env": [],
+  "footnotes": [
+    "Network bytes are counted by TCP port (the listening socket is not in the service's cgroup under socket activation, and polled traffic is what this row sends)."
+  ],
+  "sourceUrl": "https://prometheus.io/docs/guides/node-exporter/",
+  "install": {
+    "agent": "node-exporter",
+    "kernel": "7.0.0-42-generic",
+    "cpu_model": "AMD EPYC-Rome Processor",
+    "vcpus": 2,
+    "started": 1794179792.082446599,
+    "finished": 1794179793.774199777,
+    "seconds": 1.7,
+    "status": "ok",
+    "exit_code": 0,
+    "version": "v1.12.1",
+    "units": [
+      "node_exporter.service",
+      "node_exporter.socket"
+    ],
+    "listening_ports": [
+      22,
+      53,
+      9100
+    ],
+    "disk_bytes": 23900840,
+    "counted_interfaces": [
+      "enp7s0",
+      "eth0"
+    ],
+    "tail": [
+      "Created symlink '/etc/systemd/system/sockets.target.wants/node_exporter.socket' → '/etc/systemd/system/node_exporter.socket'.",
+      "Created symlink '/etc/systemd/system/multi-user.target.wants/node_exporter.service' → '/etc/systemd/system/node_exporter.service'.",
+      "VERSION=v1.12.1",
+      "UNITS=node_exporter.service,node_exporter.socket"
+    ]
+  },
+  "schedule": {
+    "agent": "node-exporter",
+    "box": "box-7",
+    "slot": 1,
+    "run": 1,
+    "installFinished": 1794179793,
+    "loadStart": 1794266193,
+    "stop": 1794269793,
+    "cpuModel": "AMD EPYC-Rome Processor",
+    "vcpus": 2
+  },
+  "footprint": {
+    "disk_bytes": 23900840,
+    "journal_bytes": 0,
+    "window": {
+      "start": 1794183393,
+      "end": 1794266193
+    },
+    "measured": 1794270385
+  }
+}

@@ -1,0 +1,5 @@
+ts,event,cgroup,detail
+1794506952,start,,system.slice/beszel-agent.service
+1794506952,blockdev_trace,,ino=8388609
+1794506952,cgroup_appeared,system.slice/beszel-agent.service,8722
+1794596945,stop,,

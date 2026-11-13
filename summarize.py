@@ -238,6 +238,7 @@ def summarize(root, harness_commit=None):
     cycles = sorted(p for p in root.glob("cycle-*") if p.is_dir())
     per_agent = defaultdict(list)
     versions = defaultdict(list)
+    runs = defaultdict(list)
     metas = {}
     footnotes = defaultdict(list)
     spans = []
@@ -260,6 +261,12 @@ def summarize(root, harness_commit=None):
             else:
                 per_agent[name].append(cycle_metrics(rows, meta, box_rows))
                 versions[name].append(meta.get("install", {}).get("version", ""))
+                # Which run stands behind this cycle's values: a cycle directory can hold runs of different
+                # slots (a run measured again replaces the first one), and not every run has the tracer's record.
+                sched = meta["schedule"]
+                runs[name].append({"cycle": int(cdir.name.rsplit("-", 1)[-1]), "box": sched.get("box", ""),
+                                   "start": sched["installFinished"], "end": sched["stop"],
+                                   "metadataRecord": any(r.get(META_COLUMN) is not None for r in rows)})
             for note in base_notes:
                 if note not in footnotes[name]:
                     footnotes[name].append(note)
@@ -287,26 +294,30 @@ def summarize(root, harness_commit=None):
             "intervalSeconds": meta.get("intervalSeconds", 0),
             "us": name == US,
             "footnotes": footnotes[name],
+            "runs": runs.get(name, []),
             "values": reduce_cycles(per_agent.get(name, [])),
         }
 
     rows = [row_for(n) for n in metas if n not in ("control", "none")]
     rows.sort(key=lambda r: (r["values"]["pss_idle_median_mb"]["median"] is None, r["values"]["pss_idle_median_mb"]["median"] or 0))
     control = row_for("control") if "control" in metas else None
+    run = {
+        "provider": run_facts.get("provider", ""),
+        "location": run_facts.get("location", ""),
+        "plan": run_facts.get("plan", ""),
+        "image": run_facts.get("image", ""),
+        "kernel": kernel,
+        "harnessCommit": harness_commit or _git_head(root),
+        "cycles": spans,
+        "notes": list(run_facts.get("notes", [])),
+    }
+    if run_facts.get("notice"):
+        run["notice"] = run_facts["notice"]   # printed above the table: what a reader must know before the figures
     return {
         "slug": f"agent-footprint-{year}",
         "title": f"Linux monitoring agent footprint benchmark ({year}): {len(rows)} agents, one VPS type, 24 hours",
         "checked": __import__("datetime").date.today().isoformat(),
-        "run": {
-            "provider": run_facts.get("provider", ""),
-            "location": run_facts.get("location", ""),
-            "plan": run_facts.get("plan", ""),
-            "image": run_facts.get("image", ""),
-            "kernel": kernel,
-            "harnessCommit": harness_commit or _git_head(root),
-            "cycles": spans,
-            "notes": list(run_facts.get("notes", [])),
-        },
+        "run": run,
         "metrics": [{"key": k, "label": label, "unit": unit, "lowerIsBetter": lower} for k, label, unit, lower in METRICS],
         "rows": rows,
         "control": control,
@@ -323,7 +334,10 @@ def to_markdown(results):
     """The headline table, read on its own: a row with footnotes is marked and the notes follow the table."""
     keys = ["pss_idle_median_mb", "memory_peak_mb", "cpu_idle_pct", "cpu_loaded_pct", "disk_written_mb_24h", "net_headline_mb_24h", "install_seconds", "disk_footprint_mb"]
     labels = {m["key"]: m["label"] for m in results["metrics"]}
-    lines = [f"# {results['title']}", "", "| Agent | Version | " + " | ".join(labels[k] for k in keys) + " |", "|---|---|" + "---|" * len(keys)]
+    lines = [f"# {results['title']}", ""]
+    if results["run"].get("notice"):
+        lines += [results["run"]["notice"], ""]
+    lines += ["| Agent | Version | " + " | ".join(labels[k] for k in keys) + " |", "|---|---|" + "---|" * len(keys)]
     rows = list(results["rows"]) + ([results["control"]] if results.get("control") else [])
     for r in rows:
         cells = []
