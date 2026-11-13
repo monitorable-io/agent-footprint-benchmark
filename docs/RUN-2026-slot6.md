@@ -46,7 +46,7 @@ The other six measured boxes and the sink are not touched.
 ## Setup
 
 - [x] The three nodes of the retest slot taken offline: 2026-11-13 22:30Z, `systemctl stop netdata` on box-2, box-4 and box-7 (the boxes are rebuilt by the start).
-- [ ] Netdata Cloud Space has room for three nodes (the founder deletes the three offline nodes; one node of his own remains):
+- [x] Netdata Cloud Space has room for three nodes (the founder deletes the three offline nodes; one node of his own remains): 2026-11-13 ~22:45Z, the founder in chat: "Nodes are deleted. Netdata Cloud is closed in my browser".
 - [x] `bench.env` points at this run; plan file and `run.json` in place; `./bench cycle plan 0`: 2026-11-13 22:31Z, between two runner ticks. `bench.env`: `YEAR=2026-slot6`, `BENCH_SLOT_COUNT=1`, `RUNLOG_BRANCH=data/run-2026-slot6`, `RUNLOG_DIR` = a worktree of that branch (before: the same four lines for slot 5). `run.json`: the bed and the four method notes of the retest slot. `./bench cycle plan 0` printed the three lines of the table above and no other box; `./bench cycle plan 1` was refused ("slot 1 is outside this run"); `./bench auto status`: "next: none", so the runner starts nothing by itself.
 
 ## Slot 6 (s = 0 of this run)
