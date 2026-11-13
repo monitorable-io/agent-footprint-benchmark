@@ -57,6 +57,22 @@ check "halted wins over everything" "$(AUTO_NOW=12000 auto_decide)" "halted"
 rm -f "$d/data/test/auto/halted"; : > "$d/data/test/auto/done"
 check "done marker -> done" "$(AUTO_NOW=100 auto_decide)" "done"
 
+# --- a one-slot run with a plan file (the instrumented retest slot): rows come from the plan, and a
+# collected slot 0 is the end of the run, never "start 1"
+YEAR=one; SLOT_COUNT=1; mkdir -p "$d/data/one/slots" "$d/data/one/auto"
+printf 'box-1 monitorable 0\nbox-6 beszel 2\n' > "$d/data/one/slots/slot-0.plan"
+jq -n '{slot: 0, startedAt: 1000, boxes: [{box: "box-1", stop: 94900}, {box: "box-6", stop: 95000}]}' > "$d/data/one/slots/slot-0.json"
+check "one-slot run: measuring" "$(AUTO_NOW=5000 auto_decide)" "status1h 0"
+check "one-slot run: collect when due" "$(AUTO_NOW=95120 auto_decide)" "collect 0"
+mkdir -p "$d/data/one/cycle-1" "$d/data/one/cycle-3"
+echo x | gzip > "$d/data/one/cycle-1/monitorable.csv.gz"
+check "one-slot run: a plan row still missing -> not adopted" "$(AUTO_NOW=95120 auto_decide)" "collect 0"
+echo x | gzip > "$d/data/one/cycle-3/beszel.csv.gz"
+check "one-slot run: every plan row present -> adopt" "$(AUTO_NOW=95120 auto_decide)" "adopt 0"
+: > "$d/data/one/auto/slot-0.collected"
+check "one-slot run: collected -> done, no next slot" "$(AUTO_NOW=95200 auto_decide)" "done"
+YEAR="test"; SLOT_COUNT=4
+
 # --- a fresh run (data/<year>/ holds only run.json, no slots/): the tick says so and does nothing
 YEAR=fresh; mkdir -p "$d/data/fresh/auto"; echo '{}' > "$d/data/fresh/run.json"
 check "fresh run: no slots dir -> none" "$(AUTO_NOW=1000 auto_decide)" "none"
@@ -80,11 +96,24 @@ YEAR="test"
 
 # --- the running-slot guard of cycle start
 rm -f "$d/data/test/auto/done"; manifest 1 6000 4102444800   # the guard reads the real clock: a stop in 2100
-check "cycle start is refused while a slot's boxes still measure" "$( (cycle_start_guard 2) 2>&1 | grep -c 'refused: slot-1.json runs until')" 1
+check "cycle start is refused while a slot's boxes still measure" "$( (cycle_start_guard 2) 2>&1 | grep -c 'refused: data/test/slots/slot-1.json runs until')" 1
 check "a BENCH_ONLY_BOXES redo passes the guard" "$(BENCH_ONLY_BOXES=box-4 cycle_start_guard 2 && echo ok)" "ok"
 manifest 1 6000 7000
 check "with every stop in the past the guard passes" "$(cycle_start_guard 2 && echo ok)" "ok"
 check "cycle start calls the guard before anything else" "$(grep -c 'cycle_start_guard "\$s"' lib/cycle.sh)" 1
+# Review of PR #10: the boxes are shared by every data root. With bench.env pointing at another run
+# (YEAR), a start must still see a slot of the first run that is measuring.
+mkdir -p "$d/data/other/slots"
+jq -n --argjson stop "$(( $(date +%s) + 5000 ))" '{slot: 0, startedAt: 1, boxes: [{box: "box-0", stop: $stop}]}' > "$d/data/other/slots/slot-0.json"
+check "the guard sees a slot measuring in another data root" "$( (cycle_start_guard 2) 2>&1 | grep -c 'refused: data/other/slots/slot-0.json runs until')" 1
+rm -rf "$d/data/other"
+# The +1 h check names boxes whose collector is not counting metadata writeback (empty: the tracer is
+# not armed; 0 after an hour: it is armed and sees nothing). Right after a start 0 is normal.
+st=$'beszel box-6 cycle-3 active rows=700 meta=2101248 next=Fri 2026-11-13\nnetdata box-0 cycle-1 active rows=700 meta=0 next=Fri\ncontrol box-8 cycle-1 active rows=700 meta= next=Fri\nmonitorable box-1 cycle-1 unreachable'
+check "tracer summary at +1 h" "$(auto_tracer_summary "$st" "+1 h")" "ATTENTION metadata tracer: not counting on box-0 box-8"
+check "tracer summary right after the start" "$(auto_tracer_summary "$st" "right after the start")" "ATTENTION metadata tracer: not counting on box-8"
+check "tracer summary, all counting" "$(auto_tracer_summary "$(head -1 <<<"$st")" "+1 h")" "metadata tracer: 1/1 boxes counting"
+check "tracer summary, a status line from before the tracer" "$(auto_tracer_summary "x box-0 cycle-1 active rows=1" "+1 h")" "ATTENTION metadata tracer: not counting on box-0"
 check "the manifest is written atomically" "$(grep -o 'slot-\$s.json.tmp' lib/cycle.sh | wc -l)" 2
 
 # --- run-log edits

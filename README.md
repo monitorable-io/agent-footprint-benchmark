@@ -56,6 +56,35 @@ the cgroup's processes, and bytes in/out from nftables counters matched on
 the cgroup (`collector/netcounters.py`). A recreated cgroup (agent restart) is
 detected by inode change or a CPU counter moving backwards and logged.
 
+Disk writes need one correction. ext4 writes its metadata (inode tables,
+bitmaps, directories) through the block device's own inode, and the kernel
+charges all writeback of one inode to a single cgroup: whichever owns that
+inode at the time, not whoever caused the writes. On the 2026 boxes that
+stream is 2 to 2.7 MB per hour of 4 KB writes, and it was charged to a mount
+unit with no process, to rsyslog, to the root cgroup and, for seven to eight
+hours in two runs, to the measured agent (`docs/RUN-2026.md`, "Deviations").
+The collector therefore records how much of it the kernel charged to each
+row (`collector/blockdev_trace.py`: the tracepoint
+`writeback:writeback_single_inode`, filtered to that inode, in a tracefs
+instance of its own; columns `io_wbytes_blockdev` and `box_wbytes_blockdev`;
+`<agent>.blockdev.csv` names the charged cgroup at every sample that saw
+such writeback). `summarize.py` publishes an agent's disk writes without it
+(`disk_written_mb_24h`; taken out hour by hour, never more than was charged
+in that hour), the whole charge
+(`disk_charged_mb_24h`) and the excluded part
+(`disk_metadata_charged_mb_24h`). Samples taken before the tracer existed
+have no such column, and their charge is published as it is. Two limits:
+the tracepoint fires for the flusher's per-inode pass only, so metadata
+written by a sync of the block device or by a journal checkpoint in a
+process's own context stays in the unit's figure; and it counts whole pages
+per pass, so it reads above the kernel's charge: 1,552,384 bytes against
+1,392,640 (11 %) over 40 minutes on a box where the charged cgroup has no
+process of its own, which is the one case where the two can be compared
+exactly. A unit that is charged the stream therefore has its own writes of
+those hours understated by up to that excess (about 0.3 MB per hour), which
+is why the charge is published next to the net figure. The side file is
+written by the collector, whose own cost is the control row.
+
 `summarize.py` turns the CSVs into `results.json`: idle window = hours 1–24
 after the install finished (the first hour is reported separately as a
 warm-up peak), loaded window = the stress hour after it. CPU % is CPU-time
@@ -78,7 +107,14 @@ work. Every box runs Docker with two idle containers for the whole cycle.
 The account holds at most 10 servers, so the 12 roles (11 agents and the
 control box, which runs only the harness) take turns: **4 slots of about
 26 h**, 9 roles per slot, every role 3 times on 3 different boxes
-(`lib/rotation.sh`; `./bench cycle plan` prints the table). Between slots a
+(`lib/rotation.sh`; `./bench cycle plan` prints the table). A slot can also
+be given its roles by hand: a plan file `data/<year>/slots/slot-<s>.plan`
+(one line per box, `box-J ROLE RUN`) replaces the rotation for that slot,
+and `YEAR` and `BENCH_SLOT_COUNT` in `bench.env` name the data root and the
+number of slots of the run the checkout is set up for (the instrumented
+retest slot of 2026 is `data/2026-slot5`, one slot). A run with a plan file
+has no rotation slots: a slot without a file is refused. `cycle start`
+refuses while a slot of any data root is still measuring. Between slots a
 box is **rebuilt in place** from the stock image (same server, same address);
 no box is destroyed during the run, and `bench vm destroy` refuses unless
 `BENCH_ALLOW_DESTROY=1`. The n-th run of a role is filed as `cycle-n`, so
