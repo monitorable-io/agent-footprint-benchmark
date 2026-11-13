@@ -63,7 +63,8 @@ The other six measured boxes and the sink are not touched.
 
 ## Teardown
 
-- [ ] Boxes deleted (the founder's words of 2026-11-13: "Teardown the 10 Hetzner boxes please, if we don't need them any more", then "Re-measure, then teardown"):
+- [x] The six boxes this slot does not use deleted: 2026-11-13 22:51:01–22:51:25Z, `BENCH_ALLOW_DESTROY=1 ./bench vm destroy` for box-0, box-1, box-3, box-5, box-6, box-8 (Hetzner servers 173543213, …214, …220, …222, …217, …218), between two runner ticks. The founder's words: "Teardown the 10 Hetzner boxes please, if we don't need them any more" (2026-11-13), then, with this slot running, "Do we have some Hetzner boxes that we are not using at the moments and can delete?". Before the deletion the CPU and host details of six boxes were read once more (`docs/evidence/2026-slot6/host-probe-detail-2026-11-13.txt`): identical on all except the reported clock, so why box-0 and box-6 idle at a higher CPU cost stays not established. After it: box-2, box-4, box-7 and the sink running, `cycle status 0` 3/3 active, the runner's next tick unchanged ("slot 0 measuring"). The sink stays until the collect.
+- [ ] The last four boxes deleted (box-2, box-4, box-7, sink), after the collect, the access-log check and the data PR:
 - [ ] Cron line removed; `bench.env` back to the 2026 run:
 
 ## Deviations and incidents
