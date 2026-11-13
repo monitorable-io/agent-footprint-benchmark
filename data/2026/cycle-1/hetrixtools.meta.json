@@ -21,7 +21,7 @@
   "footnotes": [
     "This box has no cron, so the vendor installer's own systemd path runs: a minutely timer starting a transient unit per run. Those runs are placed in a persistent slice (one word added to the vendor launcher) so the kernel's accounting for them survives each run. The timer's launcher unit is matched too; a unit that lives for less than the 10-second sampling interval is counted only as far as the samples catch it.",
     "The CPU figure is 12.6 to 17.4 % of one vCPU in the three runs, and the box's load average agrees: its idle median is 0.22 to 0.30 on this row's boxes against 0.05 to 0.13 on every other box.",
-    "Idle CPU depends on the box. This row's runs on box-0 and box-6 show 17.36 and 17.05 % of one vCPU and its run on box-3 12.63 %; each of the four rows measured on these three boxes shows 1.3 to 1.5 times the idle CPU time on box-0 and box-6, and under load this row's runs on box-0, box-3 and box-6 are 13.04, 10.90 and 12.86 %. The published median (17.05 %) is therefore a box-0 or box-6 figure, while every other row was measured on boxes that idle like box-3 (Netdata's run 1 excepted). Why the two boxes differ is not established (`docs/RUN-2026-slot5.md`, \"Deviations\")."
+    "Idle CPU: the published median (17.05 %) is a run on box-0 or box-6, which idle 1.3 to 1.5 times higher than the other boxes for every agent measured on them; this row's run on box-3 shows 12.63 % (see the method notes)."
   ],
   "sourceUrl": "https://github.com/hetrixtools/agent",
   "install": {
