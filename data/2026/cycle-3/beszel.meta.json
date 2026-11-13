@@ -19,7 +19,8 @@
     "BESZEL_HUB_URL"
   ],
   "footnotes": [
-    "Run 3 (box-6): this run's 15.1 MB of disk writes all fall in the first 7.0 hours after the install and then stop; in that span the agent logged nothing, its on-disk footprint did not grow, and its CPU, memory and network figures are the same as in the hours after. The same writes (the same hourly rate and block sizes, about 16 MB in all) appear in one run of another agent on another box and day (Monitorable, run 1) and in neither agent's other two runs, so they are most likely the box's filesystem writeback charged to this unit's cgroup, not the agent's own writes. The cause is not established; the figure is published as measured."
+    "Run 3 (box-6) was measured again on 2026-11-12/13, on the same box, with a collector that records which cgroup the kernel charges for the box's filesystem-metadata writeback; it replaces the run of 2026-11-10 (`data/2026/superseded/cycle-3/`). That run was charged 16.6 MB of disk writes in its first seven hours; this one was charged 4 KB in 25 hours, while the box's metadata writeback (150 MB over the run) was charged to other cgroups throughout. `docs/RUN-2026-slot5.md` has the cause and the rule under which the run was replaced.",
+    "The memory peak (118 MB) is reached before the first sample, within seconds of the install: the cgroup's high-water mark is already 117 MB there while it holds 8 MB, and it holds about 8 MB for the rest of the run."
   ],
   "sourceUrl": "https://beszel.dev/guide/agent-installation",
   "install": {
@@ -27,9 +28,9 @@
     "kernel": "7.0.0-30-generic",
     "cpu_model": "AMD EPYC-Rome Processor",
     "vcpus": 2,
-    "started": 1794271387.9487128,
-    "finished": 1794271391.5900342,
-    "seconds": 3.6,
+    "started": 1794506942.139831967,
+    "finished": 1794506945.497626921,
+    "seconds": 3.4,
     "status": "ok",
     "exit_code": 0,
     "version": "beszel-agent 0.21.1",
@@ -63,11 +64,11 @@
   "schedule": {
     "agent": "beszel",
     "box": "box-6",
-    "slot": 2,
+    "slot": 0,
     "run": 2,
-    "installFinished": 1794271391,
-    "loadStart": 1794357791,
-    "stop": 1794361391,
+    "installFinished": 1794506945,
+    "loadStart": 1794593345,
+    "stop": 1794596945,
     "cpuModel": "AMD EPYC-Rome Processor",
     "vcpus": 2
   },
@@ -75,9 +76,9 @@
     "disk_bytes": 10789175,
     "journal_bytes": 0,
     "window": {
-      "start": 1794274991,
-      "end": 1794357791
+      "start": 1794510545,
+      "end": 1794593345
     },
-    "measured": 1794362177
+    "measured": 1794597688
   }
 }

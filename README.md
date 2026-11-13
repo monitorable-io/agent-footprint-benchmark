@@ -5,14 +5,27 @@ disk writes, network bytes, install time and on-disk size, measured on
 identical cheap VPSes over 24 hours idle plus one loaded hour, three times,
 with every 10-second sample published here.
 
-**Status: the run is complete (2026-11-07 → 2026-11-12).** 11 agents and a
+**Status: the run is complete (2026-11-07 → 2026-11-13).** 11 agents and a
 control, three runs each on three different boxes, 36 role-runs, all
 collected. `data/2026/results.md` is the headline table and
 `data/2026/results.json` the same with every per-run value and footnote;
 `docs/RUN-2026.md` is the run log with every deviation.
-`python3 summarize.py data/2026 --harness-commit d879a73` reproduces
+`python3 summarize.py data/2026 --harness-commit d879a73..e73e37f` reproduces
 `results.json`. The files in `data/2026/` are laid out like the pilot's,
 described below.
+
+Eight of the 36 role-runs were measured twice. Checking the data showed
+that the kernel can charge the box's own filesystem-metadata writeback to
+the measured agent's cgroup, where it reads as the agent's disk writes
+(`docs/RUN-2026-slot5.md` has the cause and the evidence). The collector
+now records how much of it each row was charged, and the runs it had
+affected or could have affected were measured again in one more slot on
+2026-11-12/13 under a rule fixed beforehand: every run measured again
+replaces the run it stands for, whatever it shows. They are Monitorable
+run 1, Beszel run 3 and the three runs of each Netdata row; their samples
+come with `<agent>.blockdev.csv`, the record of which cgroup was charged.
+The replaced runs stay published in `data/2026/superseded/`, and the slot as
+collected, with its own control run, in `data/2026-slot5/`.
 
 The first run (2026-10-31 → 2026-11-04) is the **pilot**: it found four
 harness defects (the collector missed processes in child cgroups and could
@@ -20,6 +33,11 @@ write a timestamp twice, network bytes counted Docker bridge traffic,
 Ubuntu's unattended-upgrades restarted agents mid-cycle), so every row was
 measured again with the fixed harness and the current release of every
 agent (`data/2026/run.json` lists what the method changed in its `notes`).
+One of the pilot's findings was about our own row: the Monitorable agent
+(v1.5.0) wrote 115 MB per 24 h to its on-disk export queue. We shipped
+v1.7.0, which writes a batch only if it is still undelivered after 15 s,
+as a normal release and started the re-run after it, so the re-run measures
+the release a reader installs today, for our agent as for every other.
 
 The pilot stays published in `data/2026-pilot/`: `results.json` and `results.md` (the headline table),
 `cycle-1…3/<agent>.csv.gz` (every 10-second sample), `<agent>.meta.json` (install

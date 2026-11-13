@@ -1,32 +1,36 @@
 {
   "slug": "agent-footprint-2026",
   "title": "Linux monitoring agent footprint benchmark (2026): 11 agents, one VPS type, 24 hours",
-  "checked": "2026-11-12",
+  "checked": "2026-11-13",
   "run": {
     "provider": "Hetzner Cloud",
     "location": "Helsinki (HEL1)",
     "plan": "CX23: 2 vCPU AMD EPYC (shared), 4 GB RAM, 40 GB NVMe",
     "image": "Ubuntu 26.04 LTS",
     "kernel": "7.0.0-15/-30/-42/-43-generic (differs by box, see kernels)",
-    "harnessCommit": "d879a73",
+    "harnessCommit": "d879a73..e73e37f",
     "cycles": [
       {
         "start": 1794086972,
-        "end": 1794269024
+        "end": 1794596325
       },
       {
         "start": 1794179152,
-        "end": 1794361243
+        "end": 1794596641
       },
       {
-        "start": 1794271391,
-        "end": 1794453552
+        "start": 1794362388,
+        "end": 1794597098
       }
     ],
     "notes": [
       "Ubuntu's apt-daily and apt-daily-upgrade timers were masked on every box at provisioning (the pilot's unattended-upgrades restarted dynamically linked agents mid-cycle).",
       "Network bytes count only the box's physical interfaces; Docker bridge traffic is excluded.",
-      "Processes are counted in the agent's cgroup and its child cgroups."
+      "Processes are counted in the agent's cgroup and its child cgroups.",
+      "Disk written excludes the filesystem-metadata writeback the kernel charged to the unit's cgroup, in the eight runs whose collector recorded it: Monitorable run 1, Beszel run 3 and the three runs of each Netdata row, measured again on 2026-11-12/13 (docs/RUN-2026-slot5.md). ext4 writes metadata through the block device's inode and the kernel charges one inode's writeback to a single cgroup, whichever owns it. The charge as the kernel reported it is published next to it. The other 28 runs have no such record and publish the kernel's charge.",
+      "Those eight runs replace the runs first measured in their place, under a rule fixed before the retest: every run measured again replaces the run it stands for, whatever it shows. The replaced runs are in data/2026/superseded/.",
+      "CPU under load is lower than idle CPU in every row, the control included, and no box recorded steal time; the cause is not established.",
+      "Box-0 and box-6 are on a different host type from the other seven boxes (their virtual CPUs report 2,495 MHz, the others 2,445 MHz). An agent measured there used 1.3 to 1.5 times the idle CPU time it used on box-3; under load the difference is smaller for three of the four agents measured on both. Beszel, HetrixTools, Pulse and Glances have two of their three runs on those two boxes, so their idle CPU median is one of those runs; every other row was measured on the other seven boxes, except Netdata's run 1."
     ]
   },
   "metrics": [
@@ -81,6 +85,18 @@
     {
       "key": "disk_written_mb_24h",
       "label": "Disk written per 24 h",
+      "unit": "MB",
+      "lowerIsBetter": true
+    },
+    {
+      "key": "disk_charged_mb_24h",
+      "label": "Disk writes charged to the unit's cgroup per 24 h (with any filesystem metadata charged to it)",
+      "unit": "MB",
+      "lowerIsBetter": true
+    },
+    {
+      "key": "disk_metadata_charged_mb_24h",
+      "label": "Filesystem-metadata writeback charged to the unit's cgroup per 24 h",
       "unit": "MB",
       "lowerIsBetter": true
     },
@@ -155,8 +171,8 @@
       "intervalSeconds": 60,
       "us": false,
       "footnotes": [
-        "This box has no cron, so the vendor installer's own systemd path runs: a minutely timer starting a transient unit per run. Those runs are placed in a persistent slice (one word added to the vendor launcher) so the kernel's accounting for them survives each run; the timer's launcher unit is counted too.",
-        "The CPU figure (13 to 17 % of one vCPU) is the same in all three runs and agrees with the box's load average: its idle median is 0.22 to 0.30 on this row's boxes against 0.05 to 0.12 on every other box."
+        "This box has no cron, so the vendor installer's own systemd path runs: a minutely timer starting a transient unit per run. Those runs are placed in a persistent slice (one word added to the vendor launcher) so the kernel's accounting for them survives each run. The timer's launcher unit is matched too; a unit that lives for less than the 10-second sampling interval is counted only as far as the samples catch it.",
+        "The CPU figure is 12.6 to 17.4 % of one vCPU in the three runs, and the box's load average agrees: its idle median is 0.22 to 0.30 on this row's boxes against 0.05 to 0.12 on every other box."
       ],
       "values": {
         "pss_idle_median_mb": {
@@ -230,6 +246,18 @@
             5.898952433868825,
             5.898952433868825
           ]
+        },
+        "disk_charged_mb_24h": {
+          "median": 5.898952433868825,
+          "cycles": [
+            5.898952433868825,
+            5.898952433868825,
+            5.898952433868825
+          ]
+        },
+        "disk_metadata_charged_mb_24h": {
+          "median": null,
+          "cycles": []
         },
         "journal_mb_24h": {
           "median": 4.514347826086956,
@@ -316,39 +344,40 @@
       "intervalSeconds": 60,
       "us": false,
       "footnotes": [
-        "Run 3 (box-6): this run's 15.1 MB of disk writes all fall in the first 7.0 hours after the install and then stop; in that span the agent logged nothing, its on-disk footprint did not grow, and its CPU, memory and network figures are the same as in the hours after. The same writes (the same hourly rate and block sizes, about 16 MB in all) appear in one run of another agent on another box and day (Monitorable, run 1) and in neither agent's other two runs, so they are most likely the box's filesystem writeback charged to this unit's cgroup, not the agent's own writes. The cause is not established; the figure is published as measured."
+        "The memory peak (118 MB) is reached before the first sample, within seconds of the install: the cgroup's high-water mark is already 117 MB there while it holds 8 MB, and it holds about 8 MB for the rest of the run.",
+        "Run 3 (box-6) was measured again on 2026-11-12/13, on the same box, with a collector that records which cgroup the kernel charges for the box's filesystem-metadata writeback; it replaces the run of 2026-11-10 (`data/2026/superseded/cycle-3/`). That run was charged 16.6 MB of disk writes in its first seven hours; this one was charged 4 KB in 25 hours, while the box's metadata writeback (150 MB over the run) was charged to other cgroups throughout. `docs/RUN-2026-slot5.md` has the cause and the rule under which the run was replaced."
       ],
       "values": {
         "pss_idle_median_mb": {
-          "median": 17.903104,
+          "median": 17.85856,
           "cycles": [
             17.854464,
             17.903104,
-            18.210816
+            17.85856
           ]
         },
         "pss_idle_p95_mb": {
-          "median": 18.690048,
+          "median": 18.706432,
           "cycles": [
             18.706432,
             18.567168,
-            18.690048
+            18.784256
           ]
         },
         "rss_idle_median_mb": {
-          "median": 19.392512,
+          "median": 19.345408,
           "cycles": [
             19.341312,
             19.392512,
-            19.697664
+            19.345408
           ]
         },
         "memory_current_idle_median_mb": {
-          "median": 8.245248,
+          "median": 8.21248,
           "cycles": [
             8.204288,
             8.245248,
-            8.35584
+            8.21248
           ]
         },
         "memory_peak_mb": {
@@ -356,15 +385,15 @@
           "cycles": [
             118.120448,
             117.997568,
-            118.300672
+            118.165504
           ]
         },
         "first_hour_peak_mb": {
-          "median": 18.56,
+          "median": 18.71872,
           "cycles": [
             18.870272,
             18.419712,
-            18.56
+            18.71872
           ]
         },
         "cpu_idle_pct": {
@@ -372,15 +401,15 @@
           "cycles": [
             0.16824370696944074,
             0.12402881628215968,
-            0.18109347505737408
+            0.18941628699118251
           ]
         },
         "cpu_loaded_pct": {
-          "median": 0.1587149860724234,
+          "median": 0.16098409470752087,
           "cycles": [
             0.16098409470752087,
             0.10622250696378831,
-            0.1587149860724234
+            0.16623197771587744
           ]
         },
         "disk_written_mb_24h": {
@@ -388,7 +417,21 @@
           "cycles": [
             0.0,
             0.0,
-            15.089349341707935
+            0.0
+          ]
+        },
+        "disk_charged_mb_24h": {
+          "median": 0.0,
+          "cycles": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "disk_metadata_charged_mb_24h": {
+          "median": 0.0,
+          "cycles": [
+            0.0
           ]
         },
         "journal_mb_24h": {
@@ -400,35 +443,35 @@
           ]
         },
         "net_out_mb_24h": {
-          "median": 2.3761231453074045,
+          "median": 2.375160942142771,
           "cycles": [
             2.3761231453074045,
             2.3207975069452833,
-            2.4070430535088776
+            2.375160942142771
           ]
         },
         "net_in_mb_24h": {
-          "median": 1.4246419712525666,
+          "median": 1.4193822055803842,
           "cycles": [
             1.4246419712525666,
             1.4059395385916174,
-            1.4366455079115836
+            1.4193822055803842
           ]
         },
         "net_headline_mb_24h": {
-          "median": 3.800765116559971,
+          "median": 3.794543147723155,
           "cycles": [
             3.800765116559971,
             3.7267370455369004,
-            3.843688561420461
+            3.794543147723155
           ]
         },
         "install_seconds": {
-          "median": 3.6,
+          "median": 3.4,
           "cycles": [
             5.2,
             3.0,
-            3.6
+            3.4
           ]
         },
         "disk_footprint_mb": {
@@ -552,6 +595,18 @@
             0.0
           ]
         },
+        "disk_charged_mb_24h": {
+          "median": 0.0,
+          "cycles": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "disk_metadata_charged_mb_24h": {
+          "median": null,
+          "cycles": []
+        },
         "journal_mb_24h": {
           "median": 0.0,
           "cycles": [
@@ -637,80 +692,95 @@
       "intervalSeconds": 60,
       "us": true,
       "footnotes": [
-        "Run 1 (box-1): this run's 14.5 MB of disk writes all fall in the first 7.8 hours after the install and then stop; in that span the agent logged nothing, its on-disk footprint did not grow, and its CPU, memory and network figures are the same as in the hours after. The same writes (the same hourly rate and block sizes, about 16 MB in all) appear in one run of another agent on another box and day (Beszel, run 3) and in neither agent's other two runs, so they are most likely the box's filesystem writeback charged to this unit's cgroup, not the agent's own writes. The cause is not established; the figure is published as measured.",
-        "Run 3 (box-7): the 0.3 MB are the agent's export queue. A batch that is not delivered within 15 s is written to disk; that happened between 16:24 and 21:16 UTC on 2026-11-11, hours in which exports timed out or were answered \"unavailable\" and were retried. A run in which every batch is delivered in time writes nothing (run 2)."
+        "Run 1 (box-1) was measured again on 2026-11-12/13, on the same box, with a collector that records which cgroup the kernel charges for the box's filesystem-metadata writeback; it replaces the run of 2026-11-08 (`data/2026/superseded/cycle-1/`). That run was charged 15.8 MB of disk writes in its first eight hours; this one was charged nothing after its install, in 25 hours, while the box's metadata writeback (163 MB over the run) was charged to other cgroups throughout. `docs/RUN-2026-slot5.md` has the cause and the rule under which the run was replaced.",
+        "The pilot run measured v1.5.0, which wrote 115 MB per 24 h to its on-disk export queue. v1.7.0 keeps a batch in memory for up to 15 s and writes it to disk only if it is still undelivered; the re-run was scheduled after that release, so that this row, like every other, is the agent's current release.",
+        "Run 3 (box-7): the 0.3 MB are the agent's export queue. A batch that is not delivered within 15 s is written to disk; that happened seven times between 16:24 and 21:16 UTC on 2026-11-11, while our own ingest endpoint was slow or failing. A run in which every batch is delivered in time writes nothing (runs 1 and 2)."
       ],
       "values": {
         "pss_idle_median_mb": {
-          "median": 45.477888,
+          "median": 45.776896,
           "cycles": [
-            45.449216,
+            45.981696,
             45.477888,
             45.776896
           ]
         },
         "pss_idle_p95_mb": {
-          "median": 47.0016,
+          "median": 47.095808,
           "cycles": [
-            46.75584,
+            47.095808,
             47.0016,
             47.251456
           ]
         },
         "rss_idle_median_mb": {
-          "median": 45.48608,
+          "median": 45.785088,
           "cycles": [
-            45.457408,
+            45.989888,
             45.48608,
             45.785088
           ]
         },
         "memory_current_idle_median_mb": {
-          "median": 14.4384,
+          "median": 14.512128,
           "cycles": [
-            14.327808,
+            14.604288,
             14.4384,
             14.512128
           ]
         },
         "memory_peak_mb": {
-          "median": 18.567168,
+          "median": 18.198528,
           "cycles": [
-            18.567168,
+            18.198528,
             17.944576,
             18.710528
           ]
         },
         "first_hour_peak_mb": {
-          "median": 46.637056,
+          "median": 46.821376,
           "cycles": [
-            45.559808,
+            46.821376,
             46.637056,
             47.04256
           ]
         },
         "cpu_idle_pct": {
-          "median": 0.08468996980311631,
+          "median": 0.08514629906993598,
           "cycles": [
-            0.08468996980311631,
+            0.08514629906993598,
             0.08289823650199299,
             0.08645645005435439
           ]
         },
         "cpu_loaded_pct": {
-          "median": 0.06351295264623955,
+          "median": 0.06777688022284122,
           "cycles": [
-            0.06351295264623955,
+            0.06779621169916435,
             0.058734512534818935,
             0.06777688022284122
           ]
         },
         "disk_written_mb_24h": {
-          "median": 0.31204603454523494,
+          "median": 0.0,
           "cycles": [
-            14.48235568546926,
+            0.0,
             0.0,
             0.31204603454523494
+          ]
+        },
+        "disk_charged_mb_24h": {
+          "median": 0.0,
+          "cycles": [
+            0.0,
+            0.0,
+            0.31204603454523494
+          ]
+        },
+        "disk_metadata_charged_mb_24h": {
+          "median": 0.0,
+          "cycles": [
+            0.0
           ]
         },
         "journal_mb_24h": {
@@ -722,9 +792,9 @@
           ]
         },
         "net_out_mb_24h": {
-          "median": 8.114061002536538,
+          "median": 8.097008508273946,
           "cycles": [
-            8.114061002536538,
+            8.083825698755888,
             8.097008508273946,
             8.334676864355599
           ]
@@ -732,23 +802,23 @@
         "net_in_mb_24h": {
           "median": 1.103299509602609,
           "cycles": [
-            1.094574977654306,
+            1.099926580504892,
             1.103299509602609,
             1.1298154076579296
           ]
         },
         "net_headline_mb_24h": {
-          "median": 8.114061002536538,
+          "median": 8.097008508273946,
           "cycles": [
-            8.114061002536538,
+            8.083825698755888,
             8.097008508273946,
             8.334676864355599
           ]
         },
         "install_seconds": {
-          "median": 6.4,
+          "median": 6.7,
           "cycles": [
-            6.4,
+            10.8,
             6.7,
             6.4
           ]
@@ -874,6 +944,18 @@
             11.793630264524703
           ]
         },
+        "disk_charged_mb_24h": {
+          "median": 11.793630264524703,
+          "cycles": [
+            11.793630264524703,
+            11.793630264524703,
+            11.793630264524703
+          ]
+        },
+        "disk_metadata_charged_mb_24h": {
+          "median": null,
+          "cycles": []
+        },
         "journal_mb_24h": {
           "median": 0.0,
           "cycles": [
@@ -958,7 +1040,9 @@
       "reportsTo": "Fivenines API (HTTPS push every 60 s)",
       "intervalSeconds": 60,
       "us": false,
-      "footnotes": [],
+      "footnotes": [
+        "The memory peak (129 MB) is mostly reached before the first sample, within seconds of the install: the cgroup's high-water mark is already 125 MB there while it holds 34 MB, and it holds about 35 MB for the rest of the run."
+      ],
       "values": {
         "pss_idle_median_mb": {
           "median": 49.882112,
@@ -1031,6 +1115,18 @@
             0.4744809566372751,
             0.4744809566372751
           ]
+        },
+        "disk_charged_mb_24h": {
+          "median": 0.4744809566372751,
+          "cycles": [
+            0.4744809566372751,
+            0.4744809566372751,
+            0.4744809566372751
+          ]
+        },
+        "disk_metadata_charged_mb_24h": {
+          "median": null,
+          "cycles": []
         },
         "journal_mb_24h": {
           "median": 0.2871015652173913,
@@ -1119,7 +1215,7 @@
       "footnotes": [
         "Glances ships no systemd unit; the harness adds a two-line one that runs `glances -w`.",
         "Runs as root (pipx install as root, the documented route); port 61208 is reachable from the sink only.",
-        "Network bytes are counted by TCP port (the listening socket is not in the service's cgroup under socket activation, and polled traffic is what this row sends).",
+        "Network bytes are counted by TCP port (61208); polled traffic is what this row sends.",
         "The network figure is the harness's own poller fetching /api/4/all every 3 s (Glances' refresh period); each reply is about 137 KB, which is the 3.9 GB per 24 h. Scale it to your own polling interval."
       ],
       "values": {
@@ -1194,6 +1290,18 @@
             0.0,
             0.0
           ]
+        },
+        "disk_charged_mb_24h": {
+          "median": 0.0,
+          "cycles": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "disk_metadata_charged_mb_24h": {
+          "median": null,
+          "cycles": []
         },
         "journal_mb_24h": {
           "median": 0.0,
@@ -1354,6 +1462,18 @@
             0.0,
             0.0
           ]
+        },
+        "disk_charged_mb_24h": {
+          "median": 0.0,
+          "cycles": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "disk_metadata_charged_mb_24h": {
+          "median": null,
+          "cycles": []
         },
         "journal_mb_24h": {
           "median": 0.0,
@@ -1534,6 +1654,18 @@
             103.20601997342675
           ]
         },
+        "disk_charged_mb_24h": {
+          "median": 103.22311838627854,
+          "cycles": [
+            103.22311838627854,
+            103.25304060876918,
+            103.20601997342675
+          ]
+        },
+        "disk_metadata_charged_mb_24h": {
+          "median": null,
+          "cycles": []
+        },
         "journal_mb_24h": {
           "median": 29.295362086956523,
           "cycles": [
@@ -1621,79 +1753,101 @@
       "footnotes": [
         "ML anomaly detection stays at its default (on).",
         "kickstart's default channel is nightly; installed with --stable-channel so the version is a release readers can reproduce.",
-        "Anonymous telemetry and the daily updater timer stay at their defaults; the updater's unit is counted with the agent."
+        "Anonymous telemetry and the daily updater timer stay at their defaults. The updater's unit is matched with the agent's; a unit that lives for less than the 10-second sampling interval is counted only as far as the samples catch it.",
+        "The three runs of this row were measured at the same time, on 2026-11-12/13 on box-0, box-3 and box-5, with a collector that records how much of the box's filesystem-metadata writeback the kernel charged to the unit. They replace the runs of 2026-11-07 to 11-11 (`data/2026/superseded/`), which have no such record: their disk figures (254 to 270 MB per 24 h) include an unknown share of that stream. `docs/RUN-2026-slot5.md` has the cause and the rule under which the runs were replaced.",
+        "The disk figure is probably a little low. The record of the metadata writeback counts whole pages per pass and reads above what the kernel charges: by 11 % on a box where the two could be compared exactly, and by about 13 % (between 6 and 21 %) in the hours of the six Netdata runs. An hour's metadata is never taken out beyond that hour's charge, but this unit writes more than the stream in every hour, so the excess is not caught: about 10 to 14 MB per 24 h in each run.",
+        "Run 1 (box-0): idle CPU is 5.4 % of one vCPU against 3.8 % in runs 2 and 3; under load the three runs agree (2.9, 2.7 and 2.9 %). Box-0 and box-6 are on a different host type from the other seven boxes (their virtual CPUs report 2,495 MHz, the others 2,445 MHz, read on 2026-11-13), and the four agents measured on box-0 and on box-3 in the re-run used 1.34 to 1.38 times the idle CPU time on box-0 (HetrixTools 17.4 against 12.6 %, Glances 2.49 against 1.83, Beszel 0.17 against 0.12, Pulse 0.07 against 0.05). The median is not affected.",
+        "Run 1 (box-0): 109.2 MB per 24 h of filesystem-metadata writeback were charged to this unit's cgroup and are not counted as its disk writes (247.9 MB per 24 h charged in all).",
+        "Run 2 (box-3): 124.0 MB per 24 h of filesystem-metadata writeback were charged to this unit's cgroup and are not counted as its disk writes (260.2 MB per 24 h charged in all).",
+        "Run 3 (box-5): 102.2 MB per 24 h of filesystem-metadata writeback were charged to this unit's cgroup and are not counted as its disk writes (242.0 MB per 24 h charged in all)."
       ],
       "values": {
         "pss_idle_median_mb": {
-          "median": 354.701312,
+          "median": 357.070336,
           "cycles": [
-            354.347008,
-            354.852864,
-            354.701312
+            355.90656,
+            360.489984,
+            357.070336
           ]
         },
         "pss_idle_p95_mb": {
-          "median": 363.767808,
+          "median": 367.584256,
           "cycles": [
-            363.456512,
-            363.767808,
-            364.191744
+            365.449216,
+            374.315008,
+            367.584256
           ]
         },
         "rss_idle_median_mb": {
-          "median": 437.612544,
+          "median": 439.549952,
           "cycles": [
-            437.608448,
-            437.612544,
-            438.038528
+            438.648832,
+            442.85952,
+            439.549952
           ]
         },
         "memory_current_idle_median_mb": {
-          "median": 245.772288,
+          "median": 248.020992,
           "cycles": [
-            245.772288,
-            246.583296,
-            245.315584
+            247.916544,
+            252.93824,
+            248.020992
           ]
         },
         "memory_peak_mb": {
-          "median": 294.428672,
+          "median": 307.990528,
           "cycles": [
-            287.809536,
-            294.428672,
-            296.853504
+            300.187648,
+            307.990528,
+            317.41952
           ]
         },
         "first_hour_peak_mb": {
-          "median": 308.021248,
+          "median": 311.103488,
           "cycles": [
-            308.021248,
-            308.01408,
-            309.291008
+            311.957504,
+            308.81792,
+            311.103488
           ]
         },
         "cpu_idle_pct": {
-          "median": 3.796405780891412,
+          "median": 3.810787392197125,
           "cycles": [
-            3.796405780891412,
-            3.7807457990095426,
-            3.9653798441840804
+            5.388088683415872,
+            3.786408688247373,
+            3.810787392197125
           ]
         },
         "cpu_loaded_pct": {
-          "median": 2.877105905292479,
+          "median": 2.8519834818941505,
           "cycles": [
-            2.843460027855153,
-            2.877105905292479,
-            3.1722372144846798
+            2.8887178551532036,
+            2.6631734818941504,
+            2.8519834818941505
           ]
         },
         "disk_written_mb_24h": {
-          "median": 265.9358896871603,
+          "median": 138.70659965696342,
           "cycles": [
-            269.7231881338326,
-            254.0011975166083,
-            265.9358896871603
+            138.70659965696342,
+            136.22305519024036,
+            139.7667012537746
+          ]
+        },
+        "disk_charged_mb_24h": {
+          "median": 247.87141650924025,
+          "cycles": [
+            247.87141650924025,
+            260.1908229689576,
+            241.9895624882232
+          ]
+        },
+        "disk_metadata_charged_mb_24h": {
+          "median": 109.16481685227684,
+          "cycles": [
+            109.16481685227684,
+            123.96776777871723,
+            102.22286123444862
           ]
         },
         "journal_mb_24h": {
@@ -1713,11 +1867,11 @@
           ]
         },
         "net_in_mb_24h": {
-          "median": 0.00012523251600434835,
+          "median": 0.00015027901920521803,
           "cycles": [
-            0.00012523251600434835,
-            0.00010853484720376858,
-            0.0007764415992269597
+            0.0007346974272255103,
+            0.00015027901920521803,
+            6.261625800217417e-05
           ]
         },
         "net_headline_mb_24h": {
@@ -1729,19 +1883,19 @@
           ]
         },
         "install_seconds": {
-          "median": 21.2,
+          "median": 26.4,
           "cycles": [
-            20.6,
-            21.2,
-            21.5
+            26.4,
+            23.1,
+            27.5
           ]
         },
         "disk_footprint_mb": {
-          "median": 790.741804,
+          "median": 794.456005,
           "cycles": [
-            790.741804,
-            786.818032,
-            790.8611
+            795.204442,
+            794.456005,
+            791.568411
           ]
         },
         "pids_median": {
@@ -1749,15 +1903,15 @@
           "cycles": [
             17.0,
             17.0,
-            18.0
+            17.0
           ]
         },
         "threads_median": {
-          "median": 148.0,
+          "median": 149.0,
           "cycles": [
-            148.0,
-            148.0,
-            147.0
+            149.0,
+            149.0,
+            148.0
           ]
         }
       }
@@ -1783,79 +1937,101 @@
       "footnotes": [
         "Same binary as the self-hosted row, claimed to Netdata Cloud. ML anomaly detection stays at its default (on).",
         "kickstart's default channel is nightly; installed with --stable-channel so the version is a release readers can reproduce.",
-        "Anonymous telemetry and the daily updater timer stay at their defaults; the updater's unit is counted with the agent."
+        "Anonymous telemetry and the daily updater timer stay at their defaults. The updater's unit is matched with the agent's; a unit that lives for less than the 10-second sampling interval is counted only as far as the samples catch it.",
+        "The three runs of this row were measured at the same time, on 2026-11-12/13 on box-2, box-4 and box-7, with a collector that records how much of the box's filesystem-metadata writeback the kernel charged to the unit. They replace the runs of 2026-11-07 to 11-11 (`data/2026/superseded/`), which have no such record: their disk figures (231 to 276 MB per 24 h) include an unknown share of that stream. `docs/RUN-2026-slot5.md` has the cause and the rule under which the runs were replaced.",
+        "The disk figure is probably a little low. The record of the metadata writeback counts whole pages per pass and reads above what the kernel charges: by 11 % on a box where the two could be compared exactly, and by about 13 % (between 6 and 21 %) in the hours of the six Netdata runs. An hour's metadata is never taken out beyond that hour's charge, but this unit writes more than the stream in every hour, so the excess is not caught: about 4 to 12 MB per 24 h in each run.",
+        "All three nodes sent more than usual at the same two moments of the idle window, 20:06:50Z and 20:53:50 to 20:54:50Z on 2026-11-12: 0.2 MB from the nodes of runs 1 and 3 and 1.0 MB from the node of run 2. The cause is not established; it is what a visit to the Space in Netdata Cloud's interface would look like, and none is on record. Outside those two minutes every run sent 0.33 MB per 24 h, as the replaced runs did; with them 0.55, 1.38 and 0.51.",
+        "Run 1 (box-2): 100.3 MB per 24 h of filesystem-metadata writeback were charged to this unit's cgroup and are not counted as its disk writes (247.7 MB per 24 h charged in all).",
+        "Run 2 (box-4): 38.8 MB per 24 h of filesystem-metadata writeback were charged to this unit's cgroup and are not counted as its disk writes (188.0 MB per 24 h charged in all).",
+        "Run 3 (box-7): 75.2 MB per 24 h of filesystem-metadata writeback were charged to this unit's cgroup and are not counted as its disk writes (223.7 MB per 24 h charged in all)."
       ],
       "values": {
         "pss_idle_median_mb": {
-          "median": 356.4288,
+          "median": 360.920064,
           "cycles": [
-            355.735552,
-            356.87424,
-            356.4288
+            359.651328,
+            360.920064,
+            361.038848
           ]
         },
         "pss_idle_p95_mb": {
-          "median": 365.910016,
+          "median": 370.312192,
           "cycles": [
-            365.438976,
-            365.910016,
-            366.148608
+            369.752064,
+            370.312192,
+            370.705408
           ]
         },
         "rss_idle_median_mb": {
-          "median": 438.781952,
+          "median": 442.814464,
           "cycles": [
-            438.781952,
-            439.228416,
-            438.380544
+            442.42944,
+            442.814464,
+            444.094464
           ]
         },
         "memory_current_idle_median_mb": {
-          "median": 252.327936,
+          "median": 253.792256,
           "cycles": [
-            252.23168,
-            252.327936,
-            252.69248
+            252.841984,
+            255.234048,
+            253.792256
           ]
         },
         "memory_peak_mb": {
-          "median": 295.559168,
+          "median": 295.960576,
           "cycles": [
-            295.559168,
-            292.528128,
-            308.166656
+            295.960576,
+            291.909632,
+            311.549952
           ]
         },
         "first_hour_peak_mb": {
-          "median": 311.877632,
+          "median": 310.89152,
           "cycles": [
-            312.170496,
-            311.29088,
-            311.877632
+            310.633472,
+            310.89152,
+            312.390656
           ]
         },
         "cpu_idle_pct": {
-          "median": 3.720910763377219,
+          "median": 3.9124067616861944,
           "cycles": [
-            3.720910763377219,
-            3.9605377134919677,
-            3.70125200144945
+            4.04170822442324,
+            3.9124067616861944,
+            3.7916023734750572
           ]
         },
         "cpu_loaded_pct": {
-          "median": 2.8118288022284124,
+          "median": 3.220628997214485,
           "cycles": [
-            2.794794568245125,
-            3.1940830083565457,
-            2.8118288022284124
+            3.3496475487465185,
+            2.946943955431755,
+            3.220628997214485
           ]
         },
         "disk_written_mb_24h": {
-          "median": 259.6009277255707,
+          "median": 148.4740679985506,
           "cycles": [
-            230.9610861988163,
-            259.6009277255707,
-            276.11371993719047
+            147.38831878246165,
+            149.23494737045536,
+            148.4740679985506
+          ]
+        },
+        "disk_charged_mb_24h": {
+          "median": 223.71990835608167,
+          "cycles": [
+            247.70470698393527,
+            188.02269692474937,
+            223.71990835608167
+          ]
+        },
+        "disk_metadata_charged_mb_24h": {
+          "median": 75.2458403575311,
+          "cycles": [
+            100.31638820147361,
+            38.787749554293995,
+            75.2458403575311
           ]
         },
         "journal_mb_24h": {
@@ -1867,43 +2043,43 @@
           ]
         },
         "net_out_mb_24h": {
-          "median": 0.33734717719531343,
+          "median": 0.5529944389419011,
           "cycles": [
-            0.33734717719531343,
-            0.3397005048918952,
-            0.3364757676047832
+            0.5529944389419011,
+            1.3751594733663486,
+            0.5111824326609494
           ]
         },
         "net_in_mb_24h": {
-          "median": 0.18967508153158594,
+          "median": 0.2509461335910134,
           "cycles": [
-            0.18954984901558158,
-            0.18967508153158594,
-            0.1899119797076942
+            0.2509461335910134,
+            0.4896027829448001,
+            0.24881405000603937
           ]
         },
         "net_headline_mb_24h": {
-          "median": 0.33734717719531343,
+          "median": 0.5529944389419011,
           "cycles": [
-            0.33734717719531343,
-            0.3397005048918952,
-            0.3364757676047832
+            0.5529944389419011,
+            1.3751594733663486,
+            0.5111824326609494
           ]
         },
         "install_seconds": {
-          "median": 25.4,
+          "median": 30.2,
           "cycles": [
-            25.2,
-            26.5,
-            25.4
+            30.3,
+            30.2,
+            29.7
           ]
         },
         "disk_footprint_mb": {
-          "median": 794.705249,
+          "median": 798.052603,
           "cycles": [
-            795.886713,
-            794.699968,
-            794.705249
+            801.9202,
+            796.809538,
+            798.052603
           ]
         },
         "pids_median": {
@@ -1915,9 +2091,9 @@
           ]
         },
         "threads_median": {
-          "median": 148.0,
+          "median": 149.0,
           "cycles": [
-            147.0,
+            149.0,
             149.0,
             148.0
           ]
@@ -2016,6 +2192,18 @@
           10.528347713491966,
           10.51979850706607
         ]
+      },
+      "disk_charged_mb_24h": {
+        "median": 10.51979850706607,
+        "cycles": [
+          10.51979850706607,
+          10.528347713491966,
+          10.51979850706607
+        ]
+      },
+      "disk_metadata_charged_mb_24h": {
+        "median": null,
+        "cycles": []
       },
       "journal_mb_24h": {
         "median": 0.0,

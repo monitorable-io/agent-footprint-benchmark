@@ -1,11 +1,11 @@
 {
   "agent": "monitorable",
   "box": "box-1",
-  "slot": 1,
+  "slot": 0,
   "run": 0,
-  "installFinished": 1794178894,
-  "loadStart": 1794265294,
-  "stop": 1794268894,
+  "installFinished": 1794506165,
+  "loadStart": 1794592565,
+  "stop": 1794596165,
   "cpuModel": "AMD EPYC-Rome Processor",
   "vcpus": 2
 }

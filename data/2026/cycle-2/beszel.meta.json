@@ -18,7 +18,9 @@
     "BESZEL_TOKEN",
     "BESZEL_HUB_URL"
   ],
-  "footnotes": [],
+  "footnotes": [
+    "The memory peak (118 MB) is reached before the first sample, within seconds of the install: the cgroup's high-water mark is already 117 MB there while it holds 8 MB, and it holds about 8 MB for the rest of the run."
+  ],
   "sourceUrl": "https://beszel.dev/guide/agent-installation",
   "install": {
     "agent": "beszel",

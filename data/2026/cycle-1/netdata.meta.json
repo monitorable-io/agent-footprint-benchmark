@@ -23,7 +23,10 @@
   "footnotes": [
     "ML anomaly detection stays at its default (on).",
     "kickstart's default channel is nightly; installed with --stable-channel so the version is a release readers can reproduce.",
-    "Anonymous telemetry and the daily updater timer stay at their defaults; the updater's unit is counted with the agent."
+    "Anonymous telemetry and the daily updater timer stay at their defaults. The updater's unit is matched with the agent's; a unit that lives for less than the 10-second sampling interval is counted only as far as the samples catch it.",
+    "The three runs of this row were measured at the same time, on 2026-11-12/13 on box-0, box-3 and box-5, with a collector that records how much of the box's filesystem-metadata writeback the kernel charged to the unit. They replace the runs of 2026-11-07 to 11-11 (`data/2026/superseded/`), which have no such record: their disk figures (254 to 270 MB per 24 h) include an unknown share of that stream. `docs/RUN-2026-slot5.md` has the cause and the rule under which the runs were replaced.",
+    "The disk figure is probably a little low. The record of the metadata writeback counts whole pages per pass and reads above what the kernel charges: by 11 % on a box where the two could be compared exactly, and by about 13 % (between 6 and 21 %) in the hours of the six Netdata runs. An hour's metadata is never taken out beyond that hour's charge, but this unit writes more than the stream in every hour, so the excess is not caught: about 10 to 14 MB per 24 h in each run.",
+    "Run 1 (box-0): idle CPU is 5.4 % of one vCPU against 3.8 % in runs 2 and 3; under load the three runs agree (2.9, 2.7 and 2.9 %). Box-0 and box-6 are on a different host type from the other seven boxes (their virtual CPUs report 2,495 MHz, the others 2,445 MHz, read on 2026-11-13), and the four agents measured on box-0 and on box-3 in the re-run used 1.34 to 1.38 times the idle CPU time on box-0 (HetrixTools 17.4 against 12.6 %, Glances 2.49 against 1.83, Beszel 0.17 against 0.12, Pulse 0.07 against 0.05). The median is not affected."
   ],
   "sourceUrl": "https://learn.netdata.cloud/docs/netdata-agent/installation/linux",
   "install": {
@@ -31,9 +34,9 @@
     "kernel": "7.0.0-30-generic",
     "cpu_model": "AMD EPYC-Rome Processor",
     "vcpus": 2,
-    "started": 1794087098.734533770,
-    "finished": 1794087119.313692407,
-    "seconds": 20.6,
+    "started": 1794505998.164993801,
+    "finished": 1794506024.590412230,
+    "seconds": 26.4,
     "status": "ok",
     "exit_code": 0,
     "version": "v2.12.3",
@@ -47,7 +50,7 @@
       8125,
       19999
     ],
-    "disk_bytes": 630764334,
+    "disk_bytes": 630776626,
     "counted_interfaces": [
       "enp7s0",
       "eth0"
@@ -64,18 +67,18 @@
       "No user sessions are running outdated binaries.",
       "No VM guests are running outdated hypervisor (qemu) binaries on this host.",
       " OK ",
-      "[/tmp/netdata-kickstart-WXooMLVQyW]# test -x //usr/libexec/netdata/netdata-updater.sh ",
+      "[/tmp/netdata-kickstart-VXrF4ztjOj]# test -x //usr/libexec/netdata/netdata-updater.sh ",
       " OK ",
-      "[/tmp/netdata-kickstart-WXooMLVQyW]# grep -q \\--enable-auto-updates //usr/libexec/netdata/netdata-updater.sh ",
+      "[/tmp/netdata-kickstart-VXrF4ztjOj]# grep -q \\--enable-auto-updates //usr/libexec/netdata/netdata-updater.sh ",
       " OK ",
-      "[/tmp/netdata-kickstart-WXooMLVQyW]# //usr/libexec/netdata/netdata-updater.sh --enable-auto-updates  ",
-      "Sat Nov  7 09:31:58 PM UTC 2026 : INFO: netdata-updater.sh:  Auto-updating has been ENABLED through cron, updater script linked to /etc/cron.daily/netdata-updater",
-      "Sat Nov  7 09:31:58 PM UTC 2026 : INFO: netdata-updater.sh:  If the update process fails and you have email notifications set up correctly for cron on this system, you should receive an email notification of the failure.",
-      "Sat Nov  7 09:31:58 PM UTC 2026 : INFO: netdata-updater.sh:  Successful updates will not send an email.",
+      "[/tmp/netdata-kickstart-VXrF4ztjOj]# //usr/libexec/netdata/netdata-updater.sh --enable-auto-updates  ",
+      "Thu Nov 12 05:53:43 PM UTC 2026 : INFO: netdata-updater.sh:  Auto-updating has been ENABLED through cron, updater script linked to /etc/cron.daily/netdata-updater",
+      "Thu Nov 12 05:53:43 PM UTC 2026 : INFO: netdata-updater.sh:  If the update process fails and you have email notifications set up correctly for cron on this system, you should receive an email notification of the failure.",
+      "Thu Nov 12 05:53:43 PM UTC 2026 : INFO: netdata-updater.sh:  Successful updates will not send an email.",
       " OK ",
       "Successfully installed the Netdata Agent.",
       "The following non-fatal warnings or errors were encountered:",
-      "/tmp/netdata-kickstart.sh: 513: printf: %{: invalid directive",
+      "/tmp/netdata-kickstart.sh: 525: printf: %{: invalid directive",
       "  - Command \"/usr/bin/curl --write-out ",
       "To view the dashboard, open your web browser and enter http://NODE:19999.",
       "Replace NODE with the IP address or hostname of your Netdata server.",
@@ -91,22 +94,22 @@
   },
   "schedule": {
     "agent": "netdata",
-    "box": "box-1",
+    "box": "box-0",
     "slot": 0,
     "run": 0,
-    "installFinished": 1794087119,
-    "loadStart": 1794173519,
-    "stop": 1794177119,
+    "installFinished": 1794506024,
+    "loadStart": 1794592424,
+    "stop": 1794596024,
     "cpuModel": "AMD EPYC-Rome Processor",
     "vcpus": 2
   },
   "footprint": {
-    "disk_bytes": 790741804,
+    "disk_bytes": 795204442,
     "journal_bytes": 0,
     "window": {
-      "start": 1794090719,
-      "end": 1794173519
+      "start": 1794509624,
+      "end": 1794592424
     },
-    "measured": 1794178514
+    "measured": 1794597603
   }
 }

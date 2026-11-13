@@ -19,8 +19,8 @@
     "HETRIX_INSTALL_ARGS"
   ],
   "footnotes": [
-    "This box has no cron, so the vendor installer's own systemd path runs: a minutely timer starting a transient unit per run. Those runs are placed in a persistent slice (one word added to the vendor launcher) so the kernel's accounting for them survives each run; the timer's launcher unit is counted too.",
-    "The CPU figure (13 to 17 % of one vCPU) is the same in all three runs and agrees with the box's load average: its idle median is 0.22 to 0.30 on this row's boxes against 0.05 to 0.12 on every other box."
+    "This box has no cron, so the vendor installer's own systemd path runs: a minutely timer starting a transient unit per run. Those runs are placed in a persistent slice (one word added to the vendor launcher) so the kernel's accounting for them survives each run. The timer's launcher unit is matched too; a unit that lives for less than the 10-second sampling interval is counted only as far as the samples catch it.",
+    "The CPU figure is 12.6 to 17.4 % of one vCPU in the three runs, and the box's load average agrees: its idle median is 0.22 to 0.30 on this row's boxes against 0.05 to 0.12 on every other box."
   ],
   "sourceUrl": "https://github.com/hetrixtools/agent",
   "install": {

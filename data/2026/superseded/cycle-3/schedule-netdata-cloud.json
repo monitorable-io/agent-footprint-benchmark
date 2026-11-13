@@ -1,0 +1,11 @@
+{
+  "agent": "netdata-cloud",
+  "box": "box-8",
+  "slot": 2,
+  "run": 2,
+  "installFinished": 1794271700,
+  "loadStart": 1794358100,
+  "stop": 1794361700,
+  "cpuModel": "AMD EPYC-Rome Processor",
+  "vcpus": 2
+}

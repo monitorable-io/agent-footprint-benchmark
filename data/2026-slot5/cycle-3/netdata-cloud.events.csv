@@ -1,0 +1,5 @@
+ts,event,cgroup,detail
+1794507105,start,,system.slice/netdata.service system.slice/netdata-updater.service
+1794507105,blockdev_trace,,ino=8388609
+1794507105,cgroup_appeared,system.slice/netdata.service,9400
+1794597098,stop,,

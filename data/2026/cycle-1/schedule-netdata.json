@@ -1,11 +1,11 @@
 {
   "agent": "netdata",
-  "box": "box-1",
+  "box": "box-0",
   "slot": 0,
   "run": 0,
-  "installFinished": 1794087119,
-  "loadStart": 1794173519,
-  "stop": 1794177119,
+  "installFinished": 1794506024,
+  "loadStart": 1794592424,
+  "stop": 1794596024,
   "cpuModel": "AMD EPYC-Rome Processor",
   "vcpus": 2
 }

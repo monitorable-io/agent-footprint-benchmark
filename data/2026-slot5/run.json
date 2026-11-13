@@ -1,0 +1,43 @@
+{
+  "provider": "Hetzner Cloud",
+  "location": "Helsinki (HEL1)",
+  "plan": "CX23: 2 vCPU AMD EPYC (shared), 4 GB RAM, 40 GB NVMe",
+  "image": "Ubuntu 26.04 LTS",
+  "kernel": "7.0.0-15/-30-generic (differs by box, see kernels)",
+  "kernels": {
+    "box-0": [
+      "7.0.0-30-generic"
+    ],
+    "box-1": [
+      "7.0.0-30-generic"
+    ],
+    "box-2": [
+      "7.0.0-15-generic"
+    ],
+    "box-3": [
+      "7.0.0-30-generic"
+    ],
+    "box-4": [
+      "7.0.0-30-generic"
+    ],
+    "box-5": [
+      "7.0.0-30-generic"
+    ],
+    "box-6": [
+      "7.0.0-30-generic"
+    ],
+    "box-7": [
+      "7.0.0-30-generic"
+    ],
+    "box-8": [
+      "7.0.0-30-generic"
+    ]
+  },
+  "notes": [
+    "Ubuntu's apt-daily and apt-daily-upgrade timers were masked on every box at provisioning (the pilot's unattended-upgrades restarted dynamically linked agents mid-cycle).",
+    "Network bytes count only the box's physical interfaces; Docker bridge traffic is excluded.",
+    "Processes are counted in the agent's cgroup and its child cgroups.",
+    "Disk written excludes the filesystem-metadata writeback the kernel charged to the unit's cgroup: ext4 writes metadata through the block device's inode and the kernel charges one inode's writeback to a single cgroup, whichever owns it. The charge as the kernel reported it is published next to it.",
+    "This is the instrumented retest slot of 2026-11-12/13: nine role-runs measured at the same time (slots/slot-0.plan, docs/RUN-2026-slot5.md). Its eight agent runs are also filed in data/2026/cycle-N/, where they replace the runs they stand for; the control run is published here only. The agent runs' files here are as collected; the footnotes added by hand are on their copies in data/2026/."
+  ]
+}

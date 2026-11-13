@@ -19,7 +19,9 @@
     "MONITORABLE_ENDPOINT",
     "MONITORABLE_INSTALLER_URL"
   ],
-  "footnotes": [],
+  "footnotes": [
+    "The pilot run measured v1.5.0, which wrote 115 MB per 24 h to its on-disk export queue. v1.7.0 keeps a batch in memory for up to 15 s and writes it to disk only if it is still undelivered; the re-run was scheduled after that release, so that this row, like every other, is the agent's current release."
+  ],
   "sourceUrl": "https://monitorable.io/docs/agent/install/",
   "install": {
     "agent": "monitorable",

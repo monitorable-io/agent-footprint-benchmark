@@ -26,7 +26,10 @@
   "footnotes": [
     "Same binary as the self-hosted row, claimed to Netdata Cloud. ML anomaly detection stays at its default (on).",
     "kickstart's default channel is nightly; installed with --stable-channel so the version is a release readers can reproduce.",
-    "Anonymous telemetry and the daily updater timer stay at their defaults; the updater's unit is counted with the agent."
+    "Anonymous telemetry and the daily updater timer stay at their defaults. The updater's unit is matched with the agent's; a unit that lives for less than the 10-second sampling interval is counted only as far as the samples catch it.",
+    "The three runs of this row were measured at the same time, on 2026-11-12/13 on box-2, box-4 and box-7, with a collector that records how much of the box's filesystem-metadata writeback the kernel charged to the unit. They replace the runs of 2026-11-07 to 11-11 (`data/2026/superseded/`), which have no such record: their disk figures (231 to 276 MB per 24 h) include an unknown share of that stream. `docs/RUN-2026-slot5.md` has the cause and the rule under which the runs were replaced.",
+    "The disk figure is probably a little low. The record of the metadata writeback counts whole pages per pass and reads above what the kernel charges: by 11 % on a box where the two could be compared exactly, and by about 13 % (between 6 and 21 %) in the hours of the six Netdata runs. An hour's metadata is never taken out beyond that hour's charge, but this unit writes more than the stream in every hour, so the excess is not caught: about 4 to 12 MB per 24 h in each run.",
+    "All three nodes sent more than usual at the same two moments of the idle window, 20:06:50Z and 20:53:50 to 20:54:50Z on 2026-11-12: 0.2 MB from the nodes of runs 1 and 3 and 1.0 MB from the node of run 2. The cause is not established; it is what a visit to the Space in Netdata Cloud's interface would look like, and none is on record. Outside those two minutes every run sent 0.33 MB per 24 h, as the replaced runs did; with them 0.55, 1.38 and 0.51."
   ],
   "sourceUrl": "https://learn.netdata.cloud/docs/netdata-agent/installation/linux",
   "install": {
@@ -34,9 +37,9 @@
     "kernel": "7.0.0-30-generic",
     "cpu_model": "AMD EPYC-Rome Processor",
     "vcpus": 2,
-    "started": 1794179429.150181131,
-    "finished": 1794179455.623419518,
-    "seconds": 26.5,
+    "started": 1794506611.038391609,
+    "finished": 1794506641.222267479,
+    "seconds": 30.2,
     "status": "ok",
     "exit_code": 0,
     "version": "v2.12.3",
@@ -50,36 +53,36 @@
       8125,
       19999
     ],
-    "disk_bytes": 642108383,
+    "disk_bytes": 643038182,
     "counted_interfaces": [
       "enp7s0",
       "eth0"
     ],
     "tail": [
       " --- Attempting to claim agent to https://app.netdata.cloud --- ",
-      "9482",
+      "9478",
       " --- Writing claiming configuration to /etc/netdata/claim.conf --- ",
-      "[/tmp/netdata-kickstart-MIaoY6ByB4]# chown root:netdata /tmp/netdata-kickstart-MIaoY6ByB4/claim.conf.S7ktAf ",
+      "[/tmp/netdata-kickstart-awGUXozPYk]# chown root:netdata /tmp/netdata-kickstart-awGUXozPYk/claim.conf.qOR6wZ ",
       " OK ",
-      "[/tmp/netdata-kickstart-MIaoY6ByB4]# chmod 0640 /tmp/netdata-kickstart-MIaoY6ByB4/claim.conf.S7ktAf ",
+      "[/tmp/netdata-kickstart-awGUXozPYk]# chmod 0640 /tmp/netdata-kickstart-awGUXozPYk/claim.conf.qOR6wZ ",
       " OK ",
-      "[/tmp/netdata-kickstart-MIaoY6ByB4]# mv -f /tmp/netdata-kickstart-MIaoY6ByB4/claim.conf.S7ktAf /etc/netdata/claim.conf ",
+      "[/tmp/netdata-kickstart-awGUXozPYk]# mv -f /tmp/netdata-kickstart-awGUXozPYk/claim.conf.qOR6wZ /etc/netdata/claim.conf ",
       " OK ",
-      "[/tmp/netdata-kickstart-MIaoY6ByB4]# /usr/sbin/netdatacli reload-claiming-state ",
+      "[/tmp/netdata-kickstart-awGUXozPYk]# /usr/sbin/netdatacli reload-claiming-state ",
       "Netdata Agent is claimed to Netdata Cloud and is currently online.",
       " OK ",
-      "[/tmp/netdata-kickstart-MIaoY6ByB4]# test -x //usr/libexec/netdata/netdata-updater.sh ",
+      "[/tmp/netdata-kickstart-awGUXozPYk]# test -x //usr/libexec/netdata/netdata-updater.sh ",
       " OK ",
-      "[/tmp/netdata-kickstart-MIaoY6ByB4]# grep -q \\--enable-auto-updates //usr/libexec/netdata/netdata-updater.sh ",
+      "[/tmp/netdata-kickstart-awGUXozPYk]# grep -q \\--enable-auto-updates //usr/libexec/netdata/netdata-updater.sh ",
       " OK ",
-      "[/tmp/netdata-kickstart-MIaoY6ByB4]# //usr/libexec/netdata/netdata-updater.sh --enable-auto-updates  ",
-      "Sun Nov  8 11:10:54 PM UTC 2026 : INFO: netdata-updater.sh:  Auto-updating has been ENABLED through cron, updater script linked to /etc/cron.daily/netdata-updater",
-      "Sun Nov  8 11:10:54 PM UTC 2026 : INFO: netdata-updater.sh:  If the update process fails and you have email notifications set up correctly for cron on this system, you should receive an email notification of the failure.",
-      "Sun Nov  8 11:10:54 PM UTC 2026 : INFO: netdata-updater.sh:  Successful updates will not send an email.",
+      "[/tmp/netdata-kickstart-awGUXozPYk]# //usr/libexec/netdata/netdata-updater.sh --enable-auto-updates  ",
+      "Thu Nov 12 06:04:00 PM UTC 2026 : INFO: netdata-updater.sh:  Auto-updating has been ENABLED through cron, updater script linked to /etc/cron.daily/netdata-updater",
+      "Thu Nov 12 06:04:00 PM UTC 2026 : INFO: netdata-updater.sh:  If the update process fails and you have email notifications set up correctly for cron on this system, you should receive an email notification of the failure.",
+      "Thu Nov 12 06:04:00 PM UTC 2026 : INFO: netdata-updater.sh:  Successful updates will not send an email.",
       " OK ",
       "Successfully installed the Netdata Agent.",
       "The following non-fatal warnings or errors were encountered:",
-      "/tmp/netdata-kickstart.sh: 513: printf: %{: invalid directive",
+      "/tmp/netdata-kickstart.sh: 525: printf: %{: invalid directive",
       "  - Command \"/usr/bin/curl --write-out ",
       "To view the dashboard, open your web browser and enter http://NODE:19999.",
       "Replace NODE with the IP address or hostname of your Netdata server.",
@@ -95,22 +98,22 @@
   },
   "schedule": {
     "agent": "netdata-cloud",
-    "box": "box-5",
-    "slot": 1,
+    "box": "box-4",
+    "slot": 0,
     "run": 1,
-    "installFinished": 1794179455,
-    "loadStart": 1794265855,
-    "stop": 1794269455,
+    "installFinished": 1794506641,
+    "loadStart": 1794593041,
+    "stop": 1794596641,
     "cpuModel": "AMD EPYC-Rome Processor",
     "vcpus": 2
   },
   "footprint": {
-    "disk_bytes": 794699968,
+    "disk_bytes": 796809538,
     "journal_bytes": 0,
     "window": {
-      "start": 1794183055,
-      "end": 1794265855
+      "start": 1794510241,
+      "end": 1794593041
     },
-    "measured": 1794270361
+    "measured": 1794597660
   }
 }

@@ -1,0 +1,4 @@
+ts,event,cgroup,detail
+1794271707,start,,system.slice/netdata.service system.slice/netdata-updater.service
+1794271707,cgroup_appeared,system.slice/netdata.service,9342
+1794361700,stop,,

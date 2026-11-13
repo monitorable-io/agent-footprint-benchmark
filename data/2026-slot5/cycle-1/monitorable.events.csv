@@ -1,0 +1,5 @@
+ts,event,cgroup,detail
+1794506172,start,,system.slice/monitorable-agent.service
+1794506172,blockdev_trace,,ino=8388609
+1794506172,cgroup_appeared,system.slice/monitorable-agent.service,8722
+1794596165,stop,,

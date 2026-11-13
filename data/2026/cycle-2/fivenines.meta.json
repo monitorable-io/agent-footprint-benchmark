@@ -16,7 +16,9 @@
   "env": [
     "FIVENINES_TOKEN"
   ],
-  "footnotes": [],
+  "footnotes": [
+    "The memory peak (129 MB) is mostly reached before the first sample, within seconds of the install: the cgroup's high-water mark is already 125 MB there while it holds 34 MB, and it holds about 35 MB for the rest of the run."
+  ],
   "sourceUrl": "https://github.com/Five-Nines-io/fivenines_agent#installation",
   "install": {
     "agent": "fivenines",

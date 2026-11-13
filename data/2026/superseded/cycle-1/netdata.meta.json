@@ -1,0 +1,113 @@
+{
+  "name": "netdata",
+  "kind": "none",
+  "cgroupGlobs": [
+    "system.slice/netdata.service",
+    "system.slice/netdata-updater.service"
+  ],
+  "ports": [],
+  "reportsTo": "nothing (standalone; local dashboard on :19999, not opened)",
+  "intervalSeconds": 1,
+  "licence": "GPL-3.0",
+  "diskPaths": [
+    "/etc/netdata",
+    "/usr/libexec/netdata",
+    "/usr/share/netdata",
+    "/var/cache/netdata",
+    "/var/lib/netdata",
+    "/var/log/netdata"
+  ],
+  "user": "netdata",
+  "env": [],
+  "package": "netdata",
+  "footnotes": [
+    "Superseded: this run is not in the published table; the run measured on 2026-11-12/13 (`data/2026/cycle-1/netdata.*`) replaces it. That run's collector records how much of the box's filesystem-metadata writeback the kernel charged to the unit; this run has no such record, so its disk figure (269.7 MB per 24 h) includes an unknown share of that stream. `docs/RUN-2026-slot5.md` has the cause and the rule under which the run was replaced.",
+    "ML anomaly detection stays at its default (on).",
+    "kickstart's default channel is nightly; installed with --stable-channel so the version is a release readers can reproduce.",
+    "Anonymous telemetry and the daily updater timer stay at their defaults. The updater's unit is matched with the agent's; a unit that lives for less than the 10-second sampling interval is counted only as far as the samples catch it."
+  ],
+  "sourceUrl": "https://learn.netdata.cloud/docs/netdata-agent/installation/linux",
+  "install": {
+    "agent": "netdata",
+    "kernel": "7.0.0-30-generic",
+    "cpu_model": "AMD EPYC-Rome Processor",
+    "vcpus": 2,
+    "started": 1794087098.734533770,
+    "finished": 1794087119.313692407,
+    "seconds": 20.6,
+    "status": "ok",
+    "exit_code": 0,
+    "version": "v2.12.3",
+    "units": [
+      "netdata.service"
+    ],
+    "listening_ports": [
+      22,
+      53,
+      4317,
+      8125,
+      19999
+    ],
+    "disk_bytes": 630764334,
+    "counted_interfaces": [
+      "enp7s0",
+      "eth0"
+    ],
+    "tail": [
+      "Setting up netdata-plugin-nfacct (2.12.3)…\r",
+      "Setting up netdata-plugin-apps (2.12.3)…\r",
+      "Setting up netdata-plugin-go (2.12.3)…\r",
+      "Setting up netdata-plugin-slabinfo (2.12.3)…\r",
+      "Processing triggers for libc-bin (2.43-2ubuntu2.3)…\r",
+      "Running kernel seems to be up-to-date.",
+      "No services need to be restarted.",
+      "No containers need to be restarted.",
+      "No user sessions are running outdated binaries.",
+      "No VM guests are running outdated hypervisor (qemu) binaries on this host.",
+      " OK ",
+      "[/tmp/netdata-kickstart-WXooMLVQyW]# test -x //usr/libexec/netdata/netdata-updater.sh ",
+      " OK ",
+      "[/tmp/netdata-kickstart-WXooMLVQyW]# grep -q \\--enable-auto-updates //usr/libexec/netdata/netdata-updater.sh ",
+      " OK ",
+      "[/tmp/netdata-kickstart-WXooMLVQyW]# //usr/libexec/netdata/netdata-updater.sh --enable-auto-updates  ",
+      "Sat Nov  7 09:31:58 PM UTC 2026 : INFO: netdata-updater.sh:  Auto-updating has been ENABLED through cron, updater script linked to /etc/cron.daily/netdata-updater",
+      "Sat Nov  7 09:31:58 PM UTC 2026 : INFO: netdata-updater.sh:  If the update process fails and you have email notifications set up correctly for cron on this system, you should receive an email notification of the failure.",
+      "Sat Nov  7 09:31:58 PM UTC 2026 : INFO: netdata-updater.sh:  Successful updates will not send an email.",
+      " OK ",
+      "Successfully installed the Netdata Agent.",
+      "The following non-fatal warnings or errors were encountered:",
+      "/tmp/netdata-kickstart.sh: 513: printf: %{: invalid directive",
+      "  - Command \"/usr/bin/curl --write-out ",
+      "To view the dashboard, open your web browser and enter http://NODE:19999.",
+      "Replace NODE with the IP address or hostname of your Netdata server.",
+      "Official documentation can be found online at https://learn.netdata.cloud/docs/.",
+      "Looking to monitor all of your infrastructure with Netdata? Check out Netdata Cloud at https://app.netdata.cloud.",
+      "Join our community and connect with us on:",
+      "  - GitHub: https://github.com/netdata/netdata/discussions",
+      "  - Discord: https://discord.gg/5ygS846fR6",
+      "  - Our community forums: https://community.netdata.cloud/",
+      "VERSION=v2.12.3",
+      "UNITS=netdata.service"
+    ]
+  },
+  "schedule": {
+    "agent": "netdata",
+    "box": "box-1",
+    "slot": 0,
+    "run": 0,
+    "installFinished": 1794087119,
+    "loadStart": 1794173519,
+    "stop": 1794177119,
+    "cpuModel": "AMD EPYC-Rome Processor",
+    "vcpus": 2
+  },
+  "footprint": {
+    "disk_bytes": 790741804,
+    "journal_bytes": 0,
+    "window": {
+      "start": 1794090719,
+      "end": 1794173519
+    },
+    "measured": 1794178514
+  }
+}

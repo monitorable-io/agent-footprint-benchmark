@@ -1,0 +1,11 @@
+# The instrumented retest slot of 2026 (disk-write attribution): docs/RUN-2026-slot5.md.
+# box role run   (run n is filed as cycle-(n+1))
+box-0 netdata 0
+box-1 monitorable 0
+box-2 netdata-cloud 0
+box-3 netdata 1
+box-4 netdata-cloud 1
+box-5 netdata 2
+box-6 beszel 2
+box-7 netdata-cloud 2
+box-8 none 0
