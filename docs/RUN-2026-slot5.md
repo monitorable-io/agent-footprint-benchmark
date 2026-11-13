@@ -75,6 +75,7 @@ in the re-run.
 - [x] `./bench cycle status 0` at 2026-11-12T18:55:01Z (+1 h, unattended runner): 9/9 rows active; metadata tracer: 9/9 boxes counting; sink: n/a this slot (no node-exporter/glances row); hubs: beszel box-6 up
 - 2026-11-12 18:15Z, first look at who is charged (the boxes' `blockdev.csv`, minutes after the installs, so the installs' own metadata is in it): the stream has already been charged to several owners. `netdata.service` itself holds part of it on four of the six Netdata boxes (0.25 to 1.0 MB so far), `containerd.service` most of the rest, the collector's own unit 1.2 MB on box-2, the root cgroup and `sysroot.mount` on others; on box-1 and box-6 the Monitorable and Beszel units have been charged none. So the Netdata rows do hold the stream at times, which the re-run's data could not show.
 - [x] `./bench collect 0` at: 2026-11-13T19:20:01Z–2026-11-13T19:22:10Z (unattended runner, main e73e37f): 9/9 rows collected, `slot-0.collect-failures.log` empty, every samples file verified, `summarize.py` ran clean (auto/summarize-0.out).
+- [x] RUN COMPLETE 2026-11-13T19:22:18Z (unattended runner): every slot collected; `summarize.py` output in data/2026-slot5/auto/summarize-final.out. The boxes stay rented until the founder says otherwise.
 
 ## Data
 
