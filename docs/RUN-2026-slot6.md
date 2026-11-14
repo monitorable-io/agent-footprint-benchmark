@@ -55,6 +55,7 @@ The other six measured boxes and the sink are not touched.
 - [x] `./bench cycle start 0` at: 2026-11-13T22:36:19Z → 2026-11-13T22:44:34Z (by hand, main 12c959b). Failures log: empty. 3 boxes in the manifest (box-2, box-4, box-7), AMD EPYC-Rome Processor / 2 vCPU; no other box was rebuilt. Every provision printed "apt-timers: … masked, unattended-upgrades stopped". Installs: 31.0 s, 25.7 s, 25.2 s, all v2.12.3, the version of the replaced runs. Kernels as in the retest slot: box-2 7.0.0-15, box-4 and box-7 7.0.0-30. Collect after 2026-11-14T23:44:23Z. `cycle status 0` right after (22:44Z): 3/3 rows active, the metadata tracer counting on box-2 and box-4 (box-7 had five samples). Read on the boxes, not in Netdata Cloud (`netdatacli aclk-state`): all three claimed and online. Requests over the Cloud link in each access log at 22:45Z: 0.
 - [x] `./bench cycle status 0` at 2026-11-13T23:40:01Z (+1 h, unattended runner): 3/3 rows active; metadata tracer: 3/3 boxes counting; sink: n/a this slot (no node-exporter/glances row); hubs: no beszel/pulse row in this slot
 - [x] `./bench collect 0` at: 2026-11-14T23:50:01Z–2026-11-14T23:50:45Z (unattended runner, main 12c959b): 3/3 rows collected, `slot-0.collect-failures.log` empty, every samples file verified, `summarize.py` ran clean (auto/summarize-0.out).
+- [x] RUN COMPLETE 2026-11-14T23:50:51Z (unattended runner): every slot collected; `summarize.py` output in data/2026-slot6/auto/summarize-final.out. The boxes stay rented until the founder says otherwise.
 
 ## Data
 
