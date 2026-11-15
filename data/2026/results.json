@@ -1,34 +1,34 @@
 {
   "slug": "agent-footprint-2026",
   "title": "Linux monitoring agent footprint benchmark (2026): 11 agents, one VPS type, 24 hours",
-  "checked": "2026-11-13",
+  "checked": "2026-11-15",
   "run": {
     "provider": "Hetzner Cloud",
     "location": "Helsinki (HEL1)",
     "plan": "CX23: 2 vCPU AMD EPYC (shared), 4 GB RAM, 40 GB NVMe",
     "image": "Ubuntu 26.04 LTS",
     "kernel": "7.0.0-15/-30/-42/-43-generic (differs by box, see kernels)",
-    "harnessCommit": "d879a73..e73e37f",
+    "harnessCommit": "d879a73..12c959b",
     "cycles": [
       {
         "start": 1794086972,
-        "end": 1794596325
+        "end": 1794699557
       },
       {
         "start": 1794179152,
-        "end": 1794596641
+        "end": 1794699712
       },
       {
         "start": 1794362388,
-        "end": 1794597098
+        "end": 1794699863
       }
     ],
     "notes": [
       "Ubuntu's apt-daily and apt-daily-upgrade timers were masked on every box at provisioning (the pilot's unattended-upgrades restarted dynamically linked agents mid-cycle).",
       "Network bytes count only the box's physical interfaces; Docker bridge traffic is excluded.",
       "Processes are counted in the agent's cgroup and its child cgroups.",
-      "Disk written counts data writes. Filesystem metadata is written through the block device's inode, and the kernel charges all writeback of one inode to a single cgroup, whichever owns it, so it is not counted for any row, including the metadata an agent's own file activity causes. In the eight runs whose collector recorded it (Monitorable run 1, Beszel run 3 and the three runs of each Netdata row, measured again on 2026-11-12/13; docs/RUN-2026-slot5.md) the metadata charged to the unit's cgroup is taken out and the charge as the kernel reported it is published as well (disk_charged_mb_24h). The other 28 runs have no such record and publish the kernel's charge; docs/RUN-2026-slot5.md says why they are taken not to contain that stream.",
-      "Those eight runs replace the runs first measured in their place, under a rule fixed before the retest: every run measured again replaces the run it stands for, whatever it shows. The replaced runs are in data/2026/superseded/. A cycle therefore holds runs of different days: each row's `runs` in results.json gives the box and the dates of every run and whether it has the metadata record.",
+      "Disk written counts data writes. Filesystem metadata is written through the block device's inode, and the kernel charges all writeback of one inode to a single cgroup, whichever owns it, so it is not counted for any row, including the metadata an agent's own file activity causes. In the eight runs whose collector recorded it (Monitorable run 1, Beszel run 3 and the three runs of each Netdata row, measured again on 2026-11-12/13, the Netdata Cloud runs once more on 2026-11-13/14; docs/RUN-2026-slot5.md, docs/RUN-2026-slot6.md) the metadata charged to the unit's cgroup is taken out and the charge as the kernel reported it is published as well (disk_charged_mb_24h). The other 28 runs have no such record and publish the kernel's charge; docs/RUN-2026-slot5.md says why they are taken not to contain that stream.",
+      "Those eight runs replace the runs first measured in their place, under a rule fixed before each retest: every run measured again replaces the run it stands for, whatever it shows. The replaced runs are in data/2026/superseded/. The Netdata Cloud runs of 2026-11-12/13 were replaced in their turn, because the benchmark's operator had caused traffic in them by opening the Netdata Cloud Space (docs/RUN-2026-slot6.md); they are in data/2026-slot5/. A cycle therefore holds runs of different days: each row's `runs` in results.json gives the box and the dates of every run and whether it has the metadata record.",
       "CPU under load is lower than idle CPU in every row, the control included, and no box recorded steal time; the cause is not established.",
       "Idle CPU depends on the box. On box-0 and box-6 an agent used 1.3 to 1.5 times the idle CPU time it used on box-3; under load the difference is smaller for three of the four agents measured on all three. Beszel, HetrixTools, Pulse and Glances have two of their three runs on those two boxes, so their idle CPU median is one of those runs (each row's notes give its box-3 figure); every other row was measured on the other seven boxes, except Netdata's run 1. The two boxes' virtual CPUs report 2,495 MHz and the others' 2,445 MHz (read on 2026-11-13, docs/evidence/2026-slot5/), so they are probably on another host type; the cause is not established."
     ]
@@ -2173,124 +2173,125 @@
         "Same binary as the self-hosted row, claimed to Netdata Cloud. ML anomaly detection stays at its default (on).",
         "kickstart's default channel is nightly; installed with --stable-channel so the version is a release readers can reproduce.",
         "Anonymous telemetry and the daily updater timer stay at their defaults. The updater's unit is matched with the agent's; a unit that lives for less than the 10-second sampling interval is counted only as far as the samples catch it.",
-        "The three runs of this row were measured at the same time, on 2026-11-12/13 on box-2, box-4 and box-7, with a collector that records how much of the box's filesystem-metadata writeback the kernel charged to the unit. They replace the runs of 2026-11-07 to 11-11 (`data/2026/superseded/`), which have no such record: their disk figures (231 to 276 MB per 24 h) include an unknown share of that stream. All of this row's figures, not only the disk figure, therefore come from one slot and day. Against the replaced runs' medians, the install time is 30.2 s (was 25.4), idle CPU 3.9 % (3.7), CPU under load 3.2 % (2.8) and network 0.55 MB out and 0.25 in per 24 h (0.34 and 0.19; see the bursts below); the other figures moved by less than 2 %. `docs/RUN-2026-slot5.md` has the cause and the rule under which the runs were replaced.",
-        "Disk written counts data writes. Filesystem metadata is written through the block device's inode and is not counted for any row, whichever cgroup the kernel charges it to, and that includes the metadata an agent's own file activity causes. On the six boxes running Netdata the metadata stream was 5.6 to 6.4 MB per hour, on the three other boxes of the same slot 2.8 to 2.9: about 65 to 85 MB per 24 h more, which Netdata's activity appears to cause and which is in no row's figure.",
-        "The disk figure is probably a few percent too low. The record of the metadata writeback counts whole pages per pass and reads above what the kernel charges: by 11 % on a box where the two could be compared exactly, and by about 13 % (between 6 and 21 %) in the hours of the six Netdata runs. An hour's metadata is never taken out beyond that hour's charge, but this unit writes more than the stream in every hour, so the excess is not caught: about 5 to 12 MB per 24 h in each run at 13 %, 2 to 18 MB over that range.",
-        "All three nodes sent more than usual at the same two moments of the idle window, 20:06:50Z and 20:53:50 to 20:54:50Z on 2026-11-12: 0.2 MB from the nodes of runs 1 and 3 and 1.0 MB from the node of run 2, eight samples in all. The cause is not established. The Netdata Cloud Space the nodes were claimed to belongs to the benchmark's operator, and the pattern is what a visit to it in Netdata Cloud's interface would look like, so a visit by the operator cannot be ruled out. Without those samples every run sent 0.34 MB per 24 h, as the replaced runs did, and the row's figure would be 0.3; with them the runs are 0.55, 1.38 and 0.51 and the published median is 0.6.",
-        "Run 1 (box-2): 100.3 MB per 24 h of filesystem-metadata writeback were charged to this unit's cgroup and are not counted as its disk writes (247.7 MB per 24 h charged in all).",
-        "Run 2 (box-4): 38.8 MB per 24 h of filesystem-metadata writeback were charged to this unit's cgroup and are not counted as its disk writes (188.0 MB per 24 h charged in all).",
-        "Run 3 (box-7): 75.2 MB per 24 h of filesystem-metadata writeback were charged to this unit's cgroup and are not counted as its disk writes (223.7 MB per 24 h charged in all)."
+        "The three runs of this row were measured at the same time, on 2026-11-13/14 on box-2, box-4 and box-7, with a collector that records how much of the box's filesystem-metadata writeback the kernel charged to the unit. They are the third measurement of this row. The first runs, of 2026-11-07 to 11-11 (`data/2026/superseded/`), have no such record: their disk figures (231 to 276 MB per 24 h) include an unknown share of that stream. The runs that replaced them, of 2026-11-12/13 (`data/2026-slot5/`), carry traffic that the benchmark's operator caused (see the note on the Netdata Cloud Space below) and were measured again on the same three boxes. The rule fixed before each retest is that every run measured again replaces the run it stands for, whatever it shows, so all of this row's figures, not only the network figure, come from this slot and day. Against the medians of the runs of 2026-11-12/13, which were the published ones from 2026-11-13 until these runs replaced them: network 0.34 MB out and 0.19 in per 24 h (was 0.55 and 0.25), disk written 140.8 MB per 24 h (148.5), install time 25.7 s (30.2), CPU under load 2.9 % (3.2); the other figures moved by 1 % or less, except the kernel's whole charge of disk writes (233.3 MB per 24 h against 223.7) and the metadata taken out of it (90.3 against 75.2), which depend on how long the unit held the metadata stream. Against the first runs' medians: idle CPU 3.9 % (3.7) and CPU under load 2.9 % (2.8); the other figures, apart from the disk figures, are within 1.2 %. `docs/RUN-2026-slot6.md` and `docs/RUN-2026-slot5.md` have the causes and the rule.",
+        "Disk written counts data writes. Filesystem metadata is written through the block device's inode and is not counted for any row, whichever cgroup the kernel charges it to, and that includes the metadata an agent's own file activity causes. On a box running Netdata the metadata stream was 5.6 to 6.4 MB per hour (the six such boxes of the slot of 2026-11-12/13; 5.7 to 5.8 on the three boxes of these runs), on the three boxes without Netdata in the slot of 2026-11-12/13 2.8 to 2.9: about 65 to 85 MB per 24 h more, which Netdata's activity appears to cause and which is in no row's figure.",
+        "The disk figure is probably 10 to 16 MB per 24 h too low in each run. The record of the metadata writeback counts whole pages per pass and reads above what the kernel charges: by 11 % on a box where the two could be compared exactly, and by about 13 % (between 6 and 21 %) in the hours of the six Netdata runs of 2026-11-12/13. These three runs agree with those six where they can be compared: in the samples in which the unit was charged no more than the record shows, the charge is 88 to 90 % of the record. An hour's metadata is never taken out beyond that hour's charge, but this unit writes more than the stream in every hour, so the excess is not caught: 10 to 16 MB per 24 h in each run at 13 %, 5 to 24 MB over that range.",
+        "The Netdata Cloud Space the nodes are claimed to belongs to the benchmark's operator. In the runs of 2026-11-12/13 all three nodes sent more than usual at the same two moments, 20:06:50Z and 20:53:50 to 20:54:50Z on 2026-11-12, which raised this row's network figure from 0.3 to 0.6 MB per 24 h; when those runs were published the cause was not established. It was read on 2026-11-13 from Netdata's own access log on the three boxes: 53, 260 and 52 requests over the Netdata Cloud link, in those minutes and in no other, almost all for chart data, every one from the same signed-in user of the Space, with the role admin. The bursts were the operator looking at the Space's dashboard: a harness incident in this row. The three runs were therefore measured again with nobody opening the Space, and each box's access log was read after the collect and before any rebuild: no request over the Netdata Cloud link on any of the three boxes from the install to the collect (`docs/evidence/2026-slot6/`).",
+        "Run 1 (box-2): one 10-second sample of the idle window, at 23:42:40Z on 2026-11-13, has 21 KB sent and 0.6 KB received, where a usual minute has 0.2 KB sent. The access log has no request over the Netdata Cloud link at that time and Netdata's journal has no line for it; the harness's own check had logged in to all three boxes over SSH between 23:40:02Z and 23:40:06Z, and the two other nodes sent nothing of the kind after the first eleven minutes of their runs. The cause is not established. It is why this run's figure is 0.36 MB per 24 h against 0.34 in runs 2 and 3; the median is not affected.",
+        "Run 1 (box-2): 89.7 MB per 24 h of filesystem-metadata writeback were charged to this unit's cgroup and are not counted as its disk writes (233.3 MB per 24 h charged in all).",
+        "Run 2 (box-4): 90.3 MB per 24 h of filesystem-metadata writeback were charged to this unit's cgroup and are not counted as its disk writes (231.0 MB per 24 h charged in all).",
+        "Run 3 (box-7): 139.3 MB per 24 h of filesystem-metadata writeback were charged to this unit's cgroup and are not counted as its disk writes (275.7 MB per 24 h charged in all)."
       ],
       "runs": [
         {
           "cycle": 1,
           "box": "box-2",
-          "start": 1794506325,
-          "end": 1794596325,
+          "start": 1794609557,
+          "end": 1794699557,
           "metadataRecord": true
         },
         {
           "cycle": 2,
           "box": "box-4",
-          "start": 1794506641,
-          "end": 1794596641,
+          "start": 1794609712,
+          "end": 1794699712,
           "metadataRecord": true
         },
         {
           "cycle": 3,
           "box": "box-7",
-          "start": 1794507098,
-          "end": 1794597098,
+          "start": 1794609863,
+          "end": 1794699863,
           "metadataRecord": true
         }
       ],
       "values": {
         "pss_idle_median_mb": {
-          "median": 360.920064,
+          "median": 358.166528,
           "cycles": [
-            359.651328,
-            360.920064,
-            361.038848
+            358.728704,
+            357.197824,
+            358.166528
           ]
         },
         "pss_idle_p95_mb": {
-          "median": 370.312192,
+          "median": 367.730688,
           "cycles": [
-            369.752064,
-            370.312192,
-            370.705408
+            367.975424,
+            366.524416,
+            367.730688
           ]
         },
         "rss_idle_median_mb": {
-          "median": 442.814464,
+          "median": 440.928256,
           "cycles": [
-            442.42944,
-            442.814464,
-            444.094464
+            441.155584,
+            439.771136,
+            440.928256
           ]
         },
         "memory_current_idle_median_mb": {
-          "median": 253.792256,
+          "median": 252.878848,
           "cycles": [
-            252.841984,
-            255.234048,
-            253.792256
+            254.04416,
+            252.878848,
+            252.481536
           ]
         },
         "memory_peak_mb": {
-          "median": 295.960576,
+          "median": 293.093376,
           "cycles": [
-            295.960576,
-            291.909632,
-            311.549952
+            300.122112,
+            290.185216,
+            293.093376
           ]
         },
         "first_hour_peak_mb": {
-          "median": 310.89152,
+          "median": 312.327168,
           "cycles": [
-            310.633472,
-            310.89152,
-            312.390656
+            312.660992,
+            312.327168,
+            311.973888
           ]
         },
         "cpu_idle_pct": {
-          "median": 3.9124067616861944,
+          "median": 3.89493076579297,
           "cycles": [
-            4.04170822442324,
-            3.9124067616861944,
-            3.7916023734750572
+            3.8989983560816524,
+            3.89493076579297,
+            3.760002438700326
           ]
         },
         "cpu_loaded_pct": {
-          "median": 3.220628997214485,
+          "median": 2.9010003342618385,
           "cycles": [
-            3.3496475487465185,
-            2.946943955431755,
-            3.220628997214485
+            3.0723808913649027,
+            2.8993215598885795,
+            2.9010003342618385
           ]
         },
         "disk_written_mb_24h": {
-          "median": 148.4740679985506,
+          "median": 140.75840919917863,
           "cycles": [
-            147.38831878246165,
-            149.23494737045536,
-            148.4740679985506
+            143.61384414542817,
+            140.75840919917863,
+            136.33846947698996
           ]
         },
         "disk_charged_mb_24h": {
-          "median": 223.71990835608167,
+          "median": 233.34204018842854,
           "cycles": [
-            247.70470698393527,
-            188.02269692474937,
-            223.71990835608167
+            233.34204018842854,
+            231.01665604058462,
+            275.67771040946974
           ]
         },
         "disk_metadata_charged_mb_24h": {
-          "median": 75.2458403575311,
+          "median": 90.25824684140598,
           "cycles": [
-            100.31638820147361,
-            38.787749554293995,
-            75.2458403575311
+            89.72819604300037,
+            90.25824684140598,
+            139.33924093247978
           ]
         },
         "journal_mb_24h": {
@@ -2302,43 +2303,43 @@
           ]
         },
         "net_out_mb_24h": {
-          "median": 0.5529944389419011,
+          "median": 0.33897519990337,
           "cycles": [
-            0.5529944389419011,
-            1.3751594733663486,
-            0.5111824326609494
+            0.3582850102669405,
+            0.3382102379514434,
+            0.33897519990337
           ]
         },
         "net_in_mb_24h": {
-          "median": 0.2509461335910134,
+          "median": 0.18998711921729677,
           "cycles": [
-            0.2509461335910134,
-            0.4896027829448001,
-            0.24881405000603937
+            0.189676125135886,
+            0.18998711921729677,
+            0.1901520086967025
           ]
         },
         "net_headline_mb_24h": {
-          "median": 0.5529944389419011,
+          "median": 0.33897519990337,
           "cycles": [
-            0.5529944389419011,
-            1.3751594733663486,
-            0.5111824326609494
+            0.3582850102669405,
+            0.3382102379514434,
+            0.33897519990337
           ]
         },
         "install_seconds": {
-          "median": 30.2,
+          "median": 25.7,
           "cycles": [
-            30.3,
-            30.2,
-            29.7
+            31.0,
+            25.7,
+            25.2
           ]
         },
         "disk_footprint_mb": {
-          "median": 798.052603,
+          "median": 795.17023,
           "cycles": [
-            801.9202,
-            796.809538,
-            798.052603
+            795.166443,
+            795.17023,
+            796.311282
           ]
         },
         "pids_median": {
@@ -2350,10 +2351,10 @@
           ]
         },
         "threads_median": {
-          "median": 149.0,
+          "median": 148.0,
           "cycles": [
-            149.0,
-            149.0,
+            148.0,
+            151.0,
             148.0
           ]
         }

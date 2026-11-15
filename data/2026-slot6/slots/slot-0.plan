@@ -1,0 +1,5 @@
+# Slot 6 of 2026: the three Netdata Cloud runs measured again (docs/RUN-2026-slot6.md).
+# box role run   (run n is filed as cycle-(n+1))
+box-2 netdata-cloud 0
+box-4 netdata-cloud 1
+box-7 netdata-cloud 2

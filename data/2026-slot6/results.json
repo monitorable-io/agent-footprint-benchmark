@@ -1,0 +1,358 @@
+{
+  "slug": "agent-footprint-2026",
+  "title": "Linux monitoring agent footprint benchmark (2026): 1 agents, one VPS type, 24 hours",
+  "checked": "2026-11-15",
+  "run": {
+    "provider": "Hetzner Cloud",
+    "location": "Helsinki (HEL1)",
+    "plan": "CX23: 2 vCPU AMD EPYC (shared), 4 GB RAM, 40 GB NVMe",
+    "image": "Ubuntu 26.04 LTS",
+    "kernel": "7.0.0-15/-30-generic (differs by box, see kernels)",
+    "harnessCommit": "12c959b",
+    "cycles": [
+      {
+        "start": 1794609557,
+        "end": 1794699557
+      },
+      {
+        "start": 1794609712,
+        "end": 1794699712
+      },
+      {
+        "start": 1794609863,
+        "end": 1794699863
+      }
+    ],
+    "notes": [
+      "Ubuntu's apt-daily and apt-daily-upgrade timers were masked on every box at provisioning (the pilot's unattended-upgrades restarted dynamically linked agents mid-cycle).",
+      "Network bytes count only the box's physical interfaces; Docker bridge traffic is excluded.",
+      "Processes are counted in the agent's cgroup and its child cgroups.",
+      "Disk written excludes the filesystem-metadata writeback the kernel charged to the unit's cgroup: ext4 writes metadata through the block device's inode and the kernel charges one inode's writeback to a single cgroup, whichever owns it. The charge as the kernel reported it is published next to it.",
+      "This is the slot of 2026-11-13/14: the three Netdata Cloud runs measured again on the boxes of the retest slot, with nobody opening the Netdata Cloud Space the nodes are claimed to (slots/slot-0.plan, docs/RUN-2026-slot6.md). Each box's Netdata access log was read after the collect: no request over the Netdata Cloud link during the runs. The three runs are also filed in data/2026/cycle-N/, where they replace the runs of data/2026-slot5/ they stand for. The files here are as collected; the footnotes added by hand are on their copies in data/2026/. There is no control run in this slot: the collector and the bed are those of the retest slot, whose control run is data/2026-slot5/cycle-1/control.*."
+    ],
+    "notice": "One slot, measured to replace the three Netdata Cloud runs of the 2026 run: not a comparison table. The three runs were simultaneous. The published table is data/2026/results.md."
+  },
+  "metrics": [
+    {
+      "key": "pss_idle_median_mb",
+      "label": "Memory (PSS), idle median",
+      "unit": "MB",
+      "lowerIsBetter": true
+    },
+    {
+      "key": "pss_idle_p95_mb",
+      "label": "Memory (PSS), idle p95",
+      "unit": "MB",
+      "lowerIsBetter": true
+    },
+    {
+      "key": "rss_idle_median_mb",
+      "label": "Memory (RSS), idle median",
+      "unit": "MB",
+      "lowerIsBetter": true
+    },
+    {
+      "key": "memory_current_idle_median_mb",
+      "label": "Memory (cgroup memory.current), idle median",
+      "unit": "MB",
+      "lowerIsBetter": true
+    },
+    {
+      "key": "memory_peak_mb",
+      "label": "Memory peak (cgroup), whole cycle",
+      "unit": "MB",
+      "lowerIsBetter": true
+    },
+    {
+      "key": "first_hour_peak_mb",
+      "label": "Memory (PSS) peak, first hour after install",
+      "unit": "MB",
+      "lowerIsBetter": true
+    },
+    {
+      "key": "cpu_idle_pct",
+      "label": "CPU, idle (% of one vCPU)",
+      "unit": "%",
+      "lowerIsBetter": true
+    },
+    {
+      "key": "cpu_loaded_pct",
+      "label": "CPU, under load (% of one vCPU)",
+      "unit": "%",
+      "lowerIsBetter": true
+    },
+    {
+      "key": "disk_written_mb_24h",
+      "label": "Disk written per 24 h",
+      "unit": "MB",
+      "lowerIsBetter": true
+    },
+    {
+      "key": "disk_charged_mb_24h",
+      "label": "Disk writes charged to the unit's cgroup per 24 h (with any filesystem metadata charged to it)",
+      "unit": "MB",
+      "lowerIsBetter": true
+    },
+    {
+      "key": "disk_metadata_charged_mb_24h",
+      "label": "Filesystem-metadata writeback charged to the unit's cgroup per 24 h",
+      "unit": "MB",
+      "lowerIsBetter": true
+    },
+    {
+      "key": "journal_mb_24h",
+      "label": "Log volume handed to journald per 24 h",
+      "unit": "MB",
+      "lowerIsBetter": true
+    },
+    {
+      "key": "net_out_mb_24h",
+      "label": "Network out per 24 h",
+      "unit": "MB",
+      "lowerIsBetter": true
+    },
+    {
+      "key": "net_in_mb_24h",
+      "label": "Network in per 24 h",
+      "unit": "MB",
+      "lowerIsBetter": true
+    },
+    {
+      "key": "net_headline_mb_24h",
+      "label": "Network per 24 h (out for push agents, in+out for polled)",
+      "unit": "MB",
+      "lowerIsBetter": true
+    },
+    {
+      "key": "install_seconds",
+      "label": "Install wall time",
+      "unit": "s",
+      "lowerIsBetter": true
+    },
+    {
+      "key": "disk_footprint_mb",
+      "label": "On-disk footprint after the cycle",
+      "unit": "MB",
+      "lowerIsBetter": true
+    },
+    {
+      "key": "pids_median",
+      "label": "Processes, idle median",
+      "unit": "",
+      "lowerIsBetter": true
+    },
+    {
+      "key": "threads_median",
+      "label": "Threads, idle median",
+      "unit": "",
+      "lowerIsBetter": true
+    }
+  ],
+  "rows": [
+    {
+      "key": "netdata-cloud",
+      "name": "Netdata (claimed to Netdata Cloud)",
+      "version": "v2.12.3",
+      "versions": [
+        "v2.12.3",
+        "v2.12.3",
+        "v2.12.3"
+      ],
+      "licence": "GPL-3.0",
+      "sourceUrl": "https://learn.netdata.cloud/docs/netdata-agent/installation/linux",
+      "installUrl": "https://learn.netdata.cloud/docs/netdata-agent/installation/linux",
+      "unitNames": [
+        "netdata.service"
+      ],
+      "reportsTo": "Netdata Cloud (ACLK, outbound)",
+      "intervalSeconds": 1,
+      "us": false,
+      "footnotes": [
+        "Same binary as the self-hosted row, claimed to Netdata Cloud. ML anomaly detection stays at its default (on).",
+        "kickstart's default channel is nightly; installed with --stable-channel so the version is a release readers can reproduce.",
+        "Anonymous telemetry and the daily updater timer stay at their defaults. The updater's unit is matched with the agent's; a unit that lives for less than the 10-second sampling interval is counted only as far as the samples catch it.",
+        "Run 1 (box-2): 89.7 MB per 24 h of filesystem-metadata writeback were charged to this unit's cgroup and are not counted as its disk writes (233.3 MB per 24 h charged in all).",
+        "Run 2 (box-4): 90.3 MB per 24 h of filesystem-metadata writeback were charged to this unit's cgroup and are not counted as its disk writes (231.0 MB per 24 h charged in all).",
+        "Run 3 (box-7): 139.3 MB per 24 h of filesystem-metadata writeback were charged to this unit's cgroup and are not counted as its disk writes (275.7 MB per 24 h charged in all)."
+      ],
+      "runs": [
+        {
+          "cycle": 1,
+          "box": "box-2",
+          "start": 1794609557,
+          "end": 1794699557,
+          "metadataRecord": true
+        },
+        {
+          "cycle": 2,
+          "box": "box-4",
+          "start": 1794609712,
+          "end": 1794699712,
+          "metadataRecord": true
+        },
+        {
+          "cycle": 3,
+          "box": "box-7",
+          "start": 1794609863,
+          "end": 1794699863,
+          "metadataRecord": true
+        }
+      ],
+      "values": {
+        "pss_idle_median_mb": {
+          "median": 358.166528,
+          "cycles": [
+            358.728704,
+            357.197824,
+            358.166528
+          ]
+        },
+        "pss_idle_p95_mb": {
+          "median": 367.730688,
+          "cycles": [
+            367.975424,
+            366.524416,
+            367.730688
+          ]
+        },
+        "rss_idle_median_mb": {
+          "median": 440.928256,
+          "cycles": [
+            441.155584,
+            439.771136,
+            440.928256
+          ]
+        },
+        "memory_current_idle_median_mb": {
+          "median": 252.878848,
+          "cycles": [
+            254.04416,
+            252.878848,
+            252.481536
+          ]
+        },
+        "memory_peak_mb": {
+          "median": 293.093376,
+          "cycles": [
+            300.122112,
+            290.185216,
+            293.093376
+          ]
+        },
+        "first_hour_peak_mb": {
+          "median": 312.327168,
+          "cycles": [
+            312.660992,
+            312.327168,
+            311.973888
+          ]
+        },
+        "cpu_idle_pct": {
+          "median": 3.89493076579297,
+          "cycles": [
+            3.8989983560816524,
+            3.89493076579297,
+            3.760002438700326
+          ]
+        },
+        "cpu_loaded_pct": {
+          "median": 2.9010003342618385,
+          "cycles": [
+            3.0723808913649027,
+            2.8993215598885795,
+            2.9010003342618385
+          ]
+        },
+        "disk_written_mb_24h": {
+          "median": 140.75840919917863,
+          "cycles": [
+            143.61384414542817,
+            140.75840919917863,
+            136.33846947698996
+          ]
+        },
+        "disk_charged_mb_24h": {
+          "median": 233.34204018842854,
+          "cycles": [
+            233.34204018842854,
+            231.01665604058462,
+            275.67771040946974
+          ]
+        },
+        "disk_metadata_charged_mb_24h": {
+          "median": 90.25824684140598,
+          "cycles": [
+            89.72819604300037,
+            90.25824684140598,
+            139.33924093247978
+          ]
+        },
+        "journal_mb_24h": {
+          "median": 0.0,
+          "cycles": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "net_out_mb_24h": {
+          "median": 0.33897519990337,
+          "cycles": [
+            0.3582850102669405,
+            0.3382102379514434,
+            0.33897519990337
+          ]
+        },
+        "net_in_mb_24h": {
+          "median": 0.18998711921729677,
+          "cycles": [
+            0.189676125135886,
+            0.18998711921729677,
+            0.1901520086967025
+          ]
+        },
+        "net_headline_mb_24h": {
+          "median": 0.33897519990337,
+          "cycles": [
+            0.3582850102669405,
+            0.3382102379514434,
+            0.33897519990337
+          ]
+        },
+        "install_seconds": {
+          "median": 25.7,
+          "cycles": [
+            31.0,
+            25.7,
+            25.2
+          ]
+        },
+        "disk_footprint_mb": {
+          "median": 795.17023,
+          "cycles": [
+            795.166443,
+            795.17023,
+            796.311282
+          ]
+        },
+        "pids_median": {
+          "median": 17.0,
+          "cycles": [
+            17.0,
+            17.0,
+            17.0
+          ]
+        },
+        "threads_median": {
+          "median": 148.0,
+          "cycles": [
+            148.0,
+            151.0,
+            148.0
+          ]
+        }
+      }
+    }
+  ],
+  "control": null
+}
