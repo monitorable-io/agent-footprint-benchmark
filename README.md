@@ -14,7 +14,7 @@ collected. `data/2026/results.md` is the headline table and
 `results.json` (apart from its `checked` date). The files in `data/2026/` are laid out like the pilot's,
 described below.
 
-Eight of the 36 role-runs were measured twice. Checking the data showed
+Eight of the 36 role-runs were measured again. Checking the data showed
 that the kernel can charge the box's own filesystem-metadata writeback to
 the measured agent's cgroup, where it reads as the agent's disk writes
 (`docs/RUN-2026-slot5.md` has the mechanism and the evidence). The collector
@@ -30,10 +30,11 @@ collected, with its own control run, in `data/2026-slot5/`.
 The three Netdata Cloud runs were measured a third time, on 2026-11-13/14.
 In the runs of the retest slot all three nodes sent two bursts of traffic,
 which doubled the row's network figure (0.6 MB per 24 h instead of 0.3).
-Netdata's own access logs then showed what they were: chart requests from
-the signed-in owner of the Netdata Cloud Space the nodes were claimed to,
-who is the operator of this benchmark. We had caused traffic in a
-competitor's row by looking at it. The three runs were measured again on
+Netdata's own access logs then showed what they were: requests, almost all
+for chart data, from one signed-in user with the role admin of the Netdata
+Cloud Space the nodes were claimed to. The Space belongs to the operator of
+this benchmark. We had caused traffic in a competitor's row by looking at
+its dashboard. The three runs were measured again on
 the same boxes with nobody opening the Space, the access logs were read
 again after the collect (no request), and by the same rule the new runs
 replace the ones they stand for, all figures of them. The retest slot's
