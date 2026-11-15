@@ -5,16 +5,16 @@ disk writes, network bytes, install time and on-disk size, measured on
 identical cheap VPSes over 24 hours idle plus one loaded hour, three times,
 with every 10-second sample published here.
 
-**Status: the run is complete (2026-11-07 → 2026-11-13).** 11 agents and a
+**Status: the run is complete (2026-11-07 → 2026-11-14).** 11 agents and a
 control, three runs each on three different boxes, 36 role-runs, all
 collected. `data/2026/results.md` is the headline table and
 `data/2026/results.json` the same with every per-run value and footnote;
 `docs/RUN-2026.md` is the run log with every deviation.
-`python3 summarize.py data/2026 --harness-commit d879a73..e73e37f` reproduces
+`python3 summarize.py data/2026 --harness-commit d879a73..12c959b` reproduces
 `results.json` (apart from its `checked` date). The files in `data/2026/` are laid out like the pilot's,
 described below.
 
-Eight of the 36 role-runs were measured twice. Checking the data showed
+Eight of the 36 role-runs were measured again. Checking the data showed
 that the kernel can charge the box's own filesystem-metadata writeback to
 the measured agent's cgroup, where it reads as the agent's disk writes
 (`docs/RUN-2026-slot5.md` has the mechanism and the evidence). The collector
@@ -26,6 +26,20 @@ run 1, Beszel run 3 and the three runs of each Netdata row; their samples
 come with `<agent>.blockdev.csv`, the record of which cgroup was charged.
 The replaced runs stay published in `data/2026/superseded/`, and the slot as
 collected, with its own control run, in `data/2026-slot5/`.
+
+The three Netdata Cloud runs were measured a third time, on 2026-11-13/14.
+In the runs of the retest slot all three nodes sent two bursts of traffic,
+which doubled the row's network figure (0.6 MB per 24 h instead of 0.3).
+Netdata's own access logs then showed what they were: requests, almost all
+for chart data, from one signed-in user with the role admin of the Netdata
+Cloud Space the nodes were claimed to. The Space belongs to the operator of
+this benchmark. We had caused traffic in a competitor's row by looking at
+its dashboard. The three runs were measured again on
+the same boxes with nobody opening the Space, the access logs were read
+again after the collect (no request), and by the same rule the new runs
+replace the ones they stand for, all figures of them. The retest slot's
+Netdata Cloud runs stay published in `data/2026-slot5/`, the third slot as
+collected in `data/2026-slot6/`; `docs/RUN-2026-slot6.md` is its log.
 
 The first run (2026-10-31 → 2026-11-04) is the **pilot**: it found four
 harness defects (the collector missed processes in child cgroups and could
@@ -81,8 +95,8 @@ inode at the time, not whoever caused the writes. On the 2026 boxes that
 stream is about 2.8 MB per hour of 4 KB writes where the agent writes little
 and 5.6 to 6.4 MB per hour on a box running Netdata, whose own file activity
 adds to it. It was seen charged to a mount unit with no process, to rsyslog,
-to the root cgroup and to Netdata's unit (for 8 to 21 of the 23 idle hours
-in each of its six instrumented runs); that it was charged to the measured
+to the root cgroup and to Netdata's unit (for 8 to 23 of the 23 idle hours
+in each of its nine instrumented runs); that it was charged to the measured
 agent for seven to eight hours in two earlier runs is inferred from the rate
 and the write sizes (`docs/RUN-2026.md`, "Deviations"). No row's disk figure
 is meant to contain it: disk written counts data writes, and the metadata an
@@ -142,7 +156,8 @@ be given its roles by hand: a plan file `data/<year>/slots/slot-<s>.plan`
 (one line per box, `box-J ROLE RUN`) replaces the rotation for that slot,
 and `YEAR` and `BENCH_SLOT_COUNT` in `bench.env` name the data root and the
 number of slots of the run the checkout is set up for (the instrumented
-retest slot of 2026 is `data/2026-slot5`, one slot). A run with a plan file
+retest slot of 2026 is `data/2026-slot5`, one slot, and the Netdata Cloud
+slot after it `data/2026-slot6`). A run with a plan file
 has no rotation slots: a slot without a file is refused. `cycle start`
 refuses while a slot of any data root is still measuring. Between slots a
 box is **rebuilt in place** from the stock image (same server, same address);

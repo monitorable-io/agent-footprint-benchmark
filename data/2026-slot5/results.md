@@ -1,6 +1,6 @@
 # Linux monitoring agent footprint benchmark (2026): 4 agents, one VPS type, 24 hours
 
-One slot, measured to replace eight runs of the 2026 run: not a comparison table. Beszel, Monitorable and the control are single runs here, and the three runs of each Netdata row were simultaneous. The published table is data/2026/results.md.
+One slot, measured to replace eight runs of the 2026 run: not a comparison table. Beszel, Monitorable and the control are single runs here, and the three runs of each Netdata row were simultaneous. Its three Netdata Cloud runs are no longer in the published table: the two bursts of traffic in them were the benchmark's operator looking at the Netdata Cloud Space, and the runs measured again on 2026-11-13/14 replace them (data/2026-slot6/, docs/RUN-2026-slot6.md). The published table is data/2026/results.md.
 
 | Agent | Version | Memory (PSS), idle median | Memory peak (cgroup), whole cycle | CPU, idle (% of one vCPU) | CPU, under load (% of one vCPU) | Disk written per 24 h | Network per 24 h (out for push agents, in+out for polled) | Install wall time | On-disk footprint after the cycle |
 |---|---|---|---|---|---|---|---|---|---|
@@ -20,7 +20,7 @@ Each figure is the median of the per-run values; `results.json` has every run's 
 - Network bytes count only the box's physical interfaces; Docker bridge traffic is excluded.
 - Processes are counted in the agent's cgroup and its child cgroups.
 - Disk written excludes the filesystem-metadata writeback the kernel charged to the unit's cgroup: ext4 writes metadata through the block device's inode and the kernel charges one inode's writeback to a single cgroup, whichever owns it. The charge as the kernel reported it is published next to it.
-- This is the instrumented retest slot of 2026-11-12/13: nine role-runs measured at the same time (slots/slot-0.plan, docs/RUN-2026-slot5.md). Its eight agent runs are also filed in data/2026/cycle-N/, where they replace the runs they stand for; the control run is published here only. The agent runs' files here are as collected; the footnotes added by hand are on their copies in data/2026/.
+- This is the instrumented retest slot of 2026-11-12/13: nine role-runs measured at the same time (slots/slot-0.plan, docs/RUN-2026-slot5.md). Five of its agent runs (Monitorable run 1, Beszel run 3 and the three Netdata runs) are also filed in data/2026/cycle-N/, where they replace the runs they stand for. Its three Netdata Cloud runs were filed there from 2026-11-13 until the runs of data/2026-slot6/ replaced them; they and the control run are published here only. The footnotes those three runs were published with are not on these files (they were on the copies): docs/RUN-2026-slot5.md quotes the one on the bursts, and the commit 12c959b of this repository has the files as published. The agent runs' files here are as collected; the footnotes added by hand are on the copies in data/2026/ of the five runs filed there.
 
 ## Row notes (†)
 

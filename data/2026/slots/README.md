@@ -11,3 +11,9 @@ replacing runs' `meta.json` and `schedule-<agent>.json` in `../cycle-N/` say `"s
 retest, not `slot-0.json` here. `run` and the cycle directory say which run each one stands for, and
 each row's `runs` in `../results.json` gives the box and the dates of every published run.
 `docs/RUN-2026-slot5.md` has the reason and the rule.
+
+The three Netdata Cloud runs were measured a third time, on 2026-11-13/14, because the benchmark's
+operator had caused traffic in the retest slot's runs by opening the Netdata Cloud Space. That slot
+is again a run of its own, `data/2026-slot6/slots/slot-0.json` and `slot-0.plan`, and the
+`"slot": 0` of the Netdata Cloud runs in `../cycle-N/` is that run's. The retest slot's Netdata Cloud
+runs are in `data/2026-slot5/` only. `docs/RUN-2026-slot6.md` has the reason and the rule.

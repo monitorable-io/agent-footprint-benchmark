@@ -1,0 +1,12 @@
+# Read on 2026-11-13 ~22:35Z on the three Netdata Cloud boxes of the retest slot (box-2, box-4, box-7),
+# from Netdata's own /var/log/netdata/access.log, before any rebuild. Account id, user name and the
+# forwarded address are left out: on every box all requests over the Cloud link carry one user (role
+# admin) and one address.
+#
+# Requests received over the Cloud link (src_transport=aclk) in the whole run, per minute (UTC):
+box-2: 53 requests: 2026-11-12T20:06 9; 20:53 8; 20:54 36. Paths: /api/v3/data 48, /api/v3/contexts 2, /api/v3/node_instances 2 (+1). Bytes sent in answer: 154,764.
+box-4: 260 requests: 2026-11-12T20:06 8; 20:53 133; 20:54 119. Paths: /api/v3/data 253, /api/v3/contexts 5, /api/v3/node_instances 2. Bytes sent in answer: 740,596.
+box-7: 52 requests: 2026-11-12T20:06 8; 20:53 8; 20:54 36. Paths: /api/v3/data 48, /api/v3/contexts 2, /api/v3/node_instances 2. Bytes sent in answer: 117,444.
+# No request over the Cloud link at any other time of the run on any of the three boxes.
+# Netdata's journal on box-4 also has 15 "CancelPending Request" lines at 20:53 and 20:54 (queries the
+# Cloud cancelled), none at any other time.

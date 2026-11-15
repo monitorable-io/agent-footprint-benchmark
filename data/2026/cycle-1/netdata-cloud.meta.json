@@ -27,10 +27,11 @@
     "Same binary as the self-hosted row, claimed to Netdata Cloud. ML anomaly detection stays at its default (on).",
     "kickstart's default channel is nightly; installed with --stable-channel so the version is a release readers can reproduce.",
     "Anonymous telemetry and the daily updater timer stay at their defaults. The updater's unit is matched with the agent's; a unit that lives for less than the 10-second sampling interval is counted only as far as the samples catch it.",
-    "The three runs of this row were measured at the same time, on 2026-11-12/13 on box-2, box-4 and box-7, with a collector that records how much of the box's filesystem-metadata writeback the kernel charged to the unit. They replace the runs of 2026-11-07 to 11-11 (`data/2026/superseded/`), which have no such record: their disk figures (231 to 276 MB per 24 h) include an unknown share of that stream. All of this row's figures, not only the disk figure, therefore come from one slot and day. Against the replaced runs' medians, the install time is 30.2 s (was 25.4), idle CPU 3.9 % (3.7), CPU under load 3.2 % (2.8) and network 0.55 MB out and 0.25 in per 24 h (0.34 and 0.19; see the bursts below); the other figures moved by less than 2 %. `docs/RUN-2026-slot5.md` has the cause and the rule under which the runs were replaced.",
-    "Disk written counts data writes. Filesystem metadata is written through the block device's inode and is not counted for any row, whichever cgroup the kernel charges it to, and that includes the metadata an agent's own file activity causes. On the six boxes running Netdata the metadata stream was 5.6 to 6.4 MB per hour, on the three other boxes of the same slot 2.8 to 2.9: about 65 to 85 MB per 24 h more, which Netdata's activity appears to cause and which is in no row's figure.",
-    "The disk figure is probably a few percent too low. The record of the metadata writeback counts whole pages per pass and reads above what the kernel charges: by 11 % on a box where the two could be compared exactly, and by about 13 % (between 6 and 21 %) in the hours of the six Netdata runs. An hour's metadata is never taken out beyond that hour's charge, but this unit writes more than the stream in every hour, so the excess is not caught: about 5 to 12 MB per 24 h in each run at 13 %, 2 to 18 MB over that range.",
-    "All three nodes sent more than usual at the same two moments of the idle window, 20:06:50Z and 20:53:50 to 20:54:50Z on 2026-11-12: 0.2 MB from the nodes of runs 1 and 3 and 1.0 MB from the node of run 2, eight samples in all. The cause is not established. The Netdata Cloud Space the nodes were claimed to belongs to the benchmark's operator, and the pattern is what a visit to it in Netdata Cloud's interface would look like, so a visit by the operator cannot be ruled out. Without those samples every run sent 0.34 MB per 24 h, as the replaced runs did, and the row's figure would be 0.3; with them the runs are 0.55, 1.38 and 0.51 and the published median is 0.6."
+    "The three runs of this row were measured at the same time, on 2026-11-13/14 on box-2, box-4 and box-7, with a collector that records how much of the box's filesystem-metadata writeback the kernel charged to the unit. They are the third measurement of this row. The first runs, of 2026-11-07 to 11-11 (`data/2026/superseded/`), have no such record: their disk figures (231 to 276 MB per 24 h) include an unknown share of that stream. The runs that replaced them, of 2026-11-12/13 (`data/2026-slot5/`), carry traffic that the benchmark's operator caused (see the note on the Netdata Cloud Space below) and were measured again on the same three boxes. The rule fixed before each retest is that every run measured again replaces the run it stands for, whatever it shows, so all of this row's figures, not only the network figure, come from this slot and day. Against the medians of the runs of 2026-11-12/13, which were the published ones from 2026-11-13 until these runs replaced them: network 0.34 MB out and 0.19 in per 24 h (was 0.55 and 0.25), disk written 140.8 MB per 24 h (148.5), install time 25.7 s (30.2), CPU under load 2.9 % (3.2); the other figures moved by 1 % or less, except the kernel's whole charge of disk writes (233.3 MB per 24 h against 223.7) and the metadata taken out of it (90.3 against 75.2), which depend on how long the unit held the metadata stream. Against the first runs' medians: idle CPU 3.9 % (3.7) and CPU under load 2.9 % (2.8); the other figures, apart from the disk figures, are within 1.2 %. `docs/RUN-2026-slot6.md` and `docs/RUN-2026-slot5.md` have the causes and the rule.",
+    "Disk written counts data writes. Filesystem metadata is written through the block device's inode and is not counted for any row, whichever cgroup the kernel charges it to, and that includes the metadata an agent's own file activity causes. On a box running Netdata the metadata stream was 5.6 to 6.4 MB per hour (the six such boxes of the slot of 2026-11-12/13; 5.7 to 5.8 on the three boxes of these runs), on the three boxes without Netdata in the slot of 2026-11-12/13 2.8 to 2.9: about 65 to 85 MB per 24 h more, which Netdata's activity appears to cause and which is in no row's figure.",
+    "The disk figure is probably 10 to 16 MB per 24 h too low in each run. The record of the metadata writeback counts whole pages per pass and reads above what the kernel charges: by 11 % on a box where the two could be compared exactly, and by about 13 % (between 6 and 21 %) in the hours of the six Netdata runs of 2026-11-12/13. These three runs agree with those six where they can be compared: in the samples in which the unit was charged no more than the record shows, the charge is 88 to 90 % of the record. An hour's metadata is never taken out beyond that hour's charge, but this unit writes more than the stream in every hour, so the excess is not caught: 10 to 16 MB per 24 h in each run at 13 %, 5 to 24 MB over that range.",
+    "The Netdata Cloud Space the nodes are claimed to belongs to the benchmark's operator. In the runs of 2026-11-12/13 all three nodes sent more than usual at the same two moments, 20:06:50Z and 20:53:50 to 20:54:50Z on 2026-11-12, which raised this row's network figure from 0.3 to 0.6 MB per 24 h; when those runs were published the cause was not established. It was read on 2026-11-13 from Netdata's own access log on the three boxes: 53, 260 and 52 requests over the Netdata Cloud link, in those minutes and in no other, almost all for chart data, every one from the same signed-in user of the Space, with the role admin. The bursts were the operator looking at the Space's dashboard: a harness incident in this row. The three runs were therefore measured again with nobody opening the Space, and each box's access log was read after the collect and before any rebuild: no request over the Netdata Cloud link on any of the three boxes from the install to the collect (`docs/evidence/2026-slot6/`).",
+    "Run 1 (box-2): one 10-second sample of the idle window, at 23:42:40Z on 2026-11-13, has 21 KB sent and 0.6 KB received, where a usual minute has 0.2 KB sent. It is not a request over the Netdata Cloud link: the access log has none at that time, and the requests of 2026-11-12 came with 2 to 95 KB received per sample. The same sample has a disk write of 2.2 MB and two more threads; six of the nine runs measured for this row show that pair ten minutes after the install (a write of 1.8 to 2.3 MB with 13 to 16 KB sent), so it may be the agent's own housekeeping. The harness's check had logged in to the three boxes over SSH between 23:40:02Z and 23:40:06Z; on this box that was 45 seconds into the idle window, on the two others still in the first hour, and in no other run of this row did that check fall in the idle window. The two other nodes sent nothing of the kind after the first eleven minutes of their runs. The cause is not established. It is why this run's figure is 0.36 MB per 24 h against 0.34 in runs 2 and 3; the median is not affected."
   ],
   "sourceUrl": "https://learn.netdata.cloud/docs/netdata-agent/installation/linux",
   "install": {
@@ -38,9 +39,9 @@
     "kernel": "7.0.0-15-generic",
     "cpu_model": "AMD EPYC-Rome Processor",
     "vcpus": 2,
-    "started": 1794506294.821056375,
-    "finished": 1794506325.105830278,
-    "seconds": 30.3,
+    "started": 1794609526.090231259,
+    "finished": 1794609557.130223416,
+    "seconds": 31.0,
     "status": "ok",
     "exit_code": 0,
     "version": "v2.12.3",
@@ -54,32 +55,32 @@
       8125,
       19999
     ],
-    "disk_bytes": 642536837,
+    "disk_bytes": 640702068,
     "counted_interfaces": [
       "enp7s0",
       "eth0"
     ],
     "tail": [
       " --- Attempting to claim agent to https://app.netdata.cloud --- ",
-      "9812",
+      "9805",
       " --- Writing claiming configuration to /etc/netdata/claim.conf --- ",
-      "[/tmp/netdata-kickstart-GF55JnNDJp]# chown root:netdata /tmp/netdata-kickstart-GF55JnNDJp/claim.conf.qxvudY ",
+      "[/tmp/netdata-kickstart-nkwhR2jqti]# chown root:netdata /tmp/netdata-kickstart-nkwhR2jqti/claim.conf.rroLV8 ",
       " OK ",
-      "[/tmp/netdata-kickstart-GF55JnNDJp]# chmod 0640 /tmp/netdata-kickstart-GF55JnNDJp/claim.conf.qxvudY ",
+      "[/tmp/netdata-kickstart-nkwhR2jqti]# chmod 0640 /tmp/netdata-kickstart-nkwhR2jqti/claim.conf.rroLV8 ",
       " OK ",
-      "[/tmp/netdata-kickstart-GF55JnNDJp]# mv -f /tmp/netdata-kickstart-GF55JnNDJp/claim.conf.qxvudY /etc/netdata/claim.conf ",
+      "[/tmp/netdata-kickstart-nkwhR2jqti]# mv -f /tmp/netdata-kickstart-nkwhR2jqti/claim.conf.rroLV8 /etc/netdata/claim.conf ",
       " OK ",
-      "[/tmp/netdata-kickstart-GF55JnNDJp]# /usr/sbin/netdatacli reload-claiming-state ",
+      "[/tmp/netdata-kickstart-nkwhR2jqti]# /usr/sbin/netdatacli reload-claiming-state ",
       "Netdata Agent is claimed to Netdata Cloud and is currently online.",
       " OK ",
-      "[/tmp/netdata-kickstart-GF55JnNDJp]# test -x //usr/libexec/netdata/netdata-updater.sh ",
+      "[/tmp/netdata-kickstart-nkwhR2jqti]# test -x //usr/libexec/netdata/netdata-updater.sh ",
       " OK ",
-      "[/tmp/netdata-kickstart-GF55JnNDJp]# grep -q \\--enable-auto-updates //usr/libexec/netdata/netdata-updater.sh ",
+      "[/tmp/netdata-kickstart-nkwhR2jqti]# grep -q \\--enable-auto-updates //usr/libexec/netdata/netdata-updater.sh ",
       " OK ",
-      "[/tmp/netdata-kickstart-GF55JnNDJp]# //usr/libexec/netdata/netdata-updater.sh --enable-auto-updates  ",
-      "Thu Nov 12 05:58:44 PM UTC 2026 : INFO: netdata-updater.sh:  Auto-updating has been ENABLED through cron, updater script linked to /etc/cron.daily/netdata-updater",
-      "Thu Nov 12 05:58:44 PM UTC 2026 : INFO: netdata-updater.sh:  If the update process fails and you have email notifications set up correctly for cron on this system, you should receive an email notification of the failure.",
-      "Thu Nov 12 05:58:44 PM UTC 2026 : INFO: netdata-updater.sh:  Successful updates will not send an email.",
+      "[/tmp/netdata-kickstart-nkwhR2jqti]# //usr/libexec/netdata/netdata-updater.sh --enable-auto-updates  ",
+      "Fri Nov 13 10:39:16 PM UTC 2026 : INFO: netdata-updater.sh:  Auto-updating has been ENABLED through cron, updater script linked to /etc/cron.daily/netdata-updater",
+      "Fri Nov 13 10:39:16 PM UTC 2026 : INFO: netdata-updater.sh:  If the update process fails and you have email notifications set up correctly for cron on this system, you should receive an email notification of the failure.",
+      "Fri Nov 13 10:39:16 PM UTC 2026 : INFO: netdata-updater.sh:  Successful updates will not send an email.",
       " OK ",
       "Successfully installed the Netdata Agent.",
       "The following non-fatal warnings or errors were encountered:",
@@ -102,19 +103,19 @@
     "box": "box-2",
     "slot": 0,
     "run": 0,
-    "installFinished": 1794506325,
-    "loadStart": 1794592725,
-    "stop": 1794596325,
+    "installFinished": 1794609557,
+    "loadStart": 1794695957,
+    "stop": 1794699557,
     "cpuModel": "AMD EPYC-Rome Processor",
     "vcpus": 2
   },
   "footprint": {
-    "disk_bytes": 801920200,
+    "disk_bytes": 795166443,
     "journal_bytes": 0,
     "window": {
-      "start": 1794509925,
-      "end": 1794592725
+      "start": 1794613157,
+      "end": 1794695957
     },
-    "measured": 1794597632
+    "measured": 1794700203
   }
 }
